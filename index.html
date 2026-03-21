@@ -4931,16 +4931,15 @@
     function renderSubjectRows(sem, container) {
         if (!container) return;
         container.innerHTML = '';
-
         sem.subjects.forEach((sub, sIdx) => {
             const row = document.createElement('div');
             row.className = 'gpa-row';
             row.id = `gpa-row-${sem.id}-${sIdx}`;
-
+            
             row.draggable = true;
-            row.ondragstart = (e) => {
-                gpaDragSubject = sub; gpaDragSourceSemId = sem.id;
-                e.dataTransfer.setData('text/plain', sub.id);
+            row.ondragstart = (e) => { 
+                gpaDragSubject = sub; gpaDragSourceSemId = sem.id; 
+                e.dataTransfer.setData('text/plain', sub.id); 
                 e.dataTransfer.effectAllowed = 'move';
                 row.style.opacity = '0.5';
             };
@@ -4949,7 +4948,6 @@
             row.ondragleave = () => { row.style.borderTop = ""; };
             row.ondrop = (e) => { e.preventDefault(); e.stopPropagation(); row.style.borderTop = ""; gpaDropOnSubject(sem.id, sIdx); };
 
-            // --- Improved Touch Drag & Drop ---
             row.addEventListener('touchstart', (e) => {
                 if(e.touches.length > 1) return;
                 if(['INPUT','SELECT','BUTTON', 'OPTION'].includes(e.target.tagName)) return;
@@ -4964,8 +4962,6 @@
                     const touch = e.touches[0];
                     row.style.left = (touch.clientX - row.offsetWidth/2) + 'px';
                     row.style.top = (touch.clientY - row.offsetHeight/2) + 'px';
-                    // Add drop indicator
-                    addGpaDropIndicator(row);
                 }, 400);
             }, {passive: false});
 
@@ -4975,7 +4971,6 @@
                     const touch = e.touches[0];
                     row.style.left = (touch.clientX - row.offsetWidth/2) + 'px';
                     row.style.top = (touch.clientY - row.offsetHeight/2) + 'px';
-                    updateGpaDropIndicator(touch.clientX, touch.clientY, sem.id);
                 } else clearTimeout(gpaTouchTimeout);
             }, {passive: false});
 
@@ -4986,21 +4981,37 @@
                     row.classList.remove('gpa-dragging');
                     row.style.position = ''; row.style.zIndex = ''; row.style.width = ''; row.style.boxShadow = '';
                     row.style.left = ''; row.style.top = '';
-
-                    // Improved drop detection
+                    
                     const touch = e.changedTouches[0];
-                    const dropInfo = getGpaDropTarget(touch.clientX, touch.clientY, sem.id);
-                    removeGpaDropIndicator();
-                    if(dropInfo && dropInfo.type === 'row') {
-                        gpaDropOnSubject(dropInfo.semId, dropInfo.idx);
-                    } else if(dropInfo && dropInfo.type === 'container') {
-                        gpaDrop(null, dropInfo.semId);
-                    } else {
-                        renderGpaPage();
-                    }
+                    row.style.display = 'none';
+                    const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+                    row.style.display = 'flex';
+                    
+                    if(elem) {
+                        const targetRow = elem.closest('.gpa-row');
+                        if (targetRow) {
+                            let tSemId = null;
+                            if (targetRow.id.includes('normal')) {
+                                tSemId = 'normal';
+                            } else {
+                                const tSemObj = gpaSemesters.find(s => targetRow.id.includes(s.id));
+                                if (tSemObj) tSemId = tSemObj.id;
+                            }
+                            if (tSemId) {
+                                const m = targetRow.id.match(/-([0-9]+)$/);
+                                if (m) gpaDropOnSubject(tSemId, parseInt(m[1], 10));
+                            }
+                        } else {
+                            const targetSemContainer = elem.closest('[id^="gpa-subj-list-"]');
+                            if (targetSemContainer) {
+                                const tSemId = targetSemContainer.id.replace('gpa-subj-list-', '');
+                                gpaDrop(null, tSemId);
+                            } else renderGpaPage();
+                        }
+                    } else renderGpaPage();
                 }
             });
-            row.addEventListener('touchcancel', () => { clearTimeout(gpaTouchTimeout); removeGpaDropIndicator(); });
+            row.addEventListener('touchcancel', () => clearTimeout(gpaTouchTimeout));
 
             let gradeOpts = '<option value="">Grade</option>';
             GPA_GRADE_SCALE.forEach(g => {
@@ -5011,7 +5022,7 @@
             let gradeInfo = null;
             if (sub.grade) gradeInfo = letterToGrade(sub.grade);
             else if (sub.pointsLost !== '') gradeInfo = pointsToGrade(100 - Number(sub.pointsLost));
-
+            
             const resultHtml = gradeInfo
                 ? `<div class="gpa-row-result" style="color:${getGpaLetterForValue(gradeInfo.gpa).color};">${gradeInfo.gpa}</div>`
                 : `<div class="gpa-row-result" style="color:#555;">—</div>`;
@@ -5031,76 +5042,6 @@
             ${resultHtml}
             <button class="gpa-row-remove" onclick="gpaRemoveSubject('${sem.id}', ${sIdx})" title="Remove">✕</button>`;
             container.appendChild(row);
-
-        });
-
-        // --- Drop Indicator helpers ---
-        function addGpaDropIndicator(row) {
-            let indicator = document.getElementById('gpa-drop-indicator');
-            if (!indicator) {
-                indicator = document.createElement('div');
-                indicator.id = 'gpa-drop-indicator';
-                indicator.style.position = 'fixed';
-                indicator.style.height = '0';
-                indicator.style.borderTop = '3px solid var(--accent-pink)';
-                indicator.style.zIndex = 10000;
-                document.body.appendChild(indicator);
-            }
-            indicator.style.display = 'block';
-        }
-        function updateGpaDropIndicator(x, y, semId) {
-            const rows = Array.from(document.querySelectorAll(`#gpa-subj-list-${semId} .gpa-row`));
-            let found = false;
-            for (let i = 0; i < rows.length; i++) {
-                const rect = rows[i].getBoundingClientRect();
-                if (y < rect.top + rect.height/2) {
-                    const indicator = document.getElementById('gpa-drop-indicator');
-                    if (indicator) {
-                        indicator.style.left = rect.left + 'px';
-                        indicator.style.top = rect.top + 'px';
-                        indicator.style.width = rect.width + 'px';
-                    }
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                // Show at end of list
-                const container = document.getElementById(`gpa-subj-list-${semId}`);
-                if (container) {
-                    const rect = container.getBoundingClientRect();
-                    const indicator = document.getElementById('gpa-drop-indicator');
-                    if (indicator) {
-                        indicator.style.left = rect.left + 'px';
-                        indicator.style.top = (rect.bottom - 2) + 'px';
-                        indicator.style.width = rect.width + 'px';
-                    }
-                }
-            }
-        }
-        function removeGpaDropIndicator() {
-            const indicator = document.getElementById('gpa-drop-indicator');
-            if (indicator) indicator.style.display = 'none';
-        }
-        function getGpaDropTarget(x, y, semId) {
-            // Try to find the row or container
-            const rows = Array.from(document.querySelectorAll(`#gpa-subj-list-${semId} .gpa-row`));
-            for (let i = 0; i < rows.length; i++) {
-                const rect = rows[i].getBoundingClientRect();
-                if (y < rect.top + rect.height/2) {
-                    return { type: 'row', semId, idx: i };
-                }
-            }
-            // If not on a row, drop at end
-            const container = document.getElementById(`gpa-subj-list-${semId}`);
-            if (container) {
-                const rect = container.getBoundingClientRect();
-                if (y >= rect.top && y <= rect.bottom) {
-                    return { type: 'container', semId };
-                }
-            }
-            return null;
-        }
         });
     }
 
