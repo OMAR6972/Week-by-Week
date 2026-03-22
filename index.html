@@ -3055,7 +3055,8 @@
 
         const calContainer = document.createElement('div');
         calContainer.className = 'calendar-container';
-        calContainer.style.gridColumn = '1/-1';
+        // Force full width regardless of parent grid state or content
+        calContainer.style.cssText = 'width:100%; box-sizing:border-box;';
 
         const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -3108,7 +3109,8 @@
                         const bg = getSubjectBg(item.task.sub);
                         const timeStr = extractTimeFromWhen(item.task.when);
                         const timeHtml = timeStr ? `<div style="font-size:0.55rem; opacity:0.85; margin-top:1px;">🕒 ${timeStr}</div>` : '';
-                        calHtml += `<div class="cal-task" style="background:${bg}; color:${color}; border-left:2px solid ${color};" onclick="openModal(${item.wIndex}, ${item.tIndex})" title="${item.task.sub}: ${item.task.name}${timeStr ? ' — '+timeStr : ''}">${item.task.icon} ${item.task.name}${timeHtml}</div>`;
+                        const subLabel = `<span style="font-size:0.5rem; font-weight:900; opacity:0.75; letter-spacing:0.3px; margin-right:2px;">[${item.task.sub}]</span>`;
+                        calHtml += `<div class="cal-task" style="background:${bg}; color:${color}; border-left:2px solid ${color};" onclick="openModal(${item.wIndex}, ${item.tIndex})" title="${item.task.sub}: ${item.task.name}${timeStr ? ' — '+timeStr : ''}">${subLabel}${item.task.icon} ${item.task.name}${timeHtml}</div>`;
                     });
                 }
                 calHtml += `</div>`;
