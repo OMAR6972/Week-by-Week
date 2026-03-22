@@ -1479,6 +1479,7 @@
     }
 
     function showRecent(subFilter = null) {
+        fpOpenState.history = false;
         if (subFilter !== null) historySubFilter = subFilter;
         const list = document.getElementById('recent-list');
         list.innerHTML = '';
@@ -1559,7 +1560,7 @@
             }
 
             const bar = document.createElement('div');
-            bar.className = 'fp-bar-collapsible fp-inline-bar' + (anyFilter || fpOpenState.history ? ' open' : '');
+            bar.className = 'fp-bar-collapsible fp-inline-bar' + (fpOpenState.history ? ' open' : '');
 
             const allChip = document.createElement('button');
             allChip.className = 'fp-chip' + (historySubFilter === 'All' ? ' active' : '');
@@ -1812,6 +1813,7 @@
 
     // --- DEADLINES LOGIC ---
     function showDeadlines(push = true, typeFilter = null, subFilter = null) {
+        fpOpenState.deadlines = false;
         if (typeFilter !== null) deadlineTypeFilter = typeFilter;
         if (subFilter !== null) deadlineSubFilter = subFilter;
 
@@ -1922,7 +1924,7 @@
             subCodesSet.forEach(code => subChips.push({ key: code, label: code, color: getSubjectColor(code) }));
 
             const anyActive = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
-            const isOpen = fpOpenState.deadlines || anyActive;
+            const isOpen = fpOpenState.deadlines;
 
             // Toggle button centred
             const togBtn = document.createElement('button');
@@ -2255,6 +2257,7 @@
 
     // --- USEFUL LINKS GLOBAL PAGE ---
     function showUsefulLinks(push = true, filterType = 'All Links', subjectFilter = 'All Subjects', badgeFilters = null) {
+        fpOpenState.usefulBadges = false;
         currentUsefulFilter = filterType;
         currentUsefulSubject = subjectFilter;
         if (badgeFilters !== null) currentUsefulBadgeFilters = new Set(badgeFilters);
@@ -2307,7 +2310,7 @@
             const anyBadge = currentUsefulBadgeFilters.size > 0;
             const badgeBtn = document.createElement('button');
             badgeBtn.id = 'ul-badges-toggle';
-            badgeBtn.className = 'fp-toggle' + (anyBadge ? ' has-filter' : '') + (fpOpenState.usefulBadges || anyBadge ? ' open' : '');
+            badgeBtn.className = 'fp-toggle' + (anyBadge ? ' has-filter' : '') + (fpOpenState.usefulBadges ? ' open' : '');
             badgeBtn.innerHTML = `🏷 Badges${anyBadge ? ` <span class="fp-badge">${currentUsefulBadgeFilters.size}</span>` : ''} <span class="fp-arrow">▼</span>`;
             subRow.appendChild(badgeBtn);
         }
@@ -2318,8 +2321,8 @@
             const anyBadge = currentUsefulBadgeFilters.size > 0;
             const badgePanel = document.createElement('div');
             badgePanel.id = 'ul-badge-panel';
-            badgePanel.className = 'fp-panel' + (fpOpenState.usefulBadges || anyBadge ? ' open' : '');
-            badgePanel.style.cssText = 'position:static; transform:none; min-width:unset; max-width:unset; width:100%; margin-bottom:10px; box-sizing:border-box; display:' + (fpOpenState.usefulBadges || anyBadge ? 'block' : 'none') + ';';
+            badgePanel.className = 'fp-panel' + (fpOpenState.usefulBadges ? ' open' : '');
+            badgePanel.style.cssText = 'position:static; transform:none; min-width:unset; max-width:unset; width:100%; margin-bottom:10px; box-sizing:border-box; display:' + (fpOpenState.usefulBadges ? 'block' : 'none') + ';';
             const fpRow = document.createElement('div');
             fpRow.className = 'fp-row'; fpRow.style.justifyContent = 'flex-start';
             allBadgeSet.forEach((color, text) => {
@@ -2568,6 +2571,7 @@
     }
 
     function showSchedule(push = true, from = 'home') {
+        fpOpenState.schedule = false;
         renderScheduleContent();
         nav('schedule', push, { from: from });
     }
@@ -2607,7 +2611,7 @@
         ];
 
         const anyActive = scheduleTaskFilter !== 'all' || scheduleSubFilter !== 'all';
-        const isOpen = fpOpenState.schedule || anyActive;
+        const isOpen = fpOpenState.schedule;
 
         const togBtn = document.createElement('button');
         const getTogLabel = (open) => {
@@ -2653,6 +2657,7 @@
             }
             btn.addEventListener('click', () => {
                 scheduleTaskFilter = chip.key;
+                calendarMonth = null; // reset so calendar auto-picks correct month
                 typeRow.querySelectorAll('.fp-chip').forEach(b => {
                     const isNow = b.dataset.key === chip.key;
                     b.classList.toggle('active', isNow);
@@ -2683,6 +2688,7 @@
             if (scheduleSubFilter === 'all') allSubBtn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
             allSubBtn.addEventListener('click', () => {
                 scheduleSubFilter = 'all';
+                calendarMonth = null;
                 subRow.querySelectorAll('.fp-chip').forEach(b => {
                     b.classList.toggle('active', b.dataset.key === 'all');
                     b.style.cssText = b.dataset.key === 'all' ? 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;' : '';
@@ -2701,6 +2707,7 @@
                 if (scheduleSubFilter === code) btn.style.cssText = `background:${getSubjectBg(code)}; color:${color}; border-color:${color}; box-shadow:0 0 10px ${color}55;`;
                 btn.addEventListener('click', () => {
                     scheduleSubFilter = code;
+                    calendarMonth = null;
                     subRow.querySelectorAll('.fp-chip').forEach(b => {
                         const isNow = b.dataset.key === code;
                         b.classList.toggle('active', isNow);
@@ -2886,17 +2893,22 @@
             });
         });
 
-        // Find available months
+        // Find available months from ALL tasks (unfiltered) so months never disappear when filtering
         const monthSet = new Set();
-        Object.keys(tasksByDate).forEach(k => {
-            monthSet.add(k.substring(0, 7)); // YYYY-MM
-        });
-        // Include months from TBD task weeks so those months are navigable
-        Object.keys(tbdTasksByWeek).forEach(wIdx => {
-            const wk = window.SCHEDULE_DATA[Number(wIdx)];
-            const { start, end } = getWeekDates(wk.week);
-            monthSet.add(`${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}`);
-            monthSet.add(`${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}`);
+        window.SCHEDULE_DATA.forEach(wk => {
+            if (!wk.tasks) return;
+            wk.tasks.forEach(t => {
+                const ts = getTaskEffectiveDeadlineMeta(t, wk.week).timestamp;
+                if (ts !== 0) {
+                    const d = new Date(ts);
+                    monthSet.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+                } else {
+                    // TBD task — include its week's months
+                    const { start, end } = getWeekDates(wk.week);
+                    monthSet.add(`${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}`);
+                    monthSet.add(`${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}`);
+                }
+            });
         });
         // Always include the current real-time month
         const nowForMonths = new Date();
@@ -3366,12 +3378,11 @@
             const fsep = document.getElementById('filter-sep');
             if (fwrap) fwrap.style.display = 'none';
             if (fsep) fsep.style.display = 'none';
-            renderPlaylistGrid(true);
+            renderPlaylistGrid(false);
         } else {
             filterBar.style.display = 'flex';
             gridPlaylists.style.display = 'none';
             gridWeeks.style.display = 'grid';
-            playlistBadgeFilters.clear();
             renderFilterBar(viewType);
         }
         if(pushState) {
@@ -3545,8 +3556,8 @@
             }
         });
 
-        // Restore open state: open if was open, or if any filter is active
-        const shouldBeOpen = openStateKey ? (fpOpenState[openStateKey] || anyActive) : anyActive;
+        // Restore open state: only based on explicit user action
+        const shouldBeOpen = openStateKey ? fpOpenState[openStateKey] : false;
 
         // Active filter summary — plain text, not a pill
         const summaryParts = [];
@@ -3608,7 +3619,10 @@
             if (openStateKey) fpOpenState[openStateKey] = !isOpen;
         });
 
-        // Separator + clear button at bottom of panel
+        // Separator + clear button at bottom of panel (not for subject resource filter)
+        if (openStateKey === 'playlist') {
+            // no sep/clear for subject weeks/exam filter
+        } else {
         const sep = document.createElement('div');
         sep.className = 'fp-sep';
         panel.appendChild(sep);
@@ -3637,6 +3651,7 @@
         });
         clearRow.appendChild(clearBtn);
         panel.appendChild(clearRow);
+        } // end if not playlist
 
         // Wrap toggle+panel in a relative container so panel is absolutely positioned below toggle
         const wrapper = document.createElement('div');
