@@ -2871,6 +2871,7 @@
             if(!wk.tasks) return;
             wk.tasks.forEach((t, tIndex) => {
                 if(scheduleTaskFilter !== 'all' && getTaskTypeCategory(t.name) !== scheduleTaskFilter) return;
+                if(scheduleSubFilter !== 'all' && t.sub !== scheduleSubFilter) return;
                 const ts = getTaskEffectiveDeadlineMeta(t, wk.week).timestamp;
                 if(ts === 0) {
                     // Undated / TBD task
