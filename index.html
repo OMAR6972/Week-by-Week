@@ -766,7 +766,7 @@
         <button class="back-btn" onclick="smartBack()">← Back</button>
         <h1 style="color:#00E5FF; text-align:center;">DEADLINES</h1>
         <p class="subtitle" style="margin-bottom: 12px;">Track your upcoming tasks and quizzes</p>
-        <div id="deadlines-filter-bar" style="max-width:800px; margin:0 auto 14px;"></div>
+        <div id="deadlines-filter-bar" style="max-width:800px; margin:0 auto 14px; text-align:center;"></div>
         
         <div style="max-width: 800px; margin: 0 auto;">
             <div id="ongoing-container" style="display:none; margin-bottom:35px;">
@@ -1901,99 +1901,123 @@
             filterBarEl.innerHTML = '';
 
             const typeChips = [
-                { key: 'all', label: 'All', color: '#00E5FF' },
-                { key: 'quiz', label: '\ud83e\udde0 Quizzes', color: '#af52de' },
-                { key: 'assignment', label: '\ud83d\udcdd Assignments', color: '#007aff' },
-                { key: 'project', label: '\ud83d\ude80 Projects', color: '#34c759' },
-                { key: 'news', label: '\ud83d\udce2 News', color: '#e91e8c' }
+                { key: 'all',        label: 'All',           color: '#00E5FF' },
+                { key: 'quiz',       label: '🧠 Quizzes',    color: '#af52de' },
+                { key: 'assignment', label: '📝 Assignments', color: '#007aff' },
+                { key: 'project',    label: '🚀 Projects',    color: '#34c759' },
+                { key: 'news',       label: '📢 News',        color: '#e91e8c' }
             ];
 
             const subCodesSet = new Set();
             [...ongoing, ...upcoming, ...completed, ...unscheduled].forEach(item => {
                 if (item.task && item.task.sub && item.task.sub !== 'NEWS') subCodesSet.add(item.task.sub);
             });
+            const hasMultipleSubs = subCodesSet.size > 1;
             const subChips = [{ key: 'All', label: 'All Subjects' }];
             subCodesSet.forEach(code => subChips.push({ key: code, label: code, color: getSubjectColor(code) }));
-
-            const dlRows = [{ label: 'Type', chips: typeChips }];
-            if (subChips.length > 2) dlRows.push({ label: 'Subject', chips: subChips });
 
             const anyActive = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
             const isOpen = fpOpenState.deadlines || anyActive;
 
-            // Toggle button ("Filter")
+            // Toggle button centred
             const togBtn = document.createElement('button');
-            togBtn.className = 'fp-toggle' + (anyActive ? ' has-filter' : '') + (isOpen ? ' open' : '');
             const getTogLabel = (open) => {
-                const nowActive = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
-                if (nowActive) {
+                const active = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+                if (active) {
                     const parts = [];
                     if (deadlineTypeFilter !== 'all') { const c = typeChips.find(t=>t.key===deadlineTypeFilter); if(c) parts.push(c.label.replace(/^\S+\s/,'')); }
                     if (deadlineSubFilter !== 'All') parts.push(deadlineSubFilter);
-                    return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '\u25b2' : '\u25bc'}</span>`;
+                    return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
                 }
-                return `Filter <span class="fp-arrow">${open ? '\u25b2' : '\u25bc'}</span>`;
+                return `Filter <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
             };
+            togBtn.className = 'fp-toggle' + (anyActive ? ' has-filter' : '') + (isOpen ? ' open' : '');
             togBtn.innerHTML = getTogLabel(isOpen);
             filterBarEl.appendChild(togBtn);
 
-            // Collapsible area
+            // Single combined collapsible bar
             const collapsible = document.createElement('div');
             collapsible.className = 'fp-bar-collapsible' + (isOpen ? ' open' : '');
-            collapsible.style.cssText = 'flex-direction:column; gap:8px; align-items:center;';
+            collapsible.style.cssText = 'flex-direction:row; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:8px; margin-bottom:18px;';
 
-            const refreshTogBtn = () => {
-                const nowActive = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+            const refreshTog = () => {
                 const open = collapsible.classList.contains('open');
-                togBtn.className = 'fp-toggle' + (nowActive ? ' has-filter' : '') + (open ? ' open' : '');
+                const active = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+                togBtn.className = 'fp-toggle' + (active ? ' has-filter' : '') + (open ? ' open' : '');
                 togBtn.innerHTML = getTogLabel(open);
             };
 
-            dlRows.forEach((row, ri) => {
-                if (row.chips.length <= 1) return;
-                const bar = document.createElement('div');
-                bar.className = 'fp-inline-bar';
-                bar.style.cssText = 'flex-wrap:wrap; justify-content:center;';
-                if (row.label) {
-                    const lbl = document.createElement('span');
-                    lbl.className = 'fp-label';
-                    lbl.textContent = row.label + ':';
-                    lbl.style.cssText = 'font-size:0.7rem; color:#666; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-right:4px;';
-                    bar.appendChild(lbl);
+            // Build chips: type row then optional separator + subject chips, all in one bar
+            const bar = document.createElement('div');
+            bar.className = 'fp-inline-bar';
+            bar.style.cssText = 'flex-wrap:wrap; justify-content:center; display:flex; gap:8px;';
+
+            // TYPE chips
+            typeChips.forEach(chip => {
+                const btn = document.createElement('button');
+                btn.className = 'fp-chip' + (deadlineTypeFilter === chip.key ? ' active' : '');
+                btn.textContent = chip.label;
+                btn.dataset.group = 'type';
+                btn.dataset.key = chip.key;
+                if (deadlineTypeFilter === chip.key && chip.color) {
+                    btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
                 }
-                const getActiveKey = () => ri === 0 ? deadlineTypeFilter : deadlineSubFilter;
-                row.chips.forEach(chip => {
+                btn.addEventListener('click', () => {
+                    deadlineTypeFilter = chip.key;
+                    bar.querySelectorAll('[data-group="type"]').forEach(b => {
+                        const isNow = b.dataset.key === chip.key;
+                        b.classList.toggle('active', isNow);
+                        const c = typeChips.find(t=>t.key===b.dataset.key);
+                        if (isNow && c && c.color) b.style.cssText = `background:${c.color}22; border-color:${c.color}; color:${c.color}; box-shadow:0 0 10px ${c.color}55;`;
+                        else b.style.cssText = '';
+                    });
+                    refreshTog();
+                    renderDeadlineContent();
+                });
+                bar.appendChild(btn);
+            });
+
+            // Separator between type and subject
+            if (hasMultipleSubs) {
+                const sep = document.createElement('span');
+                sep.style.cssText = 'width:1px; background:rgba(255,255,255,0.12); align-self:stretch; margin:0 4px; border-radius:1px;';
+                bar.appendChild(sep);
+
+                // SUBJECT chips
+                subChips.forEach(chip => {
                     const btn = document.createElement('button');
-                    btn.className = 'fp-chip' + (getActiveKey() === chip.key ? ' active' : '');
+                    btn.className = 'fp-chip' + (deadlineSubFilter === chip.key ? ' active' : '');
                     btn.textContent = chip.label;
-                    btn.dataset.row = ri;
+                    btn.dataset.group = 'sub';
                     btn.dataset.key = chip.key;
-                    if (getActiveKey() === chip.key && chip.color) {
-                        btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
+                    if (deadlineSubFilter === chip.key) {
+                        if (chip.color) btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
+                        else btn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
                     }
                     btn.addEventListener('click', () => {
-                        if (ri === 0) deadlineTypeFilter = chip.key;
-                        else deadlineSubFilter = chip.key;
-                        bar.querySelectorAll('.fp-chip').forEach(b => {
+                        deadlineSubFilter = chip.key;
+                        bar.querySelectorAll('[data-group="sub"]').forEach(b => {
                             const isNow = b.dataset.key === chip.key;
                             b.classList.toggle('active', isNow);
-                            if (isNow && chip.color) b.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
-                            else if (isNow) b.style.cssText = 'background:rgba(233,30,140,0.18); border-color:var(--accent-pink); color:var(--accent-pink);';
+                            const c = subChips.find(s=>s.key===b.dataset.key);
+                            if (isNow && c && c.color) b.style.cssText = `background:${c.color}22; border-color:${c.color}; color:${c.color}; box-shadow:0 0 10px ${c.color}55;`;
+                            else if (isNow) b.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
                             else b.style.cssText = '';
                         });
-                        refreshTogBtn();
+                        refreshTog();
                         renderDeadlineContent();
                     });
                     bar.appendChild(btn);
                 });
-                collapsible.appendChild(bar);
-            });
+            }
+
+            collapsible.appendChild(bar);
 
             togBtn.addEventListener('click', () => {
                 const nowOpen = collapsible.classList.contains('open');
                 collapsible.classList.toggle('open', !nowOpen);
                 fpOpenState.deadlines = !nowOpen;
-                refreshTogBtn();
+                refreshTog();
             });
 
             filterBarEl.appendChild(collapsible);
@@ -2511,74 +2535,144 @@
         const viewToggleContainer = document.getElementById('schedule-view-toggle');
         if (!filterContainer || !viewToggleContainer) return;
 
-        // View toggle
+        // View toggle (list/calendar) stays as-is
         viewToggleContainer.innerHTML = '';
-        ['list','calendar'].forEach(mode => {
+        ['📋 List','📅 Calendar'].forEach((label, i) => {
+            const mode = i === 0 ? 'list' : 'calendar';
             const btn = document.createElement('button');
             btn.className = 'schedule-filter-chip' + (scheduleViewMode === mode ? ' active' : '');
-            btn.textContent = mode === 'list' ? '📋 List' : '📅 Calendar';
+            btn.textContent = label;
             btn.addEventListener('click', () => { scheduleViewMode = mode; renderScheduleWeeksGrid(); renderScheduleFilters(); });
             viewToggleContainer.appendChild(btn);
         });
 
         const subCodes = new Set();
         window.SCHEDULE_DATA.forEach(wk => { (wk.tasks||[]).forEach(t => { if(t.sub) subCodes.add(t.sub); }); });
+        const hasMultipleSubs = subCodes.size > 1;
 
-        // Type chips — always visible, original style
         filterContainer.innerHTML = '';
 
-        const typeWrap = document.createElement('div');
-        typeWrap.className = 'schedule-filters';
         const typeChipsData = [
-            { key: 'all', label: 'All' },
-            { key: 'quiz', label: '🧠 Quizzes' },
-            { key: 'assignment', label: '📝 Assignments' },
-            { key: 'project', label: '🚀 Projects' }
+            { key: 'all',        label: 'All',           color: '#00E5FF' },
+            { key: 'quiz',       label: '🧠 Quizzes',    color: '#af52de' },
+            { key: 'assignment', label: '📝 Assignments', color: '#007aff' },
+            { key: 'project',    label: '🚀 Projects',    color: '#34c759' }
         ];
-        typeChipsData.forEach(f => {
-            const btn = document.createElement('button');
-            btn.className = 'schedule-filter-chip' + (scheduleTaskFilter === f.key ? ' active' : '');
-            btn.textContent = f.label;
-            btn.dataset.chipKey = f.key;
-            btn.addEventListener('click', () => { scheduleTaskFilter = f.key; renderScheduleFilters(); renderScheduleWeeksGrid(); });
-            typeWrap.appendChild(btn);
-        });
-        filterContainer.appendChild(typeWrap);
 
-        // Subject chips (if multiple)
-        if (subCodes.size > 1) {
-            const subWrap = document.createElement('div');
-            subWrap.className = 'schedule-filters';
+        const anyActive = scheduleTaskFilter !== 'all' || scheduleSubFilter !== 'all';
+        const isOpen = fpOpenState.schedule || anyActive;
+
+        const togBtn = document.createElement('button');
+        const getTogLabel = (open) => {
+            const active = scheduleTaskFilter !== 'all' || scheduleSubFilter !== 'all';
+            if (active) {
+                const parts = [];
+                if (scheduleTaskFilter !== 'all') { const c = typeChipsData.find(t=>t.key===scheduleTaskFilter); if(c) parts.push(c.label.replace(/^\S+\s/,'')); }
+                if (scheduleSubFilter !== 'all') parts.push(scheduleSubFilter);
+                return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+            }
+            return `Filter <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+        };
+        togBtn.className = 'fp-toggle' + (anyActive ? ' has-filter' : '') + (isOpen ? ' open' : '');
+        togBtn.innerHTML = getTogLabel(isOpen);
+        filterContainer.appendChild(togBtn);
+
+        const collapsible = document.createElement('div');
+        collapsible.className = 'fp-bar-collapsible' + (isOpen ? ' open' : '');
+        collapsible.style.cssText = 'flex-direction:row; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:8px;';
+
+        const refreshTog = () => {
+            const open = collapsible.classList.contains('open');
+            const active = scheduleTaskFilter !== 'all' || scheduleSubFilter !== 'all';
+            togBtn.className = 'fp-toggle' + (active ? ' has-filter' : '') + (open ? ' open' : '');
+            togBtn.innerHTML = getTogLabel(open);
+        };
+
+        const bar = document.createElement('div');
+        bar.className = 'fp-inline-bar';
+        bar.style.cssText = 'flex-wrap:wrap; justify-content:center; display:flex; gap:8px;';
+
+        // TYPE chips
+        typeChipsData.forEach(chip => {
+            const btn = document.createElement('button');
+            btn.className = 'fp-chip' + (scheduleTaskFilter === chip.key ? ' active' : '');
+            btn.textContent = chip.label;
+            btn.dataset.group = 'type';
+            btn.dataset.key = chip.key;
+            if (scheduleTaskFilter === chip.key && chip.color) {
+                btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
+            }
+            btn.addEventListener('click', () => {
+                scheduleTaskFilter = chip.key;
+                bar.querySelectorAll('[data-group="type"]').forEach(b => {
+                    const isNow = b.dataset.key === chip.key;
+                    b.classList.toggle('active', isNow);
+                    const c = typeChipsData.find(t=>t.key===b.dataset.key);
+                    if (isNow && c && c.color) b.style.cssText = `background:${c.color}22; border-color:${c.color}; color:${c.color}; box-shadow:0 0 10px ${c.color}55;`;
+                    else b.style.cssText = '';
+                });
+                refreshTog();
+                renderScheduleWeeksGrid();
+            });
+            bar.appendChild(btn);
+        });
+
+        // Separator + subject chips
+        if (hasMultipleSubs) {
+            const sep = document.createElement('span');
+            sep.style.cssText = 'width:1px; background:rgba(255,255,255,0.12); align-self:stretch; margin:0 4px; border-radius:1px;';
+            bar.appendChild(sep);
+
             const allSubBtn = document.createElement('button');
-            allSubBtn.className = 'schedule-filter-chip' + (scheduleSubFilter === 'all' ? ' active' : '');
+            allSubBtn.className = 'fp-chip' + (scheduleSubFilter === 'all' ? ' active' : '');
             allSubBtn.textContent = 'All Subjects';
-            allSubBtn.addEventListener('click', () => { scheduleSubFilter = 'all'; renderScheduleFilters(); renderScheduleWeeksGrid(); });
-            subWrap.appendChild(allSubBtn);
+            allSubBtn.dataset.group = 'sub';
+            allSubBtn.dataset.key = 'all';
+            if (scheduleSubFilter === 'all') allSubBtn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+            allSubBtn.addEventListener('click', () => {
+                scheduleSubFilter = 'all';
+                bar.querySelectorAll('[data-group="sub"]').forEach(b => {
+                    b.classList.toggle('active', b.dataset.key === 'all');
+                    b.style.cssText = b.dataset.key === 'all' ? 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;' : '';
+                });
+                refreshTog();
+                renderScheduleWeeksGrid();
+            });
+            bar.appendChild(allSubBtn);
+
             subCodes.forEach(code => {
                 const color = getSubjectColor(code);
                 const btn = document.createElement('button');
-                btn.className = 'schedule-filter-chip' + (scheduleSubFilter === code ? ' active' : '');
+                btn.className = 'fp-chip' + (scheduleSubFilter === code ? ' active' : '');
                 btn.textContent = code;
-                if (scheduleSubFilter === code) btn.style.cssText = `background:${getSubjectBg(code)}; color:${color}; border-color:${color};`;
-                btn.addEventListener('click', () => { scheduleSubFilter = code; renderScheduleFilters(); renderScheduleWeeksGrid(); });
-                subWrap.appendChild(btn);
+                btn.dataset.group = 'sub';
+                btn.dataset.key = code;
+                if (scheduleSubFilter === code) btn.style.cssText = `background:${getSubjectBg(code)}; color:${color}; border-color:${color}; box-shadow:0 0 10px ${color}55;`;
+                btn.addEventListener('click', () => {
+                    scheduleSubFilter = code;
+                    bar.querySelectorAll('[data-group="sub"]').forEach(b => {
+                        const isNow = b.dataset.key === code;
+                        b.classList.toggle('active', isNow);
+                        if (isNow) b.style.cssText = `background:${getSubjectBg(code)}; color:${color}; border-color:${color}; box-shadow:0 0 10px ${color}55;`;
+                        else b.style.cssText = '';
+                    });
+                    refreshTog();
+                    renderScheduleWeeksGrid();
+                });
+                bar.appendChild(btn);
             });
-            filterContainer.appendChild(subWrap);
         }
 
-        // Clear all button
-        if (scheduleTaskFilter !== 'all' || scheduleSubFilter !== 'all') {
-            const clrWrap = document.createElement('div');
-            clrWrap.style.cssText = 'display:flex; justify-content:center; margin-top:8px;';
-            const clr = document.createElement('button');
-            clr.className = 'fp-clear-btn';
-            clr.textContent = '✕ Clear all filters';
-            clr.addEventListener('click', () => { scheduleTaskFilter = 'all'; scheduleSubFilter = 'all'; renderScheduleFilters(); renderScheduleWeeksGrid(); });
-            clrWrap.appendChild(clr);
-            filterContainer.appendChild(clrWrap);
-        }
+        collapsible.appendChild(bar);
 
+        togBtn.addEventListener('click', () => {
+            const nowOpen = collapsible.classList.contains('open');
+            collapsible.classList.toggle('open', !nowOpen);
+            fpOpenState.schedule = !nowOpen;
+            refreshTog();
+        });
 
+        filterContainer.appendChild(collapsible);
     }
 
     function renderScheduleWeeksGrid() {
