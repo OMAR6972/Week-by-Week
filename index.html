@@ -1035,7 +1035,7 @@
 <div class="hotkeys-panel" id="hotkeys-panel">
     <div class="hotkeys-panel-title">Keyboard Shortcuts</div>
     <div class="hotkey-row"><span class="hotkey-key">S</span> Subjects (Home)</div>
-    <div class="hotkey-row"><span class="hotkey-key">T</span> Task Schedule</div>
+    <div class="hotkey-row"><span class="hotkey-key">T</span> Semester Map</div>
     <div class="hotkey-row"><span class="hotkey-key">D</span> Deadlines</div>
     <div class="hotkey-row"><span class="hotkey-key">M</span> Midterms</div>
     <div class="hotkey-row"><span class="hotkey-key">L</span> Useful Links</div>
@@ -1167,7 +1167,7 @@
         const labels = {
             'home': 'Subjects',
             'recent': 'History',
-            'schedule': 'Task Schedule',
+            'schedule': 'Semester Map',
             'deadlines': 'Deadlines',
             'midterm': 'Midterms',
             'useful-links': 'Useful Links',
@@ -4906,10 +4906,10 @@
         if (active === 'schedule') {
             const modeText = scheduleViewMode === 'calendar' ? 'Calendar View' : 'List View';
             return {
-                title: `Task Schedule (${modeText})`,
+                title: `Semester Map (${modeText})`,
                 fileBase: `task-schedule-${scheduleViewMode}`,
                 bodyHtml: `<p>Screenshot export is recommended for exact table/calendar layout.</p>`,
-                text: `*Task Schedule (${modeText})*\n\nUse screenshot export for the exact table/calendar layout.`,
+                text: `*Semester Map (${modeText})*\n\nUse screenshot export for the exact table/calendar layout.`,
                 screenshotSelector: scheduleViewMode === 'calendar' ? '#deliverables-grid .calendar-container' : '#deliverables-grid'
             };
         }
