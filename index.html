@@ -1977,8 +1977,13 @@
             outerBar.style.cssText = 'background:rgba(8,2,18,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:10px 18px; display:flex; flex-direction:column; gap:10px;';
 
             // ROW 1 — TYPE chips (multi-select)
+            const dlTypeRowWrapper = document.createElement('div');
+            dlTypeRowWrapper.style.cssText = 'display:flex; align-items:center; gap:10px;';
+            const dlTypeRowLabel = document.createElement('span');
+            dlTypeRowLabel.textContent = 'Types';
+            dlTypeRowLabel.style.cssText = 'font-size:0.58rem; font-weight:700; color:rgba(196,181,219,0.45); text-transform:uppercase; letter-spacing:1.5px; white-space:nowrap; flex-shrink:0; min-width:46px;';
             const typeRow = document.createElement('div');
-            typeRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+            typeRow.style.cssText = 'flex:1; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
             const refreshTypeChips = () => {
                 typeRow.querySelectorAll('.fp-chip').forEach(b => {
                     const k = b.dataset.key;
@@ -2002,7 +2007,9 @@
                 });
                 typeRow.appendChild(btn);
             });
-            outerBar.appendChild(typeRow);
+            dlTypeRowWrapper.appendChild(dlTypeRowLabel);
+            dlTypeRowWrapper.appendChild(typeRow);
+            outerBar.appendChild(dlTypeRowWrapper);
 
             // ROW 2 — SUBJECT chips (multi-select, if multiple)
             if (hasMultipleSubs) {
@@ -2010,8 +2017,13 @@
                 rowDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
                 outerBar.appendChild(rowDivider);
 
+                const dlSubRowWrapper = document.createElement('div');
+                dlSubRowWrapper.style.cssText = 'display:flex; align-items:center; gap:10px;';
+                const dlSubRowLabel = document.createElement('span');
+                dlSubRowLabel.textContent = 'Subjects';
+                dlSubRowLabel.style.cssText = 'font-size:0.58rem; font-weight:700; color:rgba(196,181,219,0.45); text-transform:uppercase; letter-spacing:1.5px; white-space:nowrap; flex-shrink:0; min-width:46px;';
                 const subRow = document.createElement('div');
-                subRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+                subRow.style.cssText = 'flex:1; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
 
                 const refreshSubChips = () => {
                     subRow.querySelectorAll('.fp-chip').forEach(b => {
@@ -2064,7 +2076,9 @@
                     });
                     subRow.appendChild(btn);
                 });
-                outerBar.appendChild(subRow);
+                dlSubRowWrapper.appendChild(dlSubRowLabel);
+                dlSubRowWrapper.appendChild(subRow);
+                outerBar.appendChild(dlSubRowWrapper);
 
                 // Apply single-subject color on initial render
                 if (deadlineSubFilter.size === 1) {
@@ -2381,9 +2395,21 @@
             ulTogBtn.innerHTML = getUlTogLabel(open);
         };
 
-        // ROW 1 — Subject chips (multi-select)
+        // Helper to sync clear button visibility based on either filter
+        const syncUlClear = () => {
+            const active = currentUsefulBadgeFilters.size > 0 || currentUsefulSubject.size > 0;
+            ulClearDivider.style.display = active ? '' : 'none';
+            ulClearRow.style.display = active ? 'flex' : 'none';
+        };
+
+        // ROW 1 — Subject chips (multi-select) — wrapped with label
+        const subRowWrapper = document.createElement('div');
+        subRowWrapper.style.cssText = 'display:flex; align-items:center; gap:10px;';
+        const subRowLabel = document.createElement('span');
+        subRowLabel.textContent = 'Subjects';
+        subRowLabel.style.cssText = 'font-size:0.58rem; font-weight:700; color:rgba(196,181,219,0.45); text-transform:uppercase; letter-spacing:1.5px; white-space:nowrap; flex-shrink:0; min-width:46px;';
         const subChipRow = document.createElement('div');
-        subChipRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+        subChipRow.style.cssText = 'flex:1; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
 
         const refreshUlSubChips = () => {
             subChipRow.querySelectorAll('.fp-chip').forEach(b => {
@@ -2412,6 +2438,7 @@
             refreshUlSubChips();
             refreshUlTog();
             renderUsefulLinksContent();
+            if (typeof syncUlClear === 'function') syncUlClear();
         });
         subChipRow.appendChild(allSubChip);
         activeSubjects.forEach(s => {
@@ -2427,10 +2454,13 @@
                 refreshUlSubChips();
                 refreshUlTog();
                 renderUsefulLinksContent();
+                if (typeof syncUlClear === 'function') syncUlClear();
             });
             subChipRow.appendChild(btn);
         });
-        ulOuterBar.appendChild(subChipRow);
+        subRowWrapper.appendChild(subRowLabel);
+        subRowWrapper.appendChild(subChipRow);
+        ulOuterBar.appendChild(subRowWrapper);
 
         // ROW 2 — Badge chips (if any badges exist)
         if (allBadgeSet.size > 0) {
@@ -2438,8 +2468,13 @@
             bdivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
             ulOuterBar.appendChild(bdivider);
 
+            const badgeRowWrapper = document.createElement('div');
+            badgeRowWrapper.style.cssText = 'display:flex; align-items:center; gap:10px;';
+            const badgeRowLabel = document.createElement('span');
+            badgeRowLabel.textContent = 'Badges';
+            badgeRowLabel.style.cssText = 'font-size:0.58rem; font-weight:700; color:rgba(196,181,219,0.45); text-transform:uppercase; letter-spacing:1.5px; white-space:nowrap; flex-shrink:0; min-width:46px;';
             const badgeChipRow = document.createElement('div');
-            badgeChipRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+            badgeChipRow.style.cssText = 'flex:1; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
             allBadgeSet.forEach((color, text) => {
                 const isActive = currentUsefulBadgeFilters.has(text);
                 const btn = document.createElement('button');
@@ -2462,13 +2497,14 @@
                         b.style.cssText = act ? `background:${bc}33; border-color:${bc}; color:${bc}; box-shadow:0 0 8px ${bc}44;` : '';
                     });
                     ulClearRow.style.display = (currentUsefulBadgeFilters.size > 0 || currentUsefulSubject.size > 0) ? 'flex' : 'none';
-                    ulClearDivider.style.display = ulClearRow.style.display;
-                    refreshUlTog();
+                    ulClearDivider.style.display = ulClearRow.style.display;                    refreshUlTog();
                     renderUsefulLinksContent();
                 });
                 badgeChipRow.appendChild(btn);
             });
-            ulOuterBar.appendChild(badgeChipRow);
+            badgeRowWrapper.appendChild(badgeRowLabel);
+            badgeRowWrapper.appendChild(badgeChipRow);
+            ulOuterBar.appendChild(badgeRowWrapper);
         }
 
         const ulClearDivider = document.createElement('div');
@@ -2483,8 +2519,7 @@
             currentUsefulBadgeFilters = new Set();
             currentUsefulSubject = new Set();
             fpOpenState.usefulBadges = true;
-            renderUsefulLinksContent();
-            refreshUlTog();
+            showUsefulLinks(false);
         });
         ulClearRow.appendChild(ulClearBtn);
         ulOuterBar.appendChild(ulClearRow);
@@ -2751,8 +2786,13 @@
         outerBar.style.cssText = 'background:rgba(8,2,18,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:10px 18px; display:flex; flex-direction:column; gap:10px;';
 
         // ROW 1 — TYPE chips (multi-select, no "All" chip — empty Set = All)
+        const typeRowWrapper = document.createElement('div');
+        typeRowWrapper.style.cssText = 'display:flex; align-items:center; gap:10px;';
+        const typeRowLabel = document.createElement('span');
+        typeRowLabel.textContent = 'Types';
+        typeRowLabel.style.cssText = 'font-size:0.58rem; font-weight:700; color:rgba(196,181,219,0.45); text-transform:uppercase; letter-spacing:1.5px; white-space:nowrap; flex-shrink:0; min-width:46px;';
         const typeRow = document.createElement('div');
-        typeRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+        typeRow.style.cssText = 'flex:1; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
         const refreshTypeChips = () => {
             typeRow.querySelectorAll('.fp-chip').forEach(b => {
                 const k = b.dataset.key;
@@ -2776,7 +2816,9 @@
             });
             typeRow.appendChild(btn);
         });
-        outerBar.appendChild(typeRow);
+        typeRowWrapper.appendChild(typeRowLabel);
+        typeRowWrapper.appendChild(typeRow);
+        outerBar.appendChild(typeRowWrapper);
 
         // ROW 2 — SUBJECT chips (multi-select, if multiple subjects exist)
         if (hasMultipleSubs) {
@@ -2784,8 +2826,13 @@
             rowDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
             outerBar.appendChild(rowDivider);
 
+            const subRowWrapper2 = document.createElement('div');
+            subRowWrapper2.style.cssText = 'display:flex; align-items:center; gap:10px;';
+            const subRowLabel2 = document.createElement('span');
+            subRowLabel2.textContent = 'Subjects';
+            subRowLabel2.style.cssText = 'font-size:0.58rem; font-weight:700; color:rgba(196,181,219,0.45); text-transform:uppercase; letter-spacing:1.5px; white-space:nowrap; flex-shrink:0; min-width:46px;';
             const subRow = document.createElement('div');
-            subRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+            subRow.style.cssText = 'flex:1; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
 
             const refreshSubChips = () => {
                 subRow.querySelectorAll('.fp-chip').forEach(b => {
@@ -2831,7 +2878,9 @@
                 });
                 subRow.appendChild(btn);
             });
-            outerBar.appendChild(subRow);
+            subRowWrapper2.appendChild(subRowLabel2);
+            subRowWrapper2.appendChild(subRow);
+            outerBar.appendChild(subRowWrapper2);
         }
 
         // Clear all button
