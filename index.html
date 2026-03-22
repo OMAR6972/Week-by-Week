@@ -1600,6 +1600,7 @@
             const section = document.createElement('div');
             section.className = 'fp-bar-section';
             section.dataset.historyFilterSection = '1';
+            section.style.marginBottom = '-22px'; // cancel most of the 30px grid gap
 
             const togBtn = document.createElement('button');
             togBtn.className = 'fp-toggle' + (anyFilter ? ' has-filter open' : '');
@@ -4925,14 +4926,15 @@
         if (active === 'directory') {
             const staffData = (window.STAFF_DATA || []).filter(person => {
                 if (directoryRoleFilter !== 'all' && person.role !== directoryRoleFilter) return false;
-                if (directorySubFilter !== 'all' && !(person.subjects || []).includes(directorySubFilter)) return false;
+                if (directorySubFilter.size > 0 && !(person.subjects || []).some(s => directorySubFilter.has(s))) return false;
                 return true;
             });
-            const title = directorySubFilter !== 'all' ? `Staff Contacts (${directorySubFilter})` : 'Staff Contacts';
+            const subLabel = directorySubFilter.size === 0 ? null : [...directorySubFilter].join(', ');
+            const title = subLabel ? `Staff Contacts (${subLabel})` : 'Staff Contacts';
             const grouped = {};
             staffData.forEach(person => {
                 (person.subjects || []).forEach(subCode => {
-                    if (directorySubFilter !== 'all' && subCode !== directorySubFilter) return;
+                    if (directorySubFilter.size > 0 && !directorySubFilter.has(subCode)) return;
                     if (!grouped[subCode]) grouped[subCode] = [];
                     if (!grouped[subCode].includes(person)) grouped[subCode].push(person);
                 });
@@ -5795,7 +5797,7 @@
 
     // --- Staff Directory ---
     let directoryRoleFilter = 'all';
-    let directorySubFilter = 'all';
+    let directorySubFilter = new Set();
 
     function showDirectory(push = true) {
         renderDirectory();
@@ -5822,16 +5824,16 @@
             { key: 'ta',     label: '👨‍🏫 TAs',    color: '#34c759' }
         ];
 
-        const anyActive = directoryRoleFilter !== 'all' || directorySubFilter !== 'all';
+        const anyActive = directoryRoleFilter !== 'all' || directorySubFilter.size > 0;
         const isOpen = fpOpenState.directory || false;
 
         // Toggle button
         const togBtn = document.createElement('button');
         const getTogLabel = (open) => {
-            if (directoryRoleFilter !== 'all' || directorySubFilter !== 'all') {
+            if (directoryRoleFilter !== 'all' || directorySubFilter.size > 0) {
                 const parts = [];
                 if (directoryRoleFilter !== 'all') { const r = roles.find(x=>x.key===directoryRoleFilter); if(r) parts.push(r.label.replace(/^\S+\s/,'')); }
-                if (directorySubFilter !== 'all') parts.push(directorySubFilter);
+                if (directorySubFilter.size > 0) [...directorySubFilter].forEach(s => parts.push(s));
                 return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open?'▲':'▼'}</span>`;
             }
             return `Filter <span class="fp-arrow">${open?'▲':'▼'}</span>`;
@@ -5847,7 +5849,7 @@
 
         const refreshTog = () => {
             const open = collapsible.classList.contains('open');
-            const active = directoryRoleFilter !== 'all' || directorySubFilter !== 'all';
+            const active = directoryRoleFilter !== 'all' || directorySubFilter.size > 0;
             togBtn.className = 'fp-toggle' + (active ? ' has-filter' : '') + (open ? ' open' : '');
             togBtn.innerHTML = getTogLabel(open);
         };
@@ -5911,7 +5913,7 @@
                 subRow.querySelectorAll('.fp-chip').forEach(b => {
                     const k = b.dataset.key;
                     const isAll = k === '__all__';
-                    const act = isAll ? directorySubFilter === 'all' : directorySubFilter === k;
+                    const act = isAll ? directorySubFilter.size === 0 : directorySubFilter.has(k);
                     b.classList.toggle('active', act);
                     if (act && isAll) b.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
                     else if (act) { const col = getSubjectColor(k); b.style.cssText = `background:${getSubjectBg(k)}; border-color:${col}; color:${col};`; }
@@ -5920,12 +5922,12 @@
             };
 
             const allSubBtn = document.createElement('button');
-            allSubBtn.className = 'fp-chip' + (directorySubFilter === 'all' ? ' active' : '');
+            allSubBtn.className = 'fp-chip' + (directorySubFilter.size === 0 ? ' active' : '');
             allSubBtn.textContent = 'All';
             allSubBtn.dataset.key = '__all__';
-            if (directorySubFilter === 'all') allSubBtn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+            if (directorySubFilter.size === 0) allSubBtn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
             allSubBtn.addEventListener('click', () => {
-                directorySubFilter = 'all';
+                directorySubFilter.clear();
                 refreshSubChips();
                 refreshTog();
                 syncDirClear();
@@ -5936,12 +5938,12 @@
             subjects.forEach(sub => {
                 const color = getSubjectColor(sub);
                 const btn = document.createElement('button');
-                btn.className = 'fp-chip' + (directorySubFilter === sub ? ' active' : '');
+                btn.className = 'fp-chip' + (directorySubFilter.has(sub) ? ' active' : '');
                 btn.textContent = sub;
                 btn.dataset.key = sub;
-                if (directorySubFilter === sub) btn.style.cssText = `background:${getSubjectBg(sub)}; border-color:${color}; color:${color};`;
+                if (directorySubFilter.has(sub)) btn.style.cssText = `background:${getSubjectBg(sub)}; border-color:${color}; color:${color};`;
                 btn.addEventListener('click', () => {
-                    directorySubFilter = sub;
+                    if (directorySubFilter.has(sub)) directorySubFilter.delete(sub); else directorySubFilter.add(sub);
                     refreshSubChips();
                     refreshTog();
                     syncDirClear();
@@ -5965,7 +5967,7 @@
         dirClearBtn.innerHTML = '✕ Clear all filters';
         dirClearBtn.addEventListener('click', () => {
             directoryRoleFilter = 'all';
-            directorySubFilter = 'all';
+            directorySubFilter.clear();
             fpOpenState.directory = true;
             renderDirectory();
         });
@@ -5973,7 +5975,7 @@
         outerBar.appendChild(dirClearRow);
 
         const syncDirClear = () => {
-            const active = directoryRoleFilter !== 'all' || directorySubFilter !== 'all';
+            const active = directoryRoleFilter !== 'all' || directorySubFilter.size > 0;
             dirClearDivider.style.display = active ? '' : 'none';
             dirClearRow.style.display = active ? 'flex' : 'none';
         };
@@ -6001,7 +6003,7 @@
 
         let filtered = staffData;
         if (directoryRoleFilter !== 'all') filtered = filtered.filter(s => s.role === directoryRoleFilter);
-        if (directorySubFilter !== 'all') filtered = filtered.filter(s => s.subjects.includes(directorySubFilter));
+        if (directorySubFilter.size > 0) filtered = filtered.filter(s => s.subjects.some(sub => directorySubFilter.has(sub)));
 
         if (filtered.length === 0) {
             list.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666; margin-top:30px; font-style:italic;">No staff match this filter.</div>';
@@ -6011,7 +6013,7 @@
         const subjectGroups = {};
         filtered.forEach(person => {
             person.subjects.forEach(sub => {
-                if (directorySubFilter !== 'all' && directorySubFilter !== sub) return;
+                if (directorySubFilter.size > 0 && !directorySubFilter.has(sub)) return;
                 if (!subjectGroups[sub]) subjectGroups[sub] = [];
                 if (!subjectGroups[sub].includes(person)) subjectGroups[sub].push(person);
             });
