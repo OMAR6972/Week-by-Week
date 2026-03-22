@@ -359,6 +359,7 @@
         .fp-panel.open { display: block; }
         .fp-toggle-wrap { position: relative; display: inline-block; }
         .fp-toggle-wrap.centered .fp-panel { left: 50%; transform: translateX(-50%); }
+        @media (max-width: 480px) { .fp-panel { left: 50% !important; transform: translateX(-50%) !important; min-width: 90vw !important; max-width: 94vw !important; } }
         .fp-sep { height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent); margin: 14px 0 0; }
         .fp-row { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; justify-content: center; }
         .fp-row + .fp-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.07); }
@@ -2363,7 +2364,6 @@
                 showUsefulLinks(false,'All Links',currentUsefulSubject,[]);
             });
             ulClrRow.appendChild(ulClr);
-            badgePanel.appendChild(ulClrRow);
             // After each badge chip click, sync visibility
             fpRow.addEventListener('click', () => {
                 setTimeout(() => {
@@ -2371,6 +2371,7 @@
                 }, 0);
             });
             badgePanel.appendChild(fpRow);
+            badgePanel.appendChild(ulClrRow);
             filterBar.appendChild(badgePanel);
 
             // Wire toggle button
@@ -3394,30 +3395,63 @@
             (p.badges || []).forEach(b => { if (b.text && b.text.trim()) allBadgeMap.set(b.text.trim(), b.color || '#e91e8c'); });
         });
 
-        // Inline always-visible badge filter chips (original style)
+        // Always-visible inline chip bar (fp-chip style, centered, compact)
         if (allBadgeMap.size > 0) {
             const filterWrap = document.createElement('div');
-            filterWrap.style.cssText = 'grid-column:1/-1; display:flex; flex-wrap:wrap; gap:7px; margin-bottom:16px; align-items:center; justify-content:flex-start;';
+            filterWrap.style.cssText = 'grid-column:1/-1; margin-bottom:16px;';
+
+            const bar = document.createElement('div');
+            bar.className = 'fp-inline-bar';
+            bar.style.cssText = 'flex-wrap:wrap; justify-content:center; display:flex; gap:7px;';
 
             const allBtn = document.createElement('button');
-            allBtn.className = 'filter-btn' + (playlistBadgeFilters.size === 0 ? ' active' : '');
+            allBtn.className = 'fp-chip' + (playlistBadgeFilters.size === 0 ? ' active' : '');
             allBtn.textContent = 'All';
+            if (playlistBadgeFilters.size === 0) allBtn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+            allBtn.dataset.key = '__all__';
             allBtn.onclick = () => { playlistBadgeFilters.clear(); renderPlaylistGrid(); };
-            filterWrap.appendChild(allBtn);
+            bar.appendChild(allBtn);
+
+            const plClearRow = document.createElement('div');
+            plClearRow.style.cssText = 'display:' + (playlistBadgeFilters.size > 0 ? 'flex' : 'none') + '; justify-content:center; margin-top:6px;';
+            const plClearBtn = document.createElement('button');
+            plClearBtn.className = 'fp-clear-btn';
+            plClearBtn.innerHTML = '✕ Clear all filters';
+            plClearBtn.onclick = () => { playlistBadgeFilters.clear(); renderPlaylistGrid(); };
+            plClearRow.appendChild(plClearBtn);
 
             allBadgeMap.forEach((color, text) => {
                 const isActive = playlistBadgeFilters.has(text);
                 const btn = document.createElement('button');
-                btn.className = 'filter-btn' + (isActive ? ' active' : '');
+                btn.className = 'fp-chip' + (isActive ? ' active' : '');
                 btn.textContent = text;
+                btn.dataset.key = text;
                 if (isActive) btn.style.cssText = `background:${color}33; border-color:${color}; color:${color}; box-shadow:0 0 8px ${color}44;`;
                 btn.onclick = () => {
                     if (playlistBadgeFilters.has(text)) playlistBadgeFilters.delete(text);
                     else playlistBadgeFilters.add(text);
+                    // Update chip styles in-place
+                    bar.querySelectorAll('.fp-chip').forEach(b => {
+                        if (b.dataset.key === '__all__') {
+                            const allNow = playlistBadgeFilters.size === 0;
+                            b.classList.toggle('active', allNow);
+                            b.style.cssText = allNow ? 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;' : '';
+                        } else {
+                            const c = allBadgeMap.get(b.dataset.key) || '#e91e8c';
+                            const act = playlistBadgeFilters.has(b.dataset.key);
+                            b.classList.toggle('active', act);
+                            b.style.cssText = act ? `background:${c}33; border-color:${c}; color:${c}; box-shadow:0 0 8px ${c}44;` : '';
+                        }
+                    });
+                    plClearRow.style.display = playlistBadgeFilters.size > 0 ? 'flex' : 'none';
+                    // Re-render cards only (filter wrap stays)
                     renderPlaylistGrid();
                 };
-                filterWrap.appendChild(btn);
+                bar.appendChild(btn);
             });
+
+            filterWrap.appendChild(bar);
+            filterWrap.appendChild(plClearRow);
             grid.appendChild(filterWrap);
         }
 
