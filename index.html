@@ -2289,104 +2289,141 @@
             return;
         }
 
-        // ── Subject selector + badge filter ──
+        // ── Combined Filter toggle (subjects row + badges row) ──
         if (!_ulSkipFilterRebuild) {
 
-        // Row 1: subject dropdown + badges toggle — left-aligned
-        const subRow = document.createElement('div');
-        subRow.id = 'ul-filter-row1';
-        subRow.style.cssText = 'display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; justify-content:center;';
-        let selectHtml = `<select class="useful-select" onchange="showUsefulLinks(false,'All Links',this.value,[])">`;
-        selectHtml += `<option value="All Subjects" ${subjectFilter === 'All Subjects' ? 'selected' : ''}>All Subjects</option>`;
-        activeSubjects.forEach(s => { selectHtml += `<option value="${s.code}" ${subjectFilter === s.code ? 'selected' : ''}>${s.code} - ${s.name}</option>`; });
-        selectHtml += `</select>`;
-        const sw = document.createElement('span'); sw.innerHTML = selectHtml;
-        subRow.appendChild(sw.firstChild);
+        const anySubFilter = subjectFilter !== 'All Subjects';
+        const anyBadgeFilter = currentUsefulBadgeFilters.size > 0;
+        const anyUlActive = anySubFilter || anyBadgeFilter;
 
-        if (allBadgeSet.size > 0) {
-            const anyBadge = currentUsefulBadgeFilters.size > 0;
-            const badgeBtn = document.createElement('button');
-            badgeBtn.id = 'ul-badges-toggle';
-            badgeBtn.className = 'fp-toggle' + (anyBadge ? ' has-filter' : '') + (fpOpenState.usefulBadges ? ' open' : '');
-            badgeBtn.innerHTML = `🏷 Badges${anyBadge ? ` <span class="fp-badge">${currentUsefulBadgeFilters.size}</span>` : ''} <span class="fp-arrow">▼</span>`;
-            subRow.appendChild(badgeBtn);
-        }
-        filterBar.appendChild(subRow);
+        // Single "Filter ▼" toggle
+        const ulTogBtn = document.createElement('button');
+        ulTogBtn.id = 'ul-filter-toggle';
+        ulTogBtn.style.cssText = 'display:block; margin:0 auto 8px;';
+        const getUlTogLabel = (open) => {
+            if (anySubFilter || currentUsefulBadgeFilters.size > 0) {
+                const parts = [];
+                if (currentUsefulSubject !== 'All Subjects') parts.push(currentUsefulSubject);
+                if (currentUsefulBadgeFilters.size > 0) parts.push(`${currentUsefulBadgeFilters.size} badge${currentUsefulBadgeFilters.size>1?'s':''}`);
+                return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+            }
+            return `Filter <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+        };
+        ulTogBtn.className = 'fp-toggle' + (anyUlActive ? ' has-filter' : '') + (fpOpenState.usefulBadges ? ' open' : '');
+        ulTogBtn.innerHTML = getUlTogLabel(fpOpenState.usefulBadges);
+        filterBar.appendChild(ulTogBtn);
 
-        // Row 2: badge panel (below, full width, static position)
+        // Collapsible combined bar
+        const ulCollapsible = document.createElement('div');
+        ulCollapsible.className = 'fp-bar-collapsible' + (fpOpenState.usefulBadges ? ' open' : '');
+        ulCollapsible.style.cssText = 'flex-direction:column; gap:0; margin-bottom:12px; align-items:stretch;';
+
+        const ulOuterBar = document.createElement('div');
+        ulOuterBar.style.cssText = 'background:rgba(8,2,18,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:10px 18px; display:flex; flex-direction:column; gap:10px;';
+
+        const refreshUlTog = () => {
+            const open = ulCollapsible.classList.contains('open');
+            const active = currentUsefulSubject !== 'All Subjects' || currentUsefulBadgeFilters.size > 0;
+            ulTogBtn.className = 'fp-toggle' + (active ? ' has-filter' : '') + (open ? ' open' : '');
+            ulTogBtn.innerHTML = getUlTogLabel(open);
+        };
+
+        // ROW 1 — Subject chips
+        const subChipRow = document.createElement('div');
+        subChipRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+        const allSubChip = document.createElement('button');
+        allSubChip.className = 'fp-chip' + (subjectFilter === 'All Subjects' ? ' active' : '');
+        allSubChip.textContent = 'All';
+        allSubChip.dataset.key = 'All Subjects';
+        if (subjectFilter === 'All Subjects') allSubChip.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+        allSubChip.addEventListener('click', () => {
+            currentUsefulSubject = 'All Subjects';
+            currentUsefulBadgeFilters = new Set();
+            showUsefulLinks(false, 'All Links', 'All Subjects', []);
+        });
+        subChipRow.appendChild(allSubChip);
+        activeSubjects.forEach(s => {
+            const color = getSubjectColor(s.code);
+            const btn = document.createElement('button');
+            btn.className = 'fp-chip' + (subjectFilter === s.code ? ' active' : '');
+            btn.textContent = s.code;
+            btn.dataset.key = s.code;
+            if (subjectFilter === s.code) btn.style.cssText = `background:${getSubjectBg(s.code)}; border-color:${color}; color:${color};`;
+            btn.addEventListener('click', () => {
+                currentUsefulSubject = s.code;
+                currentUsefulBadgeFilters = new Set();
+                showUsefulLinks(false, 'All Links', s.code, []);
+            });
+            subChipRow.appendChild(btn);
+        });
+        ulOuterBar.appendChild(subChipRow);
+
+        // ROW 2 — Badge chips (if any badges exist)
         if (allBadgeSet.size > 0) {
-            const anyBadge = currentUsefulBadgeFilters.size > 0;
-            const badgePanel = document.createElement('div');
-            badgePanel.id = 'ul-badge-panel';
-            badgePanel.className = 'fp-panel' + (fpOpenState.usefulBadges ? ' open' : '');
-            badgePanel.style.cssText = 'position:static; transform:none; min-width:unset; max-width:unset; width:100%; margin-bottom:10px; box-sizing:border-box; display:' + (fpOpenState.usefulBadges ? 'block' : 'none') + ';';
-            const fpRow = document.createElement('div');
-            fpRow.className = 'fp-row'; fpRow.style.justifyContent = 'flex-start';
+            const bdivider = document.createElement('div');
+            bdivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
+            ulOuterBar.appendChild(bdivider);
+
+            const badgeChipRow = document.createElement('div');
+            badgeChipRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
             allBadgeSet.forEach((color, text) => {
                 const isActive = currentUsefulBadgeFilters.has(text);
                 const btn = document.createElement('button');
-                btn.className = 'filter-btn' + (isActive ? ' active' : '');
-                btn.textContent = text; btn.dataset.badgeColor = color;
+                btn.className = 'fp-chip' + (isActive ? ' active' : '');
+                btn.textContent = text;
+                btn.dataset.badgeText = text;
+                btn.dataset.badgeColor = color;
                 if (isActive) btn.style.cssText = `background:${color}33; border-color:${color}; color:${color}; box-shadow:0 0 8px ${color}44;`;
                 btn.addEventListener('click', () => {
                     fpOpenState.usefulBadges = true;
                     const next = new Set(currentUsefulBadgeFilters);
                     if (next.has(text)) next.delete(text); else next.add(text);
                     currentUsefulBadgeFilters = next;
-                    renderUsefulLinksContent();
-                    // Update chips in-place
-                    const pnl = document.getElementById('ul-badge-panel');
-                    if (pnl) pnl.querySelectorAll('.filter-btn').forEach(b => {
-                        if (b.textContent === '✕ Clear') return;
-                        const bc = b.dataset.badgeColor || '#e91e8c', bt = b.textContent.trim();
+                    // Update badge chip styles in-place
+                    badgeChipRow.querySelectorAll('.fp-chip').forEach(b => {
+                        const bt = b.dataset.badgeText; if (!bt) return;
+                        const bc = b.dataset.badgeColor || '#e91e8c';
                         const act = currentUsefulBadgeFilters.has(bt);
                         b.classList.toggle('active', act);
                         b.style.cssText = act ? `background:${bc}33; border-color:${bc}; color:${bc}; box-shadow:0 0 8px ${bc}44;` : '';
                     });
-                    // Update toggle
-                    const tog = document.getElementById('ul-badges-toggle');
-                    if (tog) {
-                        const anyB = currentUsefulBadgeFilters.size > 0;
-                        tog.classList.toggle('has-filter', anyB);
-                        tog.innerHTML = `🏷 Badges${anyB ? ` <span class="fp-badge">${currentUsefulBadgeFilters.size}</span>` : ''} <span class="fp-arrow open">▼</span>`;
-                    }
+                    ulClearRow.style.display = (currentUsefulBadgeFilters.size > 0 || currentUsefulSubject !== 'All Subjects') ? 'flex' : 'none';
+                    ulClearDivider.style.display = ulClearRow.style.display;
+                    refreshUlTog();
+                    renderUsefulLinksContent();
                 });
-                fpRow.appendChild(btn);
+                badgeChipRow.appendChild(btn);
             });
-            // Clear button — always in DOM, visible only when badges active
-            const ulClrRow = document.createElement('div');
-            ulClrRow.style.cssText = 'display:' + (anyBadge ? 'flex' : 'none') + '; justify-content:center; margin-top:6px;';
-            const ulClr = document.createElement('button');
-            ulClr.className = 'fp-clear-btn';
-            ulClr.innerHTML = '✕ Clear all filters';
-            ulClr.addEventListener('click', () => {
-                currentUsefulBadgeFilters = new Set();
-                fpOpenState.usefulBadges = true;
-                showUsefulLinks(false,'All Links',currentUsefulSubject,[]);
-            });
-            ulClrRow.appendChild(ulClr);
-            // After each badge chip click, sync visibility
-            fpRow.addEventListener('click', () => {
-                setTimeout(() => {
-                    ulClrRow.style.display = currentUsefulBadgeFilters.size > 0 ? 'flex' : 'none';
-                }, 0);
-            });
-            badgePanel.appendChild(fpRow);
-            badgePanel.appendChild(ulClrRow);
-            filterBar.appendChild(badgePanel);
-
-            // Wire toggle button
-            const badgeBtn = document.getElementById('ul-badges-toggle');
-            if (badgeBtn) {
-                badgeBtn.addEventListener('click', () => {
-                    const isOpen = badgePanel.classList.contains('open');
-                    badgePanel.classList.toggle('open', !isOpen);
-                    badgePanel.style.display = !isOpen ? 'block' : 'none';
-                    badgeBtn.classList.toggle('open', !isOpen);
-                    fpOpenState.usefulBadges = !isOpen;
-                });
-            }
+            ulOuterBar.appendChild(badgeChipRow);
         }
+
+        // Clear all row
+        const ulClearDivider = document.createElement('div');
+        ulClearDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px; display:' + (anyUlActive ? '' : 'none') + ';';
+        ulOuterBar.appendChild(ulClearDivider);
+        const ulClearRow = document.createElement('div');
+        ulClearRow.style.cssText = 'display:' + (anyUlActive ? 'flex' : 'none') + '; justify-content:center;';
+        const ulClearBtn = document.createElement('button');
+        ulClearBtn.className = 'fp-clear-btn';
+        ulClearBtn.innerHTML = '✕ Clear all filters';
+        ulClearBtn.addEventListener('click', () => {
+            currentUsefulBadgeFilters = new Set();
+            fpOpenState.usefulBadges = true;
+            showUsefulLinks(false, 'All Links', 'All Subjects', []);
+        });
+        ulClearRow.appendChild(ulClearBtn);
+        ulOuterBar.appendChild(ulClearRow);
+
+        ulCollapsible.appendChild(ulOuterBar);
+
+        ulTogBtn.addEventListener('click', () => {
+            const nowOpen = ulCollapsible.classList.contains('open');
+            ulCollapsible.classList.toggle('open', !nowOpen);
+            fpOpenState.usefulBadges = !nowOpen;
+            refreshUlTog();
+        });
+
+        filterBar.appendChild(ulCollapsible);
 
         } // end !_ulSkipFilterRebuild
 
@@ -2957,14 +2994,22 @@
             dayHeaders.forEach(d => { calHtml += `<div class="cal-day-header">${d}</div>`; });
 
             const semStartDate = window.CONFIG && window.CONFIG.semesterStart ? new Date(window.CONFIG.semesterStart + 'T00:00:00') : null;
-            for(let i = 0; i < firstDay; i++) {
+            // Calculate leading empty cells: day-of-week offset + any pre-semester days
+            let leadingEmpties = firstDay;
+            if (semStartDate) {
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const thisDate = new Date(yr, mo-1, d);
+                    if (thisDate < semStartDate) leadingEmpties++;
+                    else break;
+                }
+            }
+            for(let i = 0; i < leadingEmpties; i++) {
                 calHtml += `<div class="cal-day empty"></div>`;
             }
             for(let d = 1; d <= daysInMonth; d++) {
                 const thisDate = new Date(yr, mo-1, d);
                 if(semStartDate && thisDate < semStartDate) {
-                    calHtml += `<div class="cal-day empty" style="min-height:0;height:0;padding:0;border:none;"></div>`;
-                    continue;
+                    continue; // already accounted for in leadingEmpties, skip rendering
                 }
                 const dateKey = `${yr}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                 const isToday = dateKey === todayKey;
