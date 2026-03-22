@@ -675,6 +675,43 @@
             .gpa-tab-nav { max-width: 100%; }
             .gpa-view-toggle-wrap { display: none !important; }
         }
+
+        /* ── Custom link context menu ── */
+        #wbw-ctx-menu {
+            position: fixed;
+            z-index: 99999;
+            background: rgba(16, 4, 30, 0.97);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(233, 30, 140, 0.25);
+            border-radius: 12px;
+            padding: 5px;
+            min-width: 180px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 20px rgba(233,30,140,0.1);
+            animation: ctxFadeIn 0.12s ease;
+            pointer-events: auto;
+        }
+        @keyframes ctxFadeIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+        #wbw-ctx-menu button {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            width: 100%;
+            background: none;
+            border: none;
+            color: #c4b5db;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s, color 0.15s;
+            white-space: nowrap;
+        }
+        #wbw-ctx-menu button:hover { background: rgba(233,30,140,0.15); color: white; }
+        #wbw-ctx-menu button .ctx-icon { font-size: 0.9rem; opacity: 0.8; flex-shrink: 0; }
+        #wbw-ctx-menu hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 3px 0; }
     </style>
 </head>
 <body>
@@ -2615,6 +2652,7 @@
                     const noteHtml = p.note ? `<div style="color:var(--text-sub); font-size:0.8rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:500px;">${p.note.split('\n')[0]}</div>` : '';
                     row.innerHTML = `<span style="font-size:1.5rem; flex-shrink:0;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.95rem;">${p.title || 'Link'}</span>${badgeHtml}</div>${noteHtml}</div><span style="color:${color}; font-size:1rem; flex-shrink:0; opacity:0.6;">→</span>`;
                     row.onclick = () => { if(p.link && p.link !== '#' && p.link.trim() !== '') window.open(p.link, '_blank'); else alert('No link assigned.'); };
+                    if (p.link && p.link !== '#') row.dataset.link = p.link;
                     section.appendChild(row);
                 } else {
                     const gWrap = document.createElement('div');
@@ -2640,6 +2678,7 @@
                         const noteSnip = p.note ? `<div style="color:var(--text-sub); font-size:0.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.note.split('\n')[0]}</div>` : '';
                         subRow.innerHTML = `<span style="font-size:1rem;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.85rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnip}</div><span style="color:${color}; opacity:0.4; font-size:0.8rem;">→</span>`;
                         subRow.onclick = () => { if(p.link && p.link !== '#' && p.link.trim() !== '') window.open(p.link, '_blank'); else alert('No link assigned.'); };
+                        if (p.link && p.link !== '#') subRow.dataset.link = p.link;
                         gBody.appendChild(subRow);
                     });
                     gWrap.appendChild(gBody);
@@ -3709,6 +3748,7 @@
                 const noteHtml = (p.note) ? `<div style="color:var(--text-sub); margin-top:15px; font-size:0.9rem; line-height:1.4; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px; white-space:pre-wrap;">${p.note}</div>` : '';
                 el.innerHTML = `${badgeWrap}<div style="font-size:2.5rem; margin-bottom:10px">${p.icon || '🔗'}</div><div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${p.title || 'Link'}</div>${noteHtml}`;
                 el.onclick = () => { if(p.link && p.link !== "#" && p.link.trim() !== "") window.open(p.link, "_blank"); else alert("No link assigned."); };
+                if (p.link && p.link !== '#') el.dataset.link = p.link;
                 grid.appendChild(el);
             } else {
                 const groupEl = document.createElement('div');
@@ -3722,7 +3762,7 @@
                     const pBadgeHtml = pBadges.map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.55rem; padding:1px 6px; border-radius:6px; font-weight:800;">${b.text}</span>`).join('');
                     const noteSnippet = p.note ? `<div style="color:var(--text-sub); font-size:0.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.note.split('\n')[0]}</div>` : '';
                     const safeLink = (p.link || '').replace(/'/g, "\\'");
-                    innerHtml += `<div class="group-link-row" onclick="window.open('${safeLink}','_blank')" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; transition:all 0.2s; margin-bottom:4px;"><span style="font-size:1.2rem;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.9rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnippet}</div><span style="color:${color}; opacity:0.5; font-size:0.9rem;">→</span></div>`;
+                    innerHtml += `<div class="group-link-row" onclick="window.open('${safeLink}','_blank')" data-link="${safeLink}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; transition:all 0.2s; margin-bottom:4px;"><span style="font-size:1.2rem;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.9rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnippet}</div><span style="color:${color}; opacity:0.5; font-size:0.9rem;">→</span></div>`;
                 });
                 groupEl.innerHTML = innerHtml;
                 grid.appendChild(groupEl);
@@ -3998,6 +4038,7 @@
                             if(res.link && res.link !== "#") window.open(res.link, "_blank");
                             else alert("No link set.");
                         };
+                        if (res.link && res.link !== '#') el.dataset.link = res.link;
                         grid.appendChild(el);
                     }
                 }
@@ -4049,6 +4090,7 @@
                         if(val.link && val.link !== "#") window.open(val.link, "_blank");
                         else alert("No link set.");
                     };
+                    if (val.link && val.link !== '#') el.dataset.link = val.link;
                     grid.appendChild(el);
                 }
             });
@@ -5880,10 +5922,11 @@
                 ${teamsHtml}
             `;
             if (person.teamsLink) {
+                const resolvedLink = getResolvedTeamsLink(person.teamsLink);
                 row.onclick = () => {
-                    const link = getResolvedTeamsLink(person.teamsLink);
-                    if (link) window.open(link, '_blank', 'noopener');
+                    if (resolvedLink) window.open(resolvedLink, '_blank', 'noopener');
                 };
+                if (resolvedLink) row.dataset.link = resolvedLink;
             }
             section.appendChild(row);
         });
@@ -6884,6 +6927,90 @@
             showToast('❌ Failed to parse data. Make sure you copied the entire string.', 'locked');
         }
     }
+
+    // ── Global link context menu ──────────────────────────────────────────────
+    (function() {
+        let menu = null;
+
+        function closeMenu() {
+            if (menu) { menu.remove(); menu = null; }
+        }
+
+        function findLink(el) {
+            // Walk up DOM from target — find data-link attr or <a href>
+            let node = el;
+            while (node && node !== document.body) {
+                if (node.dataset && node.dataset.link && node.dataset.link.trim()) return node.dataset.link.trim();
+                if (node.tagName === 'A' && node.href && !node.href.startsWith('javascript')) return node.href;
+                node = node.parentElement;
+            }
+            return null;
+        }
+
+        function showMenu(x, y, url) {
+            closeMenu();
+            menu = document.createElement('div');
+            menu.id = 'wbw-ctx-menu';
+
+            const openBtn = document.createElement('button');
+            openBtn.innerHTML = '<span class="ctx-icon">↗</span> Open in new tab';
+            openBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.open(url, '_blank', 'noopener');
+                closeMenu();
+            });
+
+            const sep = document.createElement('hr');
+
+            const copyBtn = document.createElement('button');
+            copyBtn.innerHTML = '<span class="ctx-icon">🔗</span> Copy link';
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        copyBtn.innerHTML = '<span class="ctx-icon">✓</span> Copied!';
+                        copyBtn.style.color = '#34c759';
+                        setTimeout(closeMenu, 800);
+                    }).catch(() => fallbackCopyCtx(url, copyBtn));
+                } else {
+                    fallbackCopyCtx(url, copyBtn);
+                }
+            });
+
+            menu.appendChild(openBtn);
+            menu.appendChild(sep);
+            menu.appendChild(copyBtn);
+            document.body.appendChild(menu);
+
+            // Position — keep inside viewport
+            const mw = 190, mh = 80;
+            const vw = window.innerWidth, vh = window.innerHeight;
+            menu.style.left = (x + mw > vw ? vw - mw - 8 : x) + 'px';
+            menu.style.top  = (y + mh > vh ? y - mh : y) + 'px';
+        }
+
+        function fallbackCopyCtx(url, btn) {
+            const ta = document.createElement('textarea');
+            ta.value = url;
+            ta.style.cssText = 'position:fixed; opacity:0;';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); btn.innerHTML = '<span class="ctx-icon">✓</span> Copied!'; btn.style.color = '#34c759'; } catch(_) { btn.innerHTML = '<span class="ctx-icon">✗</span> Failed'; }
+            document.body.removeChild(ta);
+            setTimeout(closeMenu, 800);
+        }
+
+        document.addEventListener('contextmenu', function(e) {
+            const url = findLink(e.target);
+            if (!url) { closeMenu(); return; } // no link — let browser handle it
+            e.preventDefault();
+            showMenu(e.clientX, e.clientY, url);
+        });
+
+        document.addEventListener('click', closeMenu);
+        document.addEventListener('scroll', closeMenu, true);
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeMenu(); });
+    })();
 </script>
 </body>
 </html>
