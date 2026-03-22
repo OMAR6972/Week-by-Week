@@ -1084,11 +1084,11 @@
     let currSub = null;
     let currentSubjectView = 'weeks';
     let playlistBadgeFilters = new Set();
-    let historySubFilter = 'All';
+    let historySubFilter = new Set();
     // Filter panel open states — survive re-renders
     let fpOpenState = { schedule: false, deadlines: false, usefulBadges: false, playlist: false, history: false };
-    let deadlineSubFilter = 'All';
-    let deadlineTypeFilter = 'all';
+    let deadlineSubFilter = new Set();
+    let deadlineTypeFilter = new Set();
     let midtermHiddenSet = (() => {
         try { return new Set(JSON.parse(localStorage.getItem('midtermHidden') || '[]')); }
         catch(e) { return new Set(); }
@@ -1097,7 +1097,7 @@
         try { localStorage.setItem('midtermHidden', JSON.stringify([...midtermHiddenSet])); } catch(e) {}
     }
     let currentUsefulFilter = 'All Links';
-    let currentUsefulSubject = 'All Subjects';
+    let currentUsefulSubject = new Set(); // multi-select subject filter
     let currentUsefulBadgeFilters = new Set(); // multi-select badge filters
     let subjectViewFilters = {};
     let weekNavPrev = null, weekNavNext = null, weekNavFrom = 'weeks';
@@ -1276,7 +1276,7 @@
                 else if(event.state.page === 'schedule') showSchedule(false, event.state.from || 'home');
                 else if(event.state.page === 'deadlines') showDeadlines(false);
                 else if(event.state.page === 'midterm') showMidterms(false, event.state.from || 'home');
-                else if(event.state.page === 'useful-links') showUsefulLinks(false, event.state.filter || currentUsefulFilter, event.state.subject || currentUsefulSubject);
+                else if(event.state.page === 'useful-links') showUsefulLinks(false, event.state.filter || currentUsefulFilter, event.state.subject || null);
                 else if(event.state.page === 'directory') showDirectory(false);
                 else if(event.state.page === 'timetable') showTimetable(false);
                 else if(event.state.page === 'gpa') showGpa(false);
@@ -1542,8 +1542,7 @@
         });
 
         if (allSubCodes.size > 1) {
-            const anyFilter = historySubFilter !== 'All';
-            // Outer section: toggle button + collapsible bar
+            const anyFilter = historySubFilter.size > 0;
             const section = document.createElement('div');
             section.className = 'fp-bar-section';
             section.dataset.historyFilterSection = '1';
@@ -1551,9 +1550,15 @@
             const togBtn = document.createElement('button');
             togBtn.className = 'fp-toggle' + (anyFilter ? ' has-filter open' : '');
             if (anyFilter) {
-                const col = getSubjectColor(historySubFilter);
-                togBtn.innerHTML = `Subject: <span class="fp-active-label">${historySubFilter}</span> <span class="fp-arrow">▲</span>`;
-                togBtn.style.cssText = `border-color:${col}; color:${col}; background:${col}22; box-shadow:0 0 12px ${col}44;`;
+                if (historySubFilter.size === 1) {
+                    const col = getSubjectColor([...historySubFilter][0]);
+                    togBtn.innerHTML = `Subject: <span class="fp-active-label">${[...historySubFilter][0]}</span> <span class="fp-arrow">▲</span>`;
+                    togBtn.style.cssText = `border-color:${col}; color:${col}; background:${col}22; box-shadow:0 0 12px ${col}44;`;
+                } else {
+                    const names = [...historySubFilter].join(', ');
+                    togBtn.innerHTML = `Subject: <span class="fp-active-label">${names}</span> <span class="fp-arrow">▲</span>`;
+                    togBtn.style.cssText = `border-color:#c4b5db; color:#c4b5db; background:rgba(196,181,219,0.12); box-shadow:0 0 12px rgba(196,181,219,0.3);`;
+                }
             } else {
                 togBtn.innerHTML = `Subject <span class="fp-arrow">▼</span>`;
             }
@@ -1561,22 +1566,68 @@
             const bar = document.createElement('div');
             bar.className = 'fp-bar-collapsible fp-inline-bar' + (fpOpenState.history ? ' open' : '');
 
+            const refreshHistoryTog = () => {
+                const open = bar.classList.contains('open');
+                const arrow = open ? '▲' : '▼';
+                if (historySubFilter.size === 0) {
+                    togBtn.className = 'fp-toggle' + (open ? ' open' : '');
+                    togBtn.innerHTML = `Subject <span class="fp-arrow">${arrow}</span>`;
+                    togBtn.style.cssText = '';
+                } else if (historySubFilter.size === 1) {
+                    const col = getSubjectColor([...historySubFilter][0]);
+                    togBtn.className = 'fp-toggle has-filter' + (open ? ' open' : '');
+                    togBtn.innerHTML = `Subject: <span class="fp-active-label">${[...historySubFilter][0]}</span> <span class="fp-arrow">${arrow}</span>`;
+                    togBtn.style.cssText = `border-color:${col}; color:${col}; background:${col}22; box-shadow:0 0 12px ${col}44;`;
+                } else {
+                    const names = [...historySubFilter].join(', ');
+                    togBtn.className = 'fp-toggle has-filter' + (open ? ' open' : '');
+                    togBtn.innerHTML = `Subject: <span class="fp-active-label">${names}</span> <span class="fp-arrow">${arrow}</span>`;
+                    togBtn.style.cssText = `border-color:#c4b5db; color:#c4b5db; background:rgba(196,181,219,0.12); box-shadow:0 0 12px rgba(196,181,219,0.3);`;
+                }
+            };
+
+            const refreshHistoryChips = () => {
+                bar.querySelectorAll('.fp-chip').forEach(b => {
+                    const code = b.dataset.code;
+                    if (code === '') {
+                        const isAll = historySubFilter.size === 0;
+                        b.classList.toggle('active', isAll);
+                        b.style.cssText = isAll ? 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;' : '';
+                    } else {
+                        const act = historySubFilter.has(code);
+                        b.classList.toggle('active', act);
+                        const col = getSubjectColor(code);
+                        b.style.cssText = act ? `background:${getSubjectBg(code)}; border-color:${col}; color:${col};` : '';
+                    }
+                });
+            };
+
             const allChip = document.createElement('button');
-            allChip.className = 'fp-chip' + (historySubFilter === 'All' ? ' active' : '');
+            allChip.className = 'fp-chip' + (historySubFilter.size === 0 ? ' active' : '');
             allChip.textContent = 'All';
             allChip.dataset.code = '';
-            if (historySubFilter === 'All') allChip.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
-            allChip.onclick = () => { historySubFilter = 'All'; renderHistoryCards(list, displayWithFilteredBatch, displayItems); updateHistoryFilterUI(section); };
+            if (historySubFilter.size === 0) allChip.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+            allChip.onclick = () => {
+                historySubFilter.clear();
+                refreshHistoryChips();
+                refreshHistoryTog();
+                renderHistoryCards(list, displayWithFilteredBatch, displayItems);
+            };
             bar.appendChild(allChip);
 
             allSubCodes.forEach(code => {
                 const color = getSubjectColor(code);
                 const chip = document.createElement('button');
-                chip.className = 'fp-chip' + (historySubFilter === code ? ' active' : '');
+                chip.className = 'fp-chip' + (historySubFilter.has(code) ? ' active' : '');
                 chip.textContent = code;
                 chip.dataset.code = code;
-                if (historySubFilter === code) chip.style.cssText = `background:${getSubjectBg(code)}; border-color:${color}; color:${color};`;
-                chip.onclick = () => { historySubFilter = code; renderHistoryCards(list, displayWithFilteredBatch, displayItems); updateHistoryFilterUI(section); };
+                if (historySubFilter.has(code)) chip.style.cssText = `background:${getSubjectBg(code)}; border-color:${color}; color:${color};`;
+                chip.onclick = () => {
+                    if (historySubFilter.has(code)) historySubFilter.delete(code); else historySubFilter.add(code);
+                    refreshHistoryChips();
+                    refreshHistoryTog();
+                    renderHistoryCards(list, displayWithFilteredBatch, displayItems);
+                };
                 bar.appendChild(chip);
             });
 
@@ -1585,8 +1636,7 @@
                 bar.classList.toggle('open', !isOpen);
                 togBtn.classList.toggle('open', !isOpen);
                 fpOpenState.history = !isOpen;
-                const arrow = togBtn.querySelector('.fp-arrow');
-                if (arrow) arrow.textContent = !isOpen ? '▲' : '▼';
+                refreshHistoryTog();
             });
 
             section.appendChild(togBtn);
@@ -1594,18 +1644,16 @@
             list.appendChild(section);
         }
 
-        // Apply subject filter
-        const filteredDisplay = historySubFilter === 'All' ? displayItems : displayItems.filter(e => {
-            if (e.type === 'week') return e.item.subCode === historySubFilter;
-            if (e.type === 'res-single') return e.item.subCode === historySubFilter;
-            if (e.type === 'res-batch') return e.items.some(i => i.subCode === historySubFilter);
+        const filteredDisplay = historySubFilter.size === 0 ? displayItems : displayItems.filter(e => {
+            if (e.type === 'week') return historySubFilter.has(e.item.subCode);
+            if (e.type === 'res-single') return historySubFilter.has(e.item.subCode);
+            if (e.type === 'res-batch') return e.items.some(i => historySubFilter.has(i.subCode));
             return true;
         });
 
-        // For batch entries filtered to a specific subject, clone and filter internal items
         const displayWithFilteredBatch = filteredDisplay.map(e => {
-            if (e.type === 'res-batch' && historySubFilter !== 'All') {
-                const filtered = e.items.filter(i => i.subCode === historySubFilter);
+            if (e.type === 'res-batch' && historySubFilter.size > 0) {
+                const filtered = e.items.filter(i => historySubFilter.has(i.subCode));
                 if (filtered.length === 1) return { type: 'res-single', item: filtered[0], timestamp: filtered[0].timestamp };
                 return { ...e, items: filtered };
             }
@@ -1687,38 +1735,7 @@
     }
 
     function updateHistoryFilterUI(section) {
-        if (!section) return;
-        // Update chips
-        section.querySelectorAll('.fp-chip').forEach(btn => {
-            const code = btn.dataset.code || '';
-            const isActive = (code === '' && historySubFilter === 'All') || (code === historySubFilter);
-            btn.classList.toggle('active', isActive);
-            if (isActive && code) {
-                const col = getSubjectColor(code);
-                btn.style.cssText = `background:${getSubjectBg(code)}; border-color:${col}; color:${col};`;
-            } else if (isActive) {
-                btn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
-            } else {
-                btn.style.cssText = '';
-            }
-        });
-        // Update toggle button label
-        const tog = section.querySelector('.fp-toggle');
-        const bar = section.querySelector('.fp-bar-collapsible');
-        if (tog) {
-            const anyFilter = historySubFilter !== 'All';
-            const isOpen = bar && bar.classList.contains('open');
-            if (anyFilter) {
-                const col = getSubjectColor(historySubFilter);
-                tog.className = 'fp-toggle has-filter' + (isOpen ? ' open' : '');
-                tog.innerHTML = `Subject: <span class="fp-active-label">${historySubFilter}</span> <span class="fp-arrow">${isOpen ? '▲' : '▼'}</span>`;
-                tog.style.cssText = `border-color:${col}; color:${col}; background:${col}22; box-shadow:0 0 12px ${col}44;`;
-            } else {
-                tog.className = 'fp-toggle' + (isOpen ? ' open' : '');
-                tog.innerHTML = `Subject <span class="fp-arrow">${isOpen ? '▲' : '▼'}</span>`;
-                tog.style.cssText = '';
-            }
-        }
+        // Filter UI is now updated inline via refreshHistoryChips / refreshHistoryTog
     }
 
     function renderHistoryCards(list, displayWithFilteredBatch, displayItems) {
@@ -1727,16 +1744,15 @@
         Array.from(list.children).forEach(child => {
             if (child !== filterSection) child.remove();
         });
-        // Re-apply subject filter
-        const filteredDisplay = historySubFilter === 'All' ? displayItems : displayItems.filter(e => {
-            if (e.type === 'week') return e.item.subCode === historySubFilter;
-            if (e.type === 'res-single') return e.item.subCode === historySubFilter;
-            if (e.type === 'res-batch') return e.items.some(i => i.subCode === historySubFilter);
+        const filteredDisplay = historySubFilter.size === 0 ? displayItems : displayItems.filter(e => {
+            if (e.type === 'week') return historySubFilter.has(e.item.subCode);
+            if (e.type === 'res-single') return historySubFilter.has(e.item.subCode);
+            if (e.type === 'res-batch') return e.items.some(i => historySubFilter.has(i.subCode));
             return true;
         });
         const toRender = filteredDisplay.map(e => {
-            if (e.type === 'res-batch' && historySubFilter !== 'All') {
-                const filtered = e.items.filter(i => i.subCode === historySubFilter);
+            if (e.type === 'res-batch' && historySubFilter.size > 0) {
+                const filtered = e.items.filter(i => historySubFilter.has(i.subCode));
                 if (filtered.length === 1) return { type: 'res-single', item: filtered[0], timestamp: filtered[0].timestamp };
                 return { ...e, items: filtered };
             }
@@ -1812,8 +1828,18 @@
 
     // --- DEADLINES LOGIC ---
     function showDeadlines(push = true, typeFilter = null, subFilter = null) {
-        if (typeFilter !== null) deadlineTypeFilter = typeFilter;
-        if (subFilter !== null) deadlineSubFilter = subFilter;
+        if (typeFilter !== null && typeFilter !== 'all') {
+            if (typeFilter instanceof Set) deadlineTypeFilter = typeFilter;
+            else { deadlineTypeFilter = new Set(); } // 'all' or null = clear
+        } else if (typeFilter === 'all') {
+            deadlineTypeFilter = new Set();
+        }
+        if (subFilter !== null && subFilter !== 'All') {
+            if (subFilter instanceof Set) deadlineSubFilter = subFilter;
+            else { deadlineSubFilter = new Set(); }
+        } else if (subFilter === 'All') {
+            deadlineSubFilter = new Set();
+        }
 
         const ongoingContainer = document.getElementById('ongoing-container');
         const ongoingList = document.getElementById('ongoing-list');
@@ -1906,7 +1932,6 @@
             filterBarEl.innerHTML = '';
 
             const typeChips = [
-                { key: 'all',        label: 'All',           color: '#00E5FF' },
                 { key: 'quiz',       label: '🧠 Quizzes',    color: '#af52de' },
                 { key: 'assignment', label: '📝 Assignments', color: '#007aff' },
                 { key: 'project',    label: '🚀 Projects',    color: '#34c759' },
@@ -1918,20 +1943,17 @@
                 if (item.task && item.task.sub && item.task.sub !== 'NEWS') subCodesSet.add(item.task.sub);
             });
             const hasMultipleSubs = subCodesSet.size > 1;
-            const subChips = [{ key: 'All', label: 'All Subjects' }];
-            subCodesSet.forEach(code => subChips.push({ key: code, label: code, color: getSubjectColor(code) }));
 
-            const anyActive = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+            const anyActive = deadlineTypeFilter.size > 0 || deadlineSubFilter.size > 0;
             const isOpen = fpOpenState.deadlines;
 
-            // Toggle button centred
             const togBtn = document.createElement('button');
             const getTogLabel = (open) => {
-                const active = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+                const active = deadlineTypeFilter.size > 0 || deadlineSubFilter.size > 0;
                 if (active) {
                     const parts = [];
-                    if (deadlineTypeFilter !== 'all') { const c = typeChips.find(t=>t.key===deadlineTypeFilter); if(c) parts.push(c.label.replace(/^\S+\s/,'')); }
-                    if (deadlineSubFilter !== 'All') parts.push(deadlineSubFilter);
+                    deadlineTypeFilter.forEach(k => { const c = typeChips.find(t=>t.key===k); if(c) parts.push(c.label.replace(/^\S+\s/,'')); });
+                    deadlineSubFilter.forEach(s => parts.push(s));
                     return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
                 }
                 return `Filter <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
@@ -1940,43 +1962,41 @@
             togBtn.innerHTML = getTogLabel(isOpen);
             filterBarEl.appendChild(togBtn);
 
-            // Single combined collapsible bar (one container, two inner rows)
             const collapsible = document.createElement('div');
             collapsible.className = 'fp-bar-collapsible' + (isOpen ? ' open' : '');
             collapsible.style.cssText = 'flex-direction:column; gap:0; margin-top:8px; margin-bottom:18px; align-items:stretch;';
 
             const refreshTog = () => {
                 const open = collapsible.classList.contains('open');
-                const active = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+                const active = deadlineTypeFilter.size > 0 || deadlineSubFilter.size > 0;
                 togBtn.className = 'fp-toggle' + (active ? ' has-filter' : '') + (open ? ' open' : '');
                 togBtn.innerHTML = getTogLabel(open);
             };
 
-            // One outer wrapper bar that holds both rows
             const outerBar = document.createElement('div');
             outerBar.style.cssText = 'background:rgba(8,2,18,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:10px 18px; display:flex; flex-direction:column; gap:10px;';
 
-            // ROW 1 — TYPE chips
+            // ROW 1 — TYPE chips (multi-select)
             const typeRow = document.createElement('div');
             typeRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+            const refreshTypeChips = () => {
+                typeRow.querySelectorAll('.fp-chip').forEach(b => {
+                    const k = b.dataset.key;
+                    const act = deadlineTypeFilter.has(k);
+                    b.classList.toggle('active', act);
+                    const c = typeChips.find(t=>t.key===k);
+                    b.style.cssText = act && c ? `background:${c.color}22; border-color:${c.color}; color:${c.color}; box-shadow:0 0 10px ${c.color}55;` : '';
+                });
+            };
             typeChips.forEach(chip => {
                 const btn = document.createElement('button');
-                btn.className = 'fp-chip' + (deadlineTypeFilter === chip.key ? ' active' : '');
+                btn.className = 'fp-chip' + (deadlineTypeFilter.has(chip.key) ? ' active' : '');
                 btn.textContent = chip.label;
-                btn.dataset.group = 'type';
                 btn.dataset.key = chip.key;
-                if (deadlineTypeFilter === chip.key && chip.color) {
-                    btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
-                }
+                if (deadlineTypeFilter.has(chip.key)) btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
                 btn.addEventListener('click', () => {
-                    deadlineTypeFilter = chip.key;
-                    typeRow.querySelectorAll('.fp-chip').forEach(b => {
-                        const isNow = b.dataset.key === chip.key;
-                        b.classList.toggle('active', isNow);
-                        const c = typeChips.find(t=>t.key===b.dataset.key);
-                        if (isNow && c && c.color) b.style.cssText = `background:${c.color}22; border-color:${c.color}; color:${c.color}; box-shadow:0 0 10px ${c.color}55;`;
-                        else b.style.cssText = '';
-                    });
+                    if (deadlineTypeFilter.has(chip.key)) deadlineTypeFilter.delete(chip.key); else deadlineTypeFilter.add(chip.key);
+                    refreshTypeChips();
                     refreshTog();
                     renderDeadlineContent();
                 });
@@ -1984,7 +2004,7 @@
             });
             outerBar.appendChild(typeRow);
 
-            // ROW 2 — SUBJECT chips (if multiple)
+            // ROW 2 — SUBJECT chips (multi-select, if multiple)
             if (hasMultipleSubs) {
                 const rowDivider = document.createElement('div');
                 rowDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
@@ -1992,35 +2012,68 @@
 
                 const subRow = document.createElement('div');
                 subRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
-                subChips.forEach(chip => {
-                    const btn = document.createElement('button');
-                    btn.className = 'fp-chip' + (deadlineSubFilter === chip.key ? ' active' : '');
-                    btn.textContent = chip.label;
-                    btn.dataset.group = 'sub';
-                    btn.dataset.key = chip.key;
-                    if (deadlineSubFilter === chip.key) {
-                        if (chip.color) btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
-                        else btn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+
+                const refreshSubChips = () => {
+                    subRow.querySelectorAll('.fp-chip').forEach(b => {
+                        const k = b.dataset.key;
+                        if (k === '__all__') {
+                            const isAll = deadlineSubFilter.size === 0;
+                            b.classList.toggle('active', isAll);
+                            b.style.cssText = isAll ? 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;' : '';
+                        } else {
+                            const act = deadlineSubFilter.has(k);
+                            b.classList.toggle('active', act);
+                            const col = getSubjectColor(k);
+                            b.style.cssText = act ? `background:${col}22; border-color:${col}; color:${col}; box-shadow:0 0 10px ${col}55;` : '';
+                        }
+                    });
+                    // Single-subject color on toggle button
+                    if (deadlineSubFilter.size === 1) {
+                        const col = getSubjectColor([...deadlineSubFilter][0]);
+                        togBtn.style.cssText = `border-color:${col}; color:${col}; background:${col}22; box-shadow:0 0 12px ${col}44;`;
+                    } else {
+                        togBtn.style.cssText = '';
                     }
+                };
+
+                const allSubBtn = document.createElement('button');
+                allSubBtn.className = 'fp-chip' + (deadlineSubFilter.size === 0 ? ' active' : '');
+                allSubBtn.textContent = 'All';
+                allSubBtn.dataset.key = '__all__';
+                if (deadlineSubFilter.size === 0) allSubBtn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+                allSubBtn.addEventListener('click', () => {
+                    deadlineSubFilter.clear();
+                    refreshSubChips();
+                    refreshTog();
+                    renderDeadlineContent();
+                });
+                subRow.appendChild(allSubBtn);
+
+                subCodesSet.forEach(code => {
+                    const color = getSubjectColor(code);
+                    const btn = document.createElement('button');
+                    btn.className = 'fp-chip' + (deadlineSubFilter.has(code) ? ' active' : '');
+                    btn.textContent = code;
+                    btn.dataset.key = code;
+                    if (deadlineSubFilter.has(code)) btn.style.cssText = `background:${color}22; border-color:${color}; color:${color}; box-shadow:0 0 10px ${color}55;`;
                     btn.addEventListener('click', () => {
-                        deadlineSubFilter = chip.key;
-                        subRow.querySelectorAll('.fp-chip').forEach(b => {
-                            const isNow = b.dataset.key === chip.key;
-                            b.classList.toggle('active', isNow);
-                            const c = subChips.find(s=>s.key===b.dataset.key);
-                            if (isNow && c && c.color) b.style.cssText = `background:${c.color}22; border-color:${c.color}; color:${c.color}; box-shadow:0 0 10px ${c.color}55;`;
-                            else if (isNow) b.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
-                            else b.style.cssText = '';
-                        });
+                        if (deadlineSubFilter.has(code)) deadlineSubFilter.delete(code); else deadlineSubFilter.add(code);
+                        refreshSubChips();
                         refreshTog();
                         renderDeadlineContent();
                     });
                     subRow.appendChild(btn);
                 });
                 outerBar.appendChild(subRow);
+
+                // Apply single-subject color on initial render
+                if (deadlineSubFilter.size === 1) {
+                    const col = getSubjectColor([...deadlineSubFilter][0]);
+                    togBtn.style.cssText = `border-color:${col}; color:${col}; background:${col}22; box-shadow:0 0 12px ${col}44;`;
+                }
             }
 
-            // Clear all button — always in DOM, show/hide based on active state
+            // Clear all button
             const dlClearDivider = document.createElement('div');
             dlClearDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
             outerBar.appendChild(dlClearDivider);
@@ -2030,22 +2083,20 @@
             dlClearBtn.className = 'fp-clear-btn';
             dlClearBtn.innerHTML = '✕ Clear all filters';
             dlClearBtn.addEventListener('click', () => {
-                deadlineTypeFilter = 'all';
-                deadlineSubFilter = 'All';
-                showDeadlines(false, 'all', 'All');
+                deadlineTypeFilter.clear();
+                deadlineSubFilter.clear();
+                showDeadlines(false);
             });
             dlClearRow.appendChild(dlClearBtn);
             outerBar.appendChild(dlClearRow);
-            // Helper to sync clear button + divider visibility
             const syncDlClear = () => {
-                const active = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+                const active = deadlineTypeFilter.size > 0 || deadlineSubFilter.size > 0;
                 dlClearDivider.style.display = active ? '' : 'none';
                 dlClearRow.style.display = active ? 'flex' : 'none';
             };
-            syncDlClear(); // set initial state
+            syncDlClear();
             collapsible.appendChild(outerBar);
 
-            // Patch chip click handlers to also sync clear button
             outerBar.addEventListener('click', () => { setTimeout(syncDlClear, 0); });
 
             togBtn.addEventListener('click', () => {
@@ -2061,18 +2112,15 @@
 
         const applyDeadlineFilters = (arr) => {
             return arr.filter(item => {
-                // Type filter
-                if (deadlineTypeFilter !== 'all') {
-                    if (deadlineTypeFilter === 'news' && item.source !== 'news') return false;
-                    if (deadlineTypeFilter !== 'news') {
-                        if (item.source === 'news') return false;
-                        const cat = getTaskTypeCategory(item.task.name);
-                        if (cat !== deadlineTypeFilter) return false;
-                    }
+                // Type filter (OR across selected types)
+                if (deadlineTypeFilter.size > 0) {
+                    const isNews = item.source === 'news';
+                    const cat = isNews ? 'news' : getTaskTypeCategory(item.task.name);
+                    if (!deadlineTypeFilter.has(cat)) return false;
                 }
-                // Subject filter
-                if (deadlineSubFilter !== 'All') {
-                    if (item.task.sub !== deadlineSubFilter) return false;
+                // Subject filter (OR across selected subjects)
+                if (deadlineSubFilter.size > 0) {
+                    if (!deadlineSubFilter.has(item.task.sub)) return false;
                 }
                 return true;
             });
@@ -2244,7 +2292,7 @@
     let _dlSkipFilterRebuild = false;
     function renderDeadlineContent() {
         _dlSkipFilterRebuild = true;
-        showDeadlines(false, deadlineTypeFilter, deadlineSubFilter);
+        showDeadlines(false);
         _dlSkipFilterRebuild = false;
     }
 
@@ -2254,9 +2302,15 @@
     }
 
     // --- USEFUL LINKS GLOBAL PAGE ---
-    function showUsefulLinks(push = true, filterType = 'All Links', subjectFilter = 'All Subjects', badgeFilters = null) {
+    function showUsefulLinks(push = true, filterType = 'All Links', subjectFilter = null, badgeFilters = null) {
         currentUsefulFilter = filterType;
-        currentUsefulSubject = subjectFilter;
+        if (subjectFilter !== null) {
+            // Accept a Set, array, or legacy string
+            if (subjectFilter instanceof Set) currentUsefulSubject = subjectFilter;
+            else if (Array.isArray(subjectFilter)) currentUsefulSubject = new Set(subjectFilter.filter(s => s !== 'All Subjects'));
+            else if (subjectFilter === 'All Subjects') currentUsefulSubject = new Set();
+            else currentUsefulSubject = new Set([subjectFilter]);
+        }
         if (badgeFilters !== null) currentUsefulBadgeFilters = new Set(badgeFilters);
 
         const filterBar = document.getElementById('useful-links-filter-bar');
@@ -2273,7 +2327,7 @@
             if (sub.playlists && sub.playlists.length > 0) {
                 hasLinksAnywhere = true;
                 activeSubjects.push(sub);
-                if (subjectFilter === 'All Subjects' || subjectFilter === sub.code) {
+                if (currentUsefulSubject.size === 0 || currentUsefulSubject.has(sub.code)) {
                     sub.playlists.forEach(p => {
                         (p.badges || []).forEach(b => {
                             if (b.text && b.text.trim()) allBadgeSet.set(b.text.trim(), b.color || '#e91e8c');
@@ -2292,18 +2346,18 @@
         // ── Combined Filter toggle (subjects row + badges row) ──
         if (!_ulSkipFilterRebuild) {
 
-        const anySubFilter = subjectFilter !== 'All Subjects';
+        const anySubFilter = currentUsefulSubject.size > 0;
         const anyBadgeFilter = currentUsefulBadgeFilters.size > 0;
         const anyUlActive = anySubFilter || anyBadgeFilter;
 
-        // Single "Filter ▼" toggle
         const ulTogBtn = document.createElement('button');
         ulTogBtn.id = 'ul-filter-toggle';
         ulTogBtn.style.cssText = 'display:block; margin:0 auto 8px;';
         const getUlTogLabel = (open) => {
-            if (anySubFilter || currentUsefulBadgeFilters.size > 0) {
+            if (currentUsefulSubject.size > 0 || currentUsefulBadgeFilters.size > 0) {
                 const parts = [];
-                if (currentUsefulSubject !== 'All Subjects') parts.push(currentUsefulSubject);
+                if (currentUsefulSubject.size === 1) parts.push([...currentUsefulSubject][0]);
+                else if (currentUsefulSubject.size > 1) parts.push(`${currentUsefulSubject.size} subjects`);
                 if (currentUsefulBadgeFilters.size > 0) parts.push(`${currentUsefulBadgeFilters.size} badge${currentUsefulBadgeFilters.size>1?'s':''}`);
                 return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
             }
@@ -2313,7 +2367,6 @@
         ulTogBtn.innerHTML = getUlTogLabel(fpOpenState.usefulBadges);
         filterBar.appendChild(ulTogBtn);
 
-        // Collapsible combined bar
         const ulCollapsible = document.createElement('div');
         ulCollapsible.className = 'fp-bar-collapsible' + (fpOpenState.usefulBadges ? ' open' : '');
         ulCollapsible.style.cssText = 'flex-direction:column; gap:0; margin-bottom:12px; align-items:stretch;';
@@ -2323,36 +2376,57 @@
 
         const refreshUlTog = () => {
             const open = ulCollapsible.classList.contains('open');
-            const active = currentUsefulSubject !== 'All Subjects' || currentUsefulBadgeFilters.size > 0;
+            const active = currentUsefulSubject.size > 0 || currentUsefulBadgeFilters.size > 0;
             ulTogBtn.className = 'fp-toggle' + (active ? ' has-filter' : '') + (open ? ' open' : '');
             ulTogBtn.innerHTML = getUlTogLabel(open);
         };
 
-        // ROW 1 — Subject chips
+        // ROW 1 — Subject chips (multi-select)
         const subChipRow = document.createElement('div');
         subChipRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+
+        const refreshUlSubChips = () => {
+            subChipRow.querySelectorAll('.fp-chip').forEach(b => {
+                const k = b.dataset.key;
+                if (k === '__all__') {
+                    const isAll = currentUsefulSubject.size === 0;
+                    b.classList.toggle('active', isAll);
+                    b.style.cssText = isAll ? 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;' : '';
+                } else {
+                    const act = currentUsefulSubject.has(k);
+                    b.classList.toggle('active', act);
+                    const col = getSubjectColor(k);
+                    b.style.cssText = act ? `background:${getSubjectBg(k)}; border-color:${col}; color:${col};` : '';
+                }
+            });
+        };
+
         const allSubChip = document.createElement('button');
-        allSubChip.className = 'fp-chip' + (subjectFilter === 'All Subjects' ? ' active' : '');
+        allSubChip.className = 'fp-chip' + (currentUsefulSubject.size === 0 ? ' active' : '');
         allSubChip.textContent = 'All';
-        allSubChip.dataset.key = 'All Subjects';
-        if (subjectFilter === 'All Subjects') allSubChip.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+        allSubChip.dataset.key = '__all__';
+        if (currentUsefulSubject.size === 0) allSubChip.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
         allSubChip.addEventListener('click', () => {
-            currentUsefulSubject = 'All Subjects';
+            currentUsefulSubject.clear();
             currentUsefulBadgeFilters = new Set();
-            showUsefulLinks(false, 'All Links', 'All Subjects', []);
+            refreshUlSubChips();
+            refreshUlTog();
+            renderUsefulLinksContent();
         });
         subChipRow.appendChild(allSubChip);
         activeSubjects.forEach(s => {
             const color = getSubjectColor(s.code);
             const btn = document.createElement('button');
-            btn.className = 'fp-chip' + (subjectFilter === s.code ? ' active' : '');
+            btn.className = 'fp-chip' + (currentUsefulSubject.has(s.code) ? ' active' : '');
             btn.textContent = s.code;
             btn.dataset.key = s.code;
-            if (subjectFilter === s.code) btn.style.cssText = `background:${getSubjectBg(s.code)}; border-color:${color}; color:${color};`;
+            if (currentUsefulSubject.has(s.code)) btn.style.cssText = `background:${getSubjectBg(s.code)}; border-color:${color}; color:${color};`;
             btn.addEventListener('click', () => {
-                currentUsefulSubject = s.code;
+                if (currentUsefulSubject.has(s.code)) currentUsefulSubject.delete(s.code); else currentUsefulSubject.add(s.code);
                 currentUsefulBadgeFilters = new Set();
-                showUsefulLinks(false, 'All Links', s.code, []);
+                refreshUlSubChips();
+                refreshUlTog();
+                renderUsefulLinksContent();
             });
             subChipRow.appendChild(btn);
         });
@@ -2387,7 +2461,7 @@
                         b.classList.toggle('active', act);
                         b.style.cssText = act ? `background:${bc}33; border-color:${bc}; color:${bc}; box-shadow:0 0 8px ${bc}44;` : '';
                     });
-                    ulClearRow.style.display = (currentUsefulBadgeFilters.size > 0 || currentUsefulSubject !== 'All Subjects') ? 'flex' : 'none';
+                    ulClearRow.style.display = (currentUsefulBadgeFilters.size > 0 || currentUsefulSubject.size > 0) ? 'flex' : 'none';
                     ulClearDivider.style.display = ulClearRow.style.display;
                     refreshUlTog();
                     renderUsefulLinksContent();
@@ -2397,7 +2471,6 @@
             ulOuterBar.appendChild(badgeChipRow);
         }
 
-        // Clear all row
         const ulClearDivider = document.createElement('div');
         ulClearDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px; display:' + (anyUlActive ? '' : 'none') + ';';
         ulOuterBar.appendChild(ulClearDivider);
@@ -2408,8 +2481,10 @@
         ulClearBtn.innerHTML = '✕ Clear all filters';
         ulClearBtn.addEventListener('click', () => {
             currentUsefulBadgeFilters = new Set();
+            currentUsefulSubject = new Set();
             fpOpenState.usefulBadges = true;
-            showUsefulLinks(false, 'All Links', 'All Subjects', []);
+            renderUsefulLinksContent();
+            refreshUlTog();
         });
         ulClearRow.appendChild(ulClearBtn);
         ulOuterBar.appendChild(ulClearRow);
@@ -2437,17 +2512,17 @@
         let renderedCount = 0;
 
         window.COURSE_DATA.forEach(sub => {
-            if (subjectFilter !== 'All Subjects' && subjectFilter !== sub.code) return;
+            if (currentUsefulSubject.size > 0 && !currentUsefulSubject.has(sub.code)) return;
             if (!sub.playlists || sub.playlists.length === 0) return;
 
             let filteredPlaylists = sub.playlists.filter(p => {
                 if (currentUsefulBadgeFilters.size === 0) return true;
-                // playlist passes if it has ALL selected badge filters
+                // playlist passes if it has ANY of the selected badge filters (OR logic)
                 const pBadges = new Set((p.badges || []).map(b => (b.text || '').trim()));
                 for (const f of currentUsefulBadgeFilters) {
-                    if (!pBadges.has(f)) return false;
+                    if (pBadges.has(f)) return true;
                 }
-                return true;
+                return false;
             });
 
             if (filteredPlaylists.length === 0) return;
@@ -2531,10 +2606,10 @@
             list.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">No links match your selected filters.</div>`;
         }
 
-        nav('useful-links', push, { filter: filterType, subject: subjectFilter });
+        nav('useful-links', push, { filter: filterType, subject: [...currentUsefulSubject] });
         if (!push) {
             history.replaceState(
-                { page: 'useful-links', filter: filterType, subject: subjectFilter },
+                { page: 'useful-links', filter: filterType, subject: [...currentUsefulSubject] },
                 null, '#useful-links'
             );
         }
@@ -2550,8 +2625,8 @@
 
     // --- SCHEDULE LOGIC ---
     let scheduleViewMode = 'list';
-    let scheduleTaskFilter = 'all';
-    let scheduleSubFilter = 'all'; // subject filter for schedule
+    let scheduleTaskFilter = new Set();
+    let scheduleSubFilter = new Set(); // subject filter for schedule
     let calendarMonth = null;
     let calendarAvailableMonths = []; // stored for keyboard nav
 
@@ -2619,7 +2694,6 @@
         const viewToggleContainer = document.getElementById('schedule-view-toggle');
         if (!filterContainer || !viewToggleContainer) return;
 
-        // View toggle (list/calendar) stays as-is
         viewToggleContainer.innerHTML = '';
         ['📋 List','📅 Calendar'].forEach((label, i) => {
             const mode = i === 0 ? 'list' : 'calendar';
@@ -2637,22 +2711,23 @@
         filterContainer.innerHTML = '';
 
         const typeChipsData = [
-            { key: 'all',        label: 'All',           color: '#00E5FF' },
             { key: 'quiz',       label: '🧠 Quizzes',    color: '#af52de' },
             { key: 'assignment', label: '📝 Assignments', color: '#007aff' },
             { key: 'project',    label: '🚀 Projects',    color: '#34c759' }
         ];
 
-        const anyActive = scheduleTaskFilter !== 'all' || scheduleSubFilter !== 'all';
+        const anyActive = scheduleTaskFilter.size > 0 || scheduleSubFilter.size > 0;
         const isOpen = fpOpenState.schedule;
 
         const togBtn = document.createElement('button');
         const getTogLabel = (open) => {
-            const active = scheduleTaskFilter !== 'all' || scheduleSubFilter !== 'all';
+            const active = scheduleTaskFilter.size > 0 || scheduleSubFilter.size > 0;
             if (active) {
                 const parts = [];
-                if (scheduleTaskFilter !== 'all') { const c = typeChipsData.find(t=>t.key===scheduleTaskFilter); if(c) parts.push(c.label.replace(/^\S+\s/,'')); }
-                if (scheduleSubFilter !== 'all') parts.push(scheduleSubFilter);
+                if (scheduleTaskFilter.size > 0) {
+                    scheduleTaskFilter.forEach(k => { const c = typeChipsData.find(t=>t.key===k); if(c) parts.push(c.label.replace(/^\S+\s/,'')); });
+                }
+                if (scheduleSubFilter.size > 0) { scheduleSubFilter.forEach(s => parts.push(s)); }
                 return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
             }
             return `Filter <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
@@ -2667,36 +2742,35 @@
 
         const refreshTog = () => {
             const open = collapsible.classList.contains('open');
-            const active = scheduleTaskFilter !== 'all' || scheduleSubFilter !== 'all';
+            const active = scheduleTaskFilter.size > 0 || scheduleSubFilter.size > 0;
             togBtn.className = 'fp-toggle' + (active ? ' has-filter' : '') + (open ? ' open' : '');
             togBtn.innerHTML = getTogLabel(open);
         };
 
-        // One outer wrapper with two inner rows
         const outerBar = document.createElement('div');
         outerBar.style.cssText = 'background:rgba(8,2,18,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:10px 18px; display:flex; flex-direction:column; gap:10px;';
 
-        // ROW 1 — TYPE chips
+        // ROW 1 — TYPE chips (multi-select, no "All" chip — empty Set = All)
         const typeRow = document.createElement('div');
         typeRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+        const refreshTypeChips = () => {
+            typeRow.querySelectorAll('.fp-chip').forEach(b => {
+                const k = b.dataset.key;
+                const act = scheduleTaskFilter.has(k);
+                b.classList.toggle('active', act);
+                const c = typeChipsData.find(t=>t.key===k);
+                b.style.cssText = act && c ? `background:${c.color}22; border-color:${c.color}; color:${c.color}; box-shadow:0 0 10px ${c.color}55;` : '';
+            });
+        };
         typeChipsData.forEach(chip => {
             const btn = document.createElement('button');
-            btn.className = 'fp-chip' + (scheduleTaskFilter === chip.key ? ' active' : '');
+            btn.className = 'fp-chip' + (scheduleTaskFilter.has(chip.key) ? ' active' : '');
             btn.textContent = chip.label;
-            btn.dataset.group = 'type';
             btn.dataset.key = chip.key;
-            if (scheduleTaskFilter === chip.key && chip.color) {
-                btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
-            }
+            if (scheduleTaskFilter.has(chip.key)) btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
             btn.addEventListener('click', () => {
-                scheduleTaskFilter = chip.key;
-                typeRow.querySelectorAll('.fp-chip').forEach(b => {
-                    const isNow = b.dataset.key === chip.key;
-                    b.classList.toggle('active', isNow);
-                    const c = typeChipsData.find(t=>t.key===b.dataset.key);
-                    if (isNow && c && c.color) b.style.cssText = `background:${c.color}22; border-color:${c.color}; color:${c.color}; box-shadow:0 0 10px ${c.color}55;`;
-                    else b.style.cssText = '';
-                });
+                if (scheduleTaskFilter.has(chip.key)) scheduleTaskFilter.delete(chip.key); else scheduleTaskFilter.add(chip.key);
+                refreshTypeChips();
                 refreshTog();
                 renderScheduleWeeksGrid();
             });
@@ -2704,7 +2778,7 @@
         });
         outerBar.appendChild(typeRow);
 
-        // ROW 2 — SUBJECT chips (if multiple)
+        // ROW 2 — SUBJECT chips (multi-select, if multiple subjects exist)
         if (hasMultipleSubs) {
             const rowDivider = document.createElement('div');
             rowDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
@@ -2713,17 +2787,30 @@
             const subRow = document.createElement('div');
             subRow.style.cssText = 'display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
 
-            const allSubBtn = document.createElement('button');
-            allSubBtn.className = 'fp-chip' + (scheduleSubFilter === 'all' ? ' active' : '');
-            allSubBtn.textContent = 'All Subjects';
-            allSubBtn.dataset.key = 'all';
-            if (scheduleSubFilter === 'all') allSubBtn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
-            allSubBtn.addEventListener('click', () => {
-                scheduleSubFilter = 'all';
+            const refreshSubChips = () => {
                 subRow.querySelectorAll('.fp-chip').forEach(b => {
-                    b.classList.toggle('active', b.dataset.key === 'all');
-                    b.style.cssText = b.dataset.key === 'all' ? 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;' : '';
+                    const k = b.dataset.key;
+                    if (k === '__all__') {
+                        const isAll = scheduleSubFilter.size === 0;
+                        b.classList.toggle('active', isAll);
+                        b.style.cssText = isAll ? 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;' : '';
+                    } else {
+                        const act = scheduleSubFilter.has(k);
+                        b.classList.toggle('active', act);
+                        const color = getSubjectColor(k);
+                        b.style.cssText = act ? `background:${getSubjectBg(k)}; color:${color}; border-color:${color}; box-shadow:0 0 10px ${color}55;` : '';
+                    }
                 });
+            };
+
+            const allSubBtn = document.createElement('button');
+            allSubBtn.className = 'fp-chip' + (scheduleSubFilter.size === 0 ? ' active' : '');
+            allSubBtn.textContent = 'All';
+            allSubBtn.dataset.key = '__all__';
+            if (scheduleSubFilter.size === 0) allSubBtn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+            allSubBtn.addEventListener('click', () => {
+                scheduleSubFilter.clear();
+                refreshSubChips();
                 refreshTog();
                 renderScheduleWeeksGrid();
             });
@@ -2732,18 +2819,13 @@
             subCodes.forEach(code => {
                 const color = getSubjectColor(code);
                 const btn = document.createElement('button');
-                btn.className = 'fp-chip' + (scheduleSubFilter === code ? ' active' : '');
+                btn.className = 'fp-chip' + (scheduleSubFilter.has(code) ? ' active' : '');
                 btn.textContent = code;
                 btn.dataset.key = code;
-                if (scheduleSubFilter === code) btn.style.cssText = `background:${getSubjectBg(code)}; color:${color}; border-color:${color}; box-shadow:0 0 10px ${color}55;`;
+                if (scheduleSubFilter.has(code)) btn.style.cssText = `background:${getSubjectBg(code)}; color:${color}; border-color:${color}; box-shadow:0 0 10px ${color}55;`;
                 btn.addEventListener('click', () => {
-                    scheduleSubFilter = code;
-                    subRow.querySelectorAll('.fp-chip').forEach(b => {
-                        const isNow = b.dataset.key === code;
-                        b.classList.toggle('active', isNow);
-                        if (isNow) b.style.cssText = `background:${getSubjectBg(code)}; color:${color}; border-color:${color}; box-shadow:0 0 10px ${color}55;`;
-                        else b.style.cssText = '';
-                    });
+                    if (scheduleSubFilter.has(code)) scheduleSubFilter.delete(code); else scheduleSubFilter.add(code);
+                    refreshSubChips();
                     refreshTog();
                     renderScheduleWeeksGrid();
                 });
@@ -2752,7 +2834,7 @@
             outerBar.appendChild(subRow);
         }
 
-        // Clear all button — always in DOM, show/hide based on active state
+        // Clear all button
         const scClearDivider = document.createElement('div');
         scClearDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
         outerBar.appendChild(scClearDivider);
@@ -2762,22 +2844,21 @@
         scClearBtn.className = 'fp-clear-btn';
         scClearBtn.innerHTML = '✕ Clear all filters';
         scClearBtn.addEventListener('click', () => {
-            scheduleTaskFilter = 'all';
-            scheduleSubFilter = 'all';
+            scheduleTaskFilter.clear();
+            scheduleSubFilter.clear();
             renderScheduleFilters();
             renderScheduleWeeksGrid();
         });
         scClearRow.appendChild(scClearBtn);
         outerBar.appendChild(scClearRow);
         const syncScClear = () => {
-            const active = scheduleTaskFilter !== 'all' || scheduleSubFilter !== 'all';
+            const active = scheduleTaskFilter.size > 0 || scheduleSubFilter.size > 0;
             scClearDivider.style.display = active ? '' : 'none';
             scClearRow.style.display = active ? 'flex' : 'none';
         };
         syncScClear();
         collapsible.appendChild(outerBar);
 
-        // Sync clear visibility on any chip click
         outerBar.addEventListener('click', () => { setTimeout(syncScClear, 0); });
 
         togBtn.addEventListener('click', () => {
@@ -2795,9 +2876,18 @@
         grid.innerHTML = '';
 
         if (scheduleViewMode === 'calendar') {
+            // Force a single full-width column so the calendar is never squashed
+            // regardless of which filter is active. Inline style overrides any
+            // class-based grid-template-columns that could auto-fill narrower columns.
+            grid.className = 'grid';
+            grid.style.gridTemplateColumns = '1fr';
             renderCalendarView(grid);
             return;
         }
+
+        // Restore multi-column layout for list view
+        grid.className = 'grid weeks-grid';
+        grid.style.gridTemplateColumns = '';
 
         // List view
         const todayDate = new Date();
@@ -2811,11 +2901,11 @@
             
             // Filter and sort tasks
             let filteredTasks = (data.tasks || []).map((t, i) => ({task: t, origIdx: i}));
-            if(scheduleTaskFilter !== 'all') {
-                filteredTasks = filteredTasks.filter(x => getTaskTypeCategory(x.task.name) === scheduleTaskFilter);
+            if(scheduleTaskFilter.size > 0) {
+                filteredTasks = filteredTasks.filter(x => scheduleTaskFilter.has(getTaskTypeCategory(x.task.name)));
             }
-            if(scheduleSubFilter !== 'all') {
-                filteredTasks = filteredTasks.filter(x => x.task.sub === scheduleSubFilter);
+            if(scheduleSubFilter.size > 0) {
+                filteredTasks = filteredTasks.filter(x => scheduleSubFilter.has(x.task.sub));
             }
 
             // Sort by time
@@ -2907,8 +2997,8 @@
         window.SCHEDULE_DATA.forEach((wk, wIndex) => {
             if(!wk.tasks) return;
             wk.tasks.forEach((t, tIndex) => {
-                if(scheduleTaskFilter !== 'all' && getTaskTypeCategory(t.name) !== scheduleTaskFilter) return;
-                if(scheduleSubFilter !== 'all' && t.sub !== scheduleSubFilter) return;
+                if(scheduleTaskFilter.size > 0 && !scheduleTaskFilter.has(getTaskTypeCategory(t.name))) return;
+                if(scheduleSubFilter.size > 0 && !scheduleSubFilter.has(t.sub)) return;
                 const ts = getTaskEffectiveDeadlineMeta(t, wk.week).timestamp;
                 if(ts === 0) {
                     // Undated / TBD task
@@ -3513,8 +3603,8 @@
         if (playlistBadgeFilters.size > 0) {
             playlists = playlists.filter(p => {
                 const pBadges = new Set((p.badges || []).map(b => (b.text || '').trim()));
-                for (const f of playlistBadgeFilters) { if (!pBadges.has(f)) return false; }
-                return true;
+                for (const f of playlistBadgeFilters) { if (pBadges.has(f)) return true; }
+                return false;
             });
         }
 
@@ -3673,18 +3763,9 @@
         clearBtn.style.display = anyActive ? 'inline-flex' : 'none';
         clearBtn.addEventListener('click', () => {
             if (openStateKey) fpOpenState[openStateKey] = true;
-            // Reset filter state for all rows
-            rows.forEach((row, ri) => {
-                const resetKey = row.chips[0] ? row.chips[0].key : allKey;
-                if (ri === 0) { if (typeof scheduleTaskFilter !== 'undefined') scheduleTaskFilter = resetKey; }
-                if (ri === 1) { if (typeof scheduleSubFilter !== 'undefined') scheduleSubFilter = resetKey; }
-            });
             // Reset state variables based on openStateKey
-            if (openStateKey === 'schedule') { scheduleTaskFilter = 'all'; scheduleSubFilter = 'all'; }
-            if (openStateKey === 'deadlines') { deadlineTypeFilter = 'all'; deadlineSubFilter = 'All'; }
-            // Rebuild the full filter panel and content
-            if (openStateKey === 'schedule') { renderScheduleFilters(); renderScheduleWeeksGrid(); }
-            else if (openStateKey === 'deadlines') { showDeadlines(false, 'all', 'All'); }
+            if (openStateKey === 'schedule') { scheduleTaskFilter.clear(); scheduleSubFilter.clear(); renderScheduleFilters(); renderScheduleWeeksGrid(); }
+            else if (openStateKey === 'deadlines') { deadlineTypeFilter.clear(); deadlineSubFilter.clear(); showDeadlines(false); }
             else { rows.forEach((row, ri) => onSelect(ri, row.chips[0] ? row.chips[0].key : allKey)); }
         });
         clearRow.appendChild(clearBtn);
@@ -4517,7 +4598,8 @@
     function collectUsefulLinksSelection(subjectFilter, filterType) {
         const groups = [];
         (window.COURSE_DATA || []).forEach(sub => {
-            if (subjectFilter !== 'All Subjects' && subjectFilter !== sub.code) return;
+            const subSet = subjectFilter instanceof Set ? subjectFilter : new Set();
+            if (subSet.size > 0 && !subSet.has(sub.code)) return;
             const links = (sub.playlists || []).filter(p => matchUsefulFilter(p, filterType));
             if (links.length) groups.push({ subCode: sub.code, subName: sub.name, links });
         });
@@ -4687,10 +4769,11 @@
             const groups = collectUsefulLinksSelection(currentUsefulSubject, currentUsefulFilter);
             const htmlSections = groups.length ? groups.map(g => `<h2>${eHtml(g.subCode)} - ${eHtml(g.subName)}</h2><ul>${g.links.map(p => `<li><b>${eHtml(p.title || 'Link')}</b>${p.note ? ` - ${eHtml(p.note.split('\n')[0])}` : ''}${p.link && p.link !== '#' ? ` <br><a href="${eHtml(p.link)}">${eHtml(p.link)}</a>` : ''}</li>`).join('')}</ul>`).join('') : '<p>No matching links.</p>';
             const txtSections = groups.length ? groups.map(g => [`${g.subCode} - ${g.subName}`, ...g.links.map(p => `- ${p.title || 'Link'}${p.link && p.link !== '#' ? ` | ${p.link}` : ''}`)].join('\n')).join('\n\n') : 'No matching links.';
-            const t = `${currentUsefulSubject === 'All Subjects' ? 'All Subjects' : currentUsefulSubject} - ${currentUsefulFilter}`;
+            const subLabel = currentUsefulSubject.size === 0 ? 'All Subjects' : [...currentUsefulSubject].join('-');
+            const t = `${subLabel} - ${currentUsefulFilter}`;
             return {
                 title: `Useful Links (${t})`,
-                fileBase: `useful-links-${String(currentUsefulSubject).toLowerCase()}-${String(currentUsefulFilter).toLowerCase().replace(/\s+/g,'-')}`,
+                fileBase: `useful-links-${subLabel.toLowerCase().replace(/\s+/g,'-')}-${String(currentUsefulFilter).toLowerCase().replace(/\s+/g,'-')}`,
                 bodyHtml: `${htmlSections}`,
                 text: `*Useful Links (${t})*\n\n${txtSections}`,
                 screenshotSelector: '#useful-links-page'
