@@ -7000,6 +7000,14 @@
             setTimeout(closeMenu, 800);
         }
 
+        document.addEventListener('auxclick', function(e) {
+            if (e.button !== 1) return; // only middle click
+            const url = findLink(e.target);
+            if (!url) return;
+            e.preventDefault();
+            window.open(url, '_blank', 'noopener');
+        });
+
         document.addEventListener('contextmenu', function(e) {
             const url = findLink(e.target);
             if (!url) { closeMenu(); return; } // no link — let browser handle it
