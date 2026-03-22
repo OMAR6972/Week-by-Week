@@ -4277,11 +4277,17 @@
         closeMobileMenu();
         closeAllDropdowns();
         if (currentPageId !== id) previousPageId = currentPageId;
+        const alreadyHere = currentPageId === id;
         currentPageId = id;
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
         document.getElementById(id+'-page').classList.add('active'); 
         window.scrollTo(0,0);
-        if(push) history.pushState({page: id, ...stateData}, null, "#" + id);
+        // If already on this page, replace instead of push so the back button
+        // doesn't accumulate duplicate history entries from repeated nav clicks
+        if(push) {
+            if (alreadyHere) history.replaceState({page: id, ...stateData}, null, "#" + id);
+            else history.pushState({page: id, ...stateData}, null, "#" + id);
+        }
         updateNavActive(id);
         updateBackButtons();
         renderQuickActions();
