@@ -815,6 +815,8 @@
                     </div>
                 </div>
                 <label>Extra Notes:</label><textarea rows="2" placeholder="e.g. Bring calculators" oninput="updateSchTask(${tIdx}, 'note', this.value)">${task.note || ''}</textarea>
+                <input type="text" placeholder="URL for Notes (Optional)" value="${task.noteLink || ''}" style="font-size:0.8rem; margin-bottom:4px; background:rgba(0,0,0,0.5);" oninput="updateSchTask(${tIdx}, 'noteLink', this.value)">
+                <input type="text" placeholder="Link note (e.g. Read before attending)" value="${task.noteNote || ''}" style="font-size:0.75rem; margin-bottom:4px; background:rgba(74,144,226,0.1); border-color:rgba(74,144,226,0.3); color:#4a90e2;" oninput="updateSchTask(${tIdx}, 'noteNote', this.value)">
                 
                 <div style="width:100%; margin-top:10px; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; border:1px solid rgba(0, 229, 255, 0.3);">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
@@ -842,7 +844,7 @@
     function updateSchTask(tIdx, field, val) { window.SCHEDULE_DATA[schWIdx].tasks[tIdx][field] = val; }
     function addScheduleWeek() { window.SCHEDULE_DATA.push({ week: window.SCHEDULE_DATA.length + 1, tasks: [] }); schWIdx = window.SCHEDULE_DATA.length - 1; renderScheduleWeeks(); renderScheduleEditor(); }
     function delScheduleWeek(e, i) { e.stopPropagation(); if(confirm("Delete this week?")) { window.SCHEDULE_DATA.splice(i, 1); schWIdx = 0; renderScheduleWeeks(); renderScheduleEditor(); } }
-    function addScheduleTask() { window.SCHEDULE_DATA[schWIdx].tasks.push({ sub: window.COURSE_DATA.length > 0 ? window.COURSE_DATA[0].code : "UNK", name: "New Task", icon: "📝", when: "", where: "", coverage: "", note: "", whenLink: "", whereLink: "", whenNote: "", whereNote: "", coverageLink: "", coverageNote: "", submitText: "", submitLink: "", submitNote: "", deadlineDate: "", deadlineEndDate: "", isCompleted: false }); renderScheduleWeeks(); renderScheduleEditor(); }
+    function addScheduleTask() { window.SCHEDULE_DATA[schWIdx].tasks.push({ sub: window.COURSE_DATA.length > 0 ? window.COURSE_DATA[0].code : "UNK", name: "New Task", icon: "📝", when: "", where: "", coverage: "", note: "", noteLink: "", noteNote: "", whenLink: "", whereLink: "", whenNote: "", whereNote: "", coverageLink: "", coverageNote: "", submitText: "", submitLink: "", submitNote: "", deadlineDate: "", deadlineEndDate: "", isCompleted: false }); renderScheduleWeeks(); renderScheduleEditor(); }
     function delScheduleTask(tIdx) { if(confirm("Remove this task?")) { window.SCHEDULE_DATA[schWIdx].tasks.splice(tIdx, 1); renderScheduleWeeks(); renderScheduleEditor(); } }
 
     function updateDeadlines() {
@@ -1681,15 +1683,33 @@
                     <label>Body / Note</label>
                     <textarea rows="2" placeholder="Details, links, or extra context..." oninput="window.NEWS_DATA[${i}].body=this.value;markDirty();">${escHtml(item.body||'')}</textarea>
                 </div>
-                <div style="background:#150a25;padding:12px;border-radius:8px;border:1px solid #2a1b3d;margin-bottom:10px;">
-                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                        <input type="checkbox" ${item.hasDeadline?'checked':''} onchange="window.NEWS_DATA[${i}].hasDeadline=this.checked;markDirty();renderNewsManager();">
-                        <span style="color:#ff9500;font-weight:700;">⏰ Has Deadline</span>
-                    </label>
-                    ${item.hasDeadline ? `<div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
-                        <div style="flex:1;min-width:140px;"><label>Deadline Date</label><input type="date" value="${escAttr(item.deadlineDate||'')}" style="padding:8px 10px;color-scheme:dark;width:100%;" oninput="window.NEWS_DATA[${i}].deadlineDate=this.value;markDirty();"></div>
-                        <div style="flex:1;min-width:120px;"><label>Deadline Time (e.g. 11:59 PM)</label><input type="text" value="${escAttr(item.deadlineTime||'')}" placeholder="11:59 PM" oninput="window.NEWS_DATA[${i}].deadlineTime=this.value;markDirty();"></div>
-                    </div>` : ''}
+                <div style="display:flex;flex-direction:column;gap:0;">
+                    <div style="background:rgba(255,255,255,0.05);padding:15px;border-radius:8px;margin-bottom:15px;display:flex;flex-direction:column;width:100%;box-sizing:border-box;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                                <input type="checkbox" ${item.hasEvent?'checked':''} onchange="window.NEWS_DATA[${i}].hasEvent=this.checked;markDirty();renderNewsManager();">
+                                <span style="color:#00E5FF;font-weight:700;">🗓️ Is a scheduled event?</span>
+                            </label>
+                            <button class="btn" style="border:1px solid #00E5FF; color:#00E5FF; background:transparent; padding:3px 8px; font-size:0.75rem; border-radius:4px;" onclick="autoDetectDateTime(${i}, 'event')">✨ Auto</button>
+                        </div>
+                        ${item.hasEvent ? `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:15px;width:100%;">
+                            <div style="flex:1;min-width:130px;"><label>Event Date</label><input type="date" value="${escAttr(item.eventDate||'')}" style="padding:8px 10px;color-scheme:dark;width:100%;" oninput="window.NEWS_DATA[${i}].eventDate=this.value;markDirty();"></div>
+                            <div style="flex:1;min-width:130px;"><label>Event Time</label><input type="time" value="${escAttr(item.eventTime||'')}" style="padding:8px 10px;color-scheme:dark;width:100%;" oninput="window.NEWS_DATA[${i}].eventTime=this.value;markDirty();"></div>
+                        </div>` : ''}
+                    </div>
+                    <div style="background:rgba(255,255,255,0.05);padding:15px;border-radius:8px;margin-bottom:15px;display:flex;flex-direction:column;width:100%;box-sizing:border-box;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                                <input type="checkbox" ${item.hasDeadline?'checked':''} onchange="window.NEWS_DATA[${i}].hasDeadline=this.checked;markDirty();renderNewsManager();">
+                                <span style="color:#ff9500;font-weight:700;">⏰ Has Deadline</span>
+                            </label>
+                            <button class="btn" style="border:1px solid #ff9500; color:#ff9500; background:transparent; padding:3px 8px; font-size:0.75rem; border-radius:4px;" onclick="autoDetectDateTime(${i}, 'deadline')">✨ Auto</button>
+                        </div>
+                        ${item.hasDeadline ? `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:15px;width:100%;">
+                            <div style="flex:1;min-width:130px;"><label>Deadline Date</label><input type="date" value="${escAttr(item.deadlineDate||'')}" style="padding:8px 10px;color-scheme:dark;width:100%;" oninput="window.NEWS_DATA[${i}].deadlineDate=this.value;markDirty();"></div>
+                            <div style="flex:1;min-width:130px;"><label>Deadline Time (e.g. 11:59 PM)</label><input type="text" value="${escAttr(item.deadlineTime||'')}" placeholder="11:59 PM" oninput="window.NEWS_DATA[${i}].deadlineTime=this.value;markDirty();"></div>
+                        </div>` : ''}
+                    </div>
                 </div>
                 <div><label style="color:#666;font-size:0.78rem;">Quick Emojis:</label><div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:4px;">${emojiOpts}</div></div>
             `;
@@ -1699,13 +1719,101 @@
 
     function addNewsEntry() {
         if(typeof window.NEWS_DATA === 'undefined') window.NEWS_DATA = [];
-        window.NEWS_DATA.unshift({ emoji:'📢', title:'New Announcement', body:'', publishedAt: new Date().toISOString().slice(0,19), sub:'', hasDeadline:false, deadlineDate:'', deadlineTime:'' });
+        window.NEWS_DATA.unshift({ emoji:'📢', title:'New Announcement', body:'', publishedAt: new Date().toISOString().slice(0,19), sub:'', hasEvent:false, eventDate:'', eventTime:'', hasDeadline:false, deadlineDate:'', deadlineTime:'' });
         markDirty();
         renderNewsManager();
     }
 
     function delNewsEntry(i) {
         if(confirm('Remove this announcement?')) { window.NEWS_DATA.splice(i,1); markDirty(); renderNewsManager(); }
+    }
+
+    function autoDetectDateTime(idx, type) {
+        if(typeof window.NEWS_DATA === 'undefined') window.NEWS_DATA = [];
+        const item = window.NEWS_DATA[idx];
+        if (!item || !item.body) {
+            alert('Please enter some text in the Body / Note first.');
+            return;
+        }
+        
+        const txt = item.body.toLowerCase();
+        let foundDate = null;
+        let foundTime = null;
+        // Robust time extraction: 9:30 am, 9 am, 21:00, 9pm, 9:00PM, etc.
+        const timeRegexes = [
+            /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i,
+            /(\d{1,2}):(\d{2})/,
+            /(\d{1,2})\s*(am|pm)/i
+        ];
+        for (const re of timeRegexes) {
+            const m = txt.match(re);
+            if (m) {
+                let hr = parseInt(m[1], 10);
+                let min = m[2] ? parseInt(m[2], 10) : 0;
+                let ampm = m[3] || m[2] || '';
+                if (typeof ampm === 'string') ampm = ampm.toLowerCase();
+                if (ampm === 'pm' && hr < 12) hr += 12;
+                if (ampm === 'am' && hr === 12) hr = 0;
+                if (ampm === 'am' || ampm === 'pm') {
+                    foundTime = `${hr.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+                } else if (re === timeRegexes[1]) {
+                    foundTime = `${hr.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+                }
+                break;
+            }
+        }
+        // Date extraction: YYYY-MM-DD, DD/MM, Month Day
+        const today = new Date();
+        if (txt.includes('tomorrow')) {
+            const tmr = new Date();
+            tmr.setDate(today.getDate() + 1);
+            foundDate = tmr.toISOString().split('T')[0];
+        } else if (txt.includes('today')) {
+            foundDate = today.toISOString().split('T')[0];
+        } else {
+            // YYYY-MM-DD
+            const ymd = txt.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+            if (ymd) {
+                foundDate = `${ymd[1]}-${ymd[2].padStart(2,'0')}-${ymd[3].padStart(2,'0')}`;
+            } else {
+                // DD/MM or D/M
+                const dmMatch = txt.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+                if (dmMatch) {
+                    let d = parseInt(dmMatch[1], 10);
+                    let m = parseInt(dmMatch[2], 10);
+                    let y = dmMatch[3] ? parseInt(dmMatch[3], 10) : today.getFullYear();
+                    if (y < 100) y += 2000;
+                    if (m > 12) { const temp = d; d = m; m = temp; }
+                    foundDate = `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+                } else {
+                    // Month name + day
+                    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec', 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+                    const monthMatch = txt.match(new RegExp(`(${months.join('|')})[a-z]*\\s+(\\d{1,2})(?:st|nd|rd|th)?`, 'i'));
+                    if (monthMatch) {
+                        const mName = monthMatch[1].toLowerCase().substring(0,3);
+                        const shortMonths = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+                        let mStr = (shortMonths.indexOf(mName) + 1).toString().padStart(2, '0');
+                        let dStr = parseInt(monthMatch[2], 10).toString().padStart(2, '0');
+                        foundDate = `${today.getFullYear()}-${mStr}-${dStr}`;
+                    }
+                }
+            }
+        }
+        if (!foundDate && !foundTime) {
+            alert('No date/time found in text.');
+            return;
+        }
+        if (type === 'event') {
+            if (foundDate) item.eventDate = foundDate;
+            if (foundTime) item.eventTime = foundTime;
+            item.hasEvent = true;
+        } else {
+            if (foundDate) item.deadlineDate = foundDate;
+            if (foundTime) item.deadlineTime = foundTime;
+            item.hasDeadline = true;
+        }
+        markDirty();
+        renderNewsManager();
     }
 
     // --- EMOJI PICKER ---

@@ -110,6 +110,21 @@
         .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #ccc; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
         .filter-btn:hover { background: rgba(255,255,255,0.15); color: white; }
         .filter-btn.active { background: var(--accent-pink); color: white; border-color: var(--accent-pink); box-shadow: 0 0 15px rgba(233,30,140,0.4); font-weight: bold; }
+        /* Badge multi-select filter chips */
+        .badge-filter-bar { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; align-items: center; }
+        .badge-filter-chip { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.12); color: #aaa; background: rgba(255,255,255,0.04); transition: all 0.18s; letter-spacing: 0.3px; }
+        .badge-filter-chip:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+        .badge-filter-chip.active { color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+        .badge-filter-clear { padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; cursor: pointer; border: 1px dashed rgba(255,255,255,0.2); color: #888; background: transparent; transition: all 0.18s; }
+        .badge-filter-clear:hover { border-color: rgba(255,255,255,0.4); color: #ccc; }
+        /* Compact subject chips (history, deadlines etc.) */
+        .sub-filter-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; align-items: center; }
+        .sub-filter-chip { padding: 4px 11px; border-radius: 14px; font-size: 0.72rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); color: #888; background: rgba(255,255,255,0.03); transition: all 0.18s; letter-spacing: 0.3px; font-family: 'Orbitron', sans-serif; }
+        .sub-filter-chip:hover { background: rgba(255,255,255,0.08); color: #ccc; }
+        .sub-filter-chip.active { color: #fff; }
+        /* Midterm hidden subjects indicator */
+        .midterm-hidden-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(255,149,0,0.3); color: #ff9500; background: rgba(255,149,0,0.08); transition: all 0.2s; margin-bottom: 16px; }
+        .midterm-hidden-btn:hover { background: rgba(255,149,0,0.15); }
         
         .useful-select { background: rgba(181, 25, 214, 0.15); border: 1px solid rgba(181, 25, 214, 0.4); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; outline: none; font-weight: bold; font-family: 'Work Sans', sans-serif; transition: 0.3s; }
         .useful-select:hover { background: rgba(181, 25, 214, 0.3); }
@@ -325,10 +340,55 @@
         .modal-url-badge:hover { background: rgba(74, 144, 226, 0.3); color: white; }
 
         /* Schedule task type filters */
-        .schedule-filters { display: flex; gap: 8px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }
-        .schedule-filter-chip { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #aaa; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; letter-spacing: 0.5px; }
-        .schedule-filter-chip:hover { background: rgba(255,255,255,0.1); color: white; }
-        .schedule-filter-chip.active { background: rgba(255, 149, 0, 0.2); color: #ff9500; border-color: #ff9500; }
+        /* ── Collapsible filter panel ─────────────────────── */
+        .fp-toggle { display: inline-flex; align-items: center; gap: 7px; padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: #aaa; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.22s; font-family: 'Work Sans', sans-serif; user-select: none; }
+        .fp-toggle:hover { background: rgba(255,255,255,0.09); color: #ddd; border-color: rgba(255,255,255,0.25); }
+        .fp-toggle.has-filter { border-color: var(--accent-pink); color: var(--accent-pink); background: rgba(233,30,140,0.1); box-shadow: 0 0 12px rgba(233,30,140,0.25); }
+        .fp-toggle.open { border-color: rgba(255,255,255,0.3); color: #fff; background: rgba(255,255,255,0.08); }
+        .fp-toggle.open.has-filter { border-color: var(--accent-pink); background: rgba(233,30,140,0.15); box-shadow: 0 0 18px rgba(233,30,140,0.35); }
+        /* Active filter label — shown as plain text after the icon, not a pill */
+        .fp-active-label { font-size: 0.75rem; color: white; font-weight: 600; opacity: 0.9; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .fp-badge { background: var(--accent-pink); color: white; font-size: 0.65rem; padding: 1px 7px; border-radius: 8px; font-weight: 800; box-shadow: 0 0 6px rgba(233,30,140,0.5); }
+        .fp-toggle .fp-arrow { font-size: 0.6rem; transition: transform 0.22s; opacity: 0.5; }
+        .fp-toggle.open .fp-arrow { transform: rotate(180deg); opacity: 1; }
+        .fp-panel { display: none; margin-top: 10px; background: rgba(8,2,18,0.85); border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; padding: 14px 16px 16px; backdrop-filter: blur(12px); box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04); animation: fpFadeIn 0.18s ease; }
+        .fp-panel.open { display: block; }
+        .fp-sep { height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent); margin: 14px 0 0; }
+        .fp-row { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; justify-content: center; }
+        .fp-row + .fp-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.07); }
+        .fp-label { font-size: 0.62rem; color: #555; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; margin-right: 4px; }
+        .fp-chip { padding: 5px 13px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); color: #888; background: transparent; cursor: pointer; font-size: 0.76rem; font-weight: 600; transition: all 0.18s; white-space: nowrap; font-family: 'Work Sans', sans-serif; }
+        .fp-chip:hover { background: rgba(255,255,255,0.08); color: #ddd; border-color: rgba(255,255,255,0.22); }
+        .fp-chip.active { color: #fff; background: rgba(233,30,140,0.18); border-color: var(--accent-pink); box-shadow: 0 0 10px rgba(233,30,140,0.35), inset 0 0 8px rgba(233,30,140,0.08); }
+        .fp-chip.active:hover { box-shadow: 0 0 16px rgba(233,30,140,0.5), inset 0 0 10px rgba(233,30,140,0.12); }
+        .fp-clear-btn { margin-top: 12px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 12px; border: 1px dashed rgba(233,30,140,0.35); color: rgba(233,30,140,0.7); background: transparent; cursor: pointer; font-size: 0.72rem; font-weight: 600; transition: all 0.18s; font-family: 'Work Sans', sans-serif; }
+        .fp-clear-btn:hover { border-color: var(--accent-pink); color: var(--accent-pink); background: rgba(233,30,140,0.08); }
+        @keyframes fpFadeIn { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @media (max-width: 600px) { .fp-chip { padding: 4px 10px; font-size: 0.72rem; } .fp-panel { padding: 11px 12px 13px; } .fp-toggle { padding: 6px 13px; font-size: 0.78rem; } }
+        /* ── Drive button inline style ───────────────────── */
+        .drive-btn-inline { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.35); color: #ffd700; padding: 4px 12px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 0.78rem; transition: 0.2s; vertical-align: middle; margin-left: 10px; }
+        .drive-btn-inline:hover { background: rgba(255,215,0,0.18); box-shadow: 0 0 10px rgba(255,215,0,0.25); }
+        /* ── News panel animation ───────────────────────── */
+        .news-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0); z-index: 1100; align-items: center; justify-content: center; backdrop-filter: blur(0px); transition: background 0.28s ease, backdrop-filter 0.28s ease; }
+        .news-panel.active { display: flex; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); }
+        .news-panel-card { width: min(520px, calc(100vw - 32px)); max-height: 80vh; background: #13062a; border: 1px solid rgba(233,30,140,0.3); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,0.55); transform: scale(0.85) translateY(20px); opacity: 0; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease; transform-origin: bottom left; }
+        .news-panel.active .news-panel-card { transform: scale(1) translateY(0); opacity: 1; }
+        @keyframes newsClose { from { transform: scale(1) translateY(0); opacity: 1; } to { transform: scale(0.7) translate(-120px, 120px); opacity: 0; } }
+        .news-panel-card.closing { animation: newsClose 0.28s cubic-bezier(0.4,0,1,1) forwards; }
+        /* ── News unread toast ─────────────────────────── */
+        .news-toast { position: fixed; bottom: 145px; left: 18px; z-index: 1050; width: min(300px, calc(100vw - 36px)); background: linear-gradient(135deg, rgba(39,18,68,0.97), rgba(20,6,40,0.98)); border: 1px solid rgba(233,30,140,0.4); border-radius: 16px; padding: 14px 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(233,30,140,0.2); backdrop-filter: blur(16px); transform: translateX(-120%) scale(0.95); opacity: 0; transition: transform 0.4s cubic-bezier(0.34,1.3,0.64,1), opacity 0.35s ease; pointer-events: none; }
+        .news-toast.show { transform: translateX(0) scale(1); opacity: 1; pointer-events: auto; }
+        .news-toast.hiding { transform: translateX(-120%) scale(0.9); opacity: 0; transition: transform 0.3s ease, opacity 0.25s ease; }
+        .news-toast-title { font-family: 'Orbitron', sans-serif; font-size: 0.72rem; letter-spacing: 1.5px; color: var(--accent-pink); text-transform: uppercase; margin-bottom: 5px; }
+        .news-toast-body { color: #ccc; font-size: 0.82rem; line-height: 1.4; margin-bottom: 12px; }
+        .news-toast-actions { display: flex; gap: 8px; }
+        .news-toast-btn { flex: 1; padding: 7px 10px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.18s; text-align: center; font-family: 'Work Sans', sans-serif; }
+        .news-toast-btn.primary { background: rgba(233,30,140,0.2); border: 1px solid rgba(233,30,140,0.5); color: #f472b6; }
+        .news-toast-btn.primary:hover { background: rgba(233,30,140,0.35); box-shadow: 0 0 14px rgba(233,30,140,0.35); }
+        .news-toast-btn.secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: #888; }
+        .news-toast-btn.secondary:hover { background: rgba(255,255,255,0.09); color: #ccc; }
+        .news-toast-timer { height: 2px; background: rgba(233,30,140,0.25); border-radius: 1px; margin-top: 11px; overflow: hidden; }
+        .news-toast-timer-bar { height: 100%; background: linear-gradient(to right, rgba(233,30,140,0.7), rgba(181,25,214,0.7)); border-radius: 1px; transition: width linear; width: 100%; }
 
         /* Week updated ago text */
         .week-updated-ago { font-size: 0.7rem; color: #666; margin-top: 8px; font-style: italic; }
@@ -462,8 +522,7 @@
         .news-fab:hover { border-color: var(--accent-pink); box-shadow: 0 4px 20px rgba(233,30,140,0.3); }
         .news-fab-badge { position: absolute; top: -5px; right: -5px; background: #e91e8c; color: white; font-size: 0.6rem; font-weight: 800; min-width: 17px; height: 17px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 3px; box-shadow: 0 0 8px rgba(233,30,140,0.7); pointer-events: none; line-height: 1; }
         /* News Panel */
-        .news-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1100; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
-        .news-panel.active { display: flex; }
+        .news-panel.active { display: flex; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); }
         .news-panel-card { width: min(520px, calc(100vw - 32px)); max-height: 80vh; background: #13062a; border: 1px solid rgba(233,30,140,0.3); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 12px 40px rgba(0,0,0,0.55); }
         .news-panel-header { padding: 16px 18px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: #13062a; }
         .news-panel-title { font-family: 'Orbitron', sans-serif; font-size: 0.88rem; color: white; letter-spacing: 1px; }
@@ -486,7 +545,15 @@
         .nav-link-gpa.active { background: rgba(233, 30, 140, 0.15); border-color: rgba(233, 30, 140, 0.4); color: var(--accent-pink); }
         .gpa-btn { background: rgba(233, 30, 140, 0.2); border: 2px solid var(--accent-pink); color: var(--accent-pink); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
         .gpa-btn:hover { background: var(--accent-pink); color: white; box-shadow: 0 0 20px var(--accent-pink); border-color: transparent; }
-        .gpa-wrap { max-width: 800px; margin: 0 auto; }
+        .gpa-wrap { max-width: 800px; margin: 0 auto; transition: max-width 0.3s; }
+        .gpa-wrap.card-active { max-width: 100%; }
+        .gpa-grid-view { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 25px; align-items: stretch; width: 100%; }
+        .gpa-semester-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(233,30,140,0.15); border-radius: 16px; padding: 20px; box-sizing: border-box; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .gpa-semester-card .gpa-row { flex-wrap: wrap; }
+        .gpa-semester-card .gpa-row-name { min-width: 100px; }
+        .gpa-semester-card .gpa-row-inputs { min-width: 120px; flex: 1; }
+        .gpa-semester-card .gpa-row-credits { min-width: 36px; font-size: 0.75rem; }
+        .gpa-list-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(233,30,140,0.15); border-radius: 16px; padding: 20px; box-sizing: border-box; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.2); margin-bottom: 24px; }
         .gpa-mode-bar { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
         .gpa-mode-pill { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #aaa; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: 0.2s; }
         .gpa-mode-pill:hover { background: rgba(255,255,255,0.1); color: white; }
@@ -541,12 +608,38 @@
         .gpa-cum-toggle { background: rgba(233, 30, 140, 0.08); border: 2px solid rgba(233, 30, 140, 0.4); color: var(--text-sub); padding: 10px 24px; border-radius: 25px; cursor: pointer; font-weight: 700; font-size: 0.9rem; letter-spacing: 1px; transition: all 0.3s ease; font-family: 'Work Sans', sans-serif; }
         .gpa-cum-toggle:hover { background: rgba(233, 30, 140, 0.15); color: white; border-color: var(--accent-pink); box-shadow: 0 0 15px rgba(233, 30, 140, 0.3); }
         .gpa-cum-toggle.active { background: rgba(233, 30, 140, 0.25); color: white; border-color: var(--accent-pink); box-shadow: 0 0 20px rgba(233, 30, 140, 0.5); text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+        /* --- GPA Tab Navigation --- */
+        .gpa-tab-nav { display: flex; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 5px; gap: 4px; margin: 0 auto 28px; max-width: 520px; }
+        .gpa-tab { flex: 1; padding: 11px 10px; border-radius: 12px; border: none; cursor: pointer; font-family: 'Work Sans', sans-serif; font-weight: 700; font-size: 0.88rem; letter-spacing: 0.5px; color: #888; background: transparent; transition: all 0.25s ease; white-space: nowrap; }
+        .gpa-tab:hover { color: #ccc; background: rgba(255,255,255,0.05); }
+        .gpa-tab.active { background: linear-gradient(135deg, rgba(233,30,140,0.25), rgba(181,25,214,0.2)); color: white; box-shadow: 0 0 18px rgba(233,30,140,0.25), inset 0 1px 0 rgba(255,255,255,0.1); border: 1px solid rgba(233,30,140,0.4); }
+        /* Sub-toggle for card/list inside All Semesters tab */
+        .gpa-view-toggle-wrap { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 18px; }
+        .gpa-view-pill { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: #888; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; font-family: 'Work Sans', sans-serif; }
+        .gpa-view-pill:hover { color: #ccc; background: rgba(255,255,255,0.08); }
+        .gpa-view-pill.active { background: rgba(181,25,214,0.15); color: var(--accent-purple); border-color: var(--accent-purple); }
+        /* Cumulative sub-toggle inside This Semester tab */
+        .gpa-cum-sub-wrap { display: flex; justify-content: flex-end; margin-bottom: 18px; }
+        .gpa-cum-sub-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: #888; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; font-family: 'Work Sans', sans-serif; }
+        .gpa-cum-sub-btn:hover { color: #ccc; background: rgba(255,255,255,0.08); }
+        .gpa-cum-sub-btn.active { background: rgba(233,30,140,0.15); color: var(--accent-pink); border-color: var(--accent-pink); }
         .gpa-row-inputs { display: flex; gap: 6px; align-items: center; min-width: 180px; }
+        .gpa-row-updown { display: none; gap: 4px; padding-right: 8px; }
+        .gpa-row-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; font-family: 'Orbitron', sans-serif; }
+        .gpa-row-btn:hover:not(:disabled) { background: rgba(255,255,255,0.25); color: var(--accent-pink); }
+        .gpa-row-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         @media (max-width: 768px) {
+            .gpa-drag-handle > span[title="Drag to reorder"] { display: none; }
+            .gpa-row-updown { display: flex; }
             .gpa-row { gap: 6px; padding: 8px 10px; }
             .gpa-row-name { min-width: 80px; font-size: 0.82rem; }
             .gpa-result-value { font-size: 2.5rem; }
             .gpa-row-inputs { min-width: 140px; }
+            /* On mobile: always stack semesters, never show grid */
+            .gpa-grid-view { display: block !important; }
+            .gpa-semester-card { margin-bottom: 20px; }
+            .gpa-tab-nav { max-width: 100%; }
+            .gpa-view-toggle-wrap { display: none !important; }
         }
     </style>
 </head>
@@ -649,19 +742,16 @@
 
     <div id="schedule-page" class="page">
         <button id="schedule-back-btn" class="back-btn" onclick="smartBack()">← Back</button>
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <h1 style="color:#ff9500">SEMESTER MAP</h1>
-        </div>
-        <p class="subtitle" style="margin-bottom: 30px;">Your overview of assignments, quizzes, and projects</p>
+        <h1 style="color:#ff9500; text-align:center;">SEMESTER MAP</h1>
+        <p class="subtitle" style="margin-bottom: 14px;">Your overview of assignments, quizzes, and projects</p>
         <div class="grid weeks-grid" id="deliverables-grid"></div>
     </div>
 
     <div id="deadlines-page" class="page">
         <button class="back-btn" onclick="smartBack()">← Back</button>
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <h1 style="color:#00E5FF">DEADLINES</h1>
-        </div>
-        <p class="subtitle" style="margin-bottom: 30px;">Track your upcoming tasks and quizzes</p>
+        <h1 style="color:#00E5FF; text-align:center;">DEADLINES</h1>
+        <p class="subtitle" style="margin-bottom: 12px;">Track your upcoming tasks and quizzes</p>
+        <div id="deadlines-filter-bar" style="max-width:800px; margin:0 auto 14px;"></div>
         
         <div style="max-width: 800px; margin: 0 auto;">
             <div id="ongoing-container" style="display:none; margin-bottom:35px;">
@@ -686,9 +776,7 @@
     <div id="midterm-page" class="page">
         <button id="midterm-back-btn" class="back-btn" onclick="smartBack()">← Back</button>
         <div id="midterm-capture-wrap">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                <h1 style="color:#007aff">MIDTERM EXAMS</h1>
-            </div>
+            <h1 style="color:#007aff; text-align:center;">MIDTERM EXAMS</h1>
             <p class="subtitle" style="margin-bottom: 30px;">27 March — 3 April 2026 &nbsp;·&nbsp; Spring 2026</p>
             <div id="midterm-list" style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column;"></div>
         </div>
@@ -700,7 +788,7 @@
     <div id="useful-links-page" class="page">
         <button class="back-btn" onclick="smartBack()">← Back</button>
         <h1 style="color:var(--accent-purple)">USEFUL LINKS</h1>
-        <p class="subtitle" style="margin-bottom: 30px;">Important resources across all subjects</p>
+        <p class="subtitle" style="margin-bottom: 14px;">Important resources across all subjects</p>
         <div id="useful-links-filter-bar" class="filter-bar"></div>
         <div class="grid weeks-grid" id="all-links-list"></div>
     </div>
@@ -732,10 +820,11 @@
         <h1 style="background: linear-gradient(to right, var(--accent-pink), var(--accent-purple)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(233, 30, 140, 0.3);">GPA CALCULATOR</h1>
         <p class="subtitle" style="margin-bottom: 20px;">Calculate your semester or cumulative GPA live</p>
         <div class="gpa-wrap" id="gpa-capture-wrap">
-            <div id="gpa-mode-toggles" style="text-align:center; margin-bottom:20px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-                <button class="gpa-cum-toggle" id="gpa-cum-toggle" onclick="toggleGpaCumulative()">📈 Current GPA</button>
-                <button class="gpa-cum-toggle" id="gpa-group-toggle" onclick="toggleGpaGroupMode()">🗂️ Group Semesters</button>
-            </div>
+            <!-- Tab navigation: always visible, both modes clearly labelled -->
+            <nav class="gpa-tab-nav" id="gpa-mode-toggles">
+                <button class="gpa-tab active" id="gpa-tab-single" onclick="gpaSelectTab('single')">📊 This Semester</button>
+                <button class="gpa-tab" id="gpa-tab-group" onclick="gpaSelectTab('group')">🗂️ All Semesters</button>
+            </nav>
             <div id="gpa-content-area" style="min-height:200px;"></div>
             <div id="gpa-result-area"></div>
             <div class="gpa-export-bar" id="gpa-export-bar" style="display:flex !important; opacity:1 !important; visibility:visible !important; min-height:40px; margin-top:30px;">
@@ -754,18 +843,18 @@
 
     <div id="weeks-page" class="page">
         <button class="back-btn" onclick="smartBack()">← Back</button>
-        <div style="text-align:center;">
-            <h1 id="subject-title" style="margin-bottom:5px;"></h1>
-            <div id="drive-container" style="margin-bottom:20px;"></div>
+        <div style="text-align:center; margin-bottom:6px;">
+            <h1 id="subject-title" style="margin-bottom:0; display:inline;"></h1><span id="drive-container"></span>
         </div>
         
-        <div id="subject-tabs" class="subject-tabs">
+        <div id="subject-tabs" class="subject-tabs" style="margin-bottom:12px;">
             <button id="tab-weeks" class="sub-tab active" onclick="renderSubjectView('weeks')">📚 Weeks</button>
             <button id="tab-events" class="sub-tab" onclick="renderSubjectView('events')">🎯 Exam Materials</button>
             <button id="tab-playlists" class="sub-tab" onclick="renderSubjectView('playlists')">🔗 Useful Links</button>
         </div>
 
-        <div id="filter-bar" class="filter-bar"></div>
+        <div id="filter-bar-wrap" style="text-align:center; margin-bottom:14px; display:none;"></div>
+        <div id="filter-bar" class="filter-bar" style="display:none;"></div>
         <div class="grid weeks-grid" id="weeks-grid"></div>
         <div class="grid weeks-grid" id="playlists-grid" style="display:none;"></div>
     </div>
@@ -842,6 +931,15 @@
 
 <!-- News FAB -->
 <button class="news-fab" id="news-fab" onclick="openNewsPanel()" title="News & Announcements"></button>
+<div id="news-toast" class="news-toast">
+    <div class="news-toast-title">📬 Announcements</div>
+    <div class="news-toast-body" id="news-toast-body"></div>
+    <div class="news-toast-actions">
+        <button class="news-toast-btn primary" onclick="dismissNewsToast(); openNewsPanel();">Go check them →</button>
+        <button class="news-toast-btn secondary" onclick="dismissNewsToast();">Dismiss</button>
+    </div>
+    <div class="news-toast-timer"><div class="news-toast-timer-bar" id="news-toast-timer-bar"></div></div>
+</div>
 
 <!-- News Panel -->
 <div id="news-panel" class="news-panel" onclick="closeNewsPanel(event)">
@@ -960,9 +1058,23 @@
     if(typeof window.STAFF_DATA === 'undefined') window.STAFF_DATA = [];
     
     let currSub = null;
-    let currentSubjectView = 'weeks'; 
+    let currentSubjectView = 'weeks';
+    let playlistBadgeFilters = new Set();
+    let historySubFilter = 'All';
+    // Filter panel open states — survive re-renders
+    let fpOpenState = { schedule: false, deadlines: false, usefulBadges: false, playlist: false, history: false };
+    let deadlineSubFilter = 'All';
+    let deadlineTypeFilter = 'all';
+    let midtermHiddenSet = (() => {
+        try { return new Set(JSON.parse(localStorage.getItem('midtermHidden') || '[]')); }
+        catch(e) { return new Set(); }
+    })();
+    function saveMidtermHidden() {
+        try { localStorage.setItem('midtermHidden', JSON.stringify([...midtermHiddenSet])); } catch(e) {}
+    }
     let currentUsefulFilter = 'All Links';
     let currentUsefulSubject = 'All Subjects';
+    let currentUsefulBadgeFilters = new Set(); // multi-select badge filters
     let subjectViewFilters = {};
     let weekNavPrev = null, weekNavNext = null, weekNavFrom = 'weeks';
     let currentContentObj = null;
@@ -1162,6 +1274,8 @@
         if (typeof window.NEWS_DATA === 'undefined') window.NEWS_DATA = [];
         renderNewsBtn();
         animateActivePageWaterfall();
+        // Show unread notification toast after a brief delay
+        setTimeout(maybeShowNewsToast, 1800);
     }
 
     function parseDateMeta(str) {
@@ -1340,7 +1454,8 @@
         return parseWhenDeadlineMeta(task && task.when, weekNum);
     }
 
-    function showRecent() {
+    function showRecent(subFilter = null) {
+        if (subFilter !== null) historySubFilter = subFilter;
         const list = document.getElementById('recent-list');
         list.innerHTML = '';
         let weekItems = [];
@@ -1395,10 +1510,80 @@
         });
         displayItems.sort((a, b) => b.timestamp - a.timestamp);
 
-        if(displayItems.length === 0) {
-            list.innerHTML = `<div style="text-align:center; color:#666; margin-top:50px">No history found.</div>`;
+        // Build compact subject filter chips
+        const allSubCodes = new Set();
+        displayItems.forEach(e => {
+            const code = e.type === 'week' ? e.item.subCode : (e.type === 'res-single' ? e.item.subCode : (e.items ? e.items[0].subCode : null));
+            if (code) allSubCodes.add(code);
+        });
+
+        if (allSubCodes.size > 1) {
+            const filterWrap = document.createElement('div');
+            filterWrap.style.cssText = 'text-align:center; margin-bottom:16px;';
+
+            const anyFilter = historySubFilter !== 'All';
+            const fpToggle = document.createElement('button');
+            fpToggle.className = 'fp-toggle' + (anyFilter ? ' has-filter' : '');
+            fpToggle.innerHTML = `🎛 Subject${anyFilter ? ` <span class="fp-badge">${historySubFilter}</span>` : ''} <span class="fp-arrow">▼</span>`;
+
+            const fpPanel = document.createElement('div');
+            fpPanel.className = 'fp-panel' + (anyFilter ? ' open' : '');
+            const fpRow = document.createElement('div');
+            fpRow.className = 'fp-row';
+            fpRow.style.justifyContent = 'center';
+
+            const allChip = document.createElement('button');
+            allChip.className = 'fp-chip' + (historySubFilter === 'All' ? ' active' : '');
+            allChip.textContent = 'All';
+            if (historySubFilter === 'All') allChip.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+            allChip.onclick = () => { fpOpenState.history = true; showRecent('All'); };
+            fpRow.appendChild(allChip);
+
+            allSubCodes.forEach(code => {
+                const color = getSubjectColor(code);
+                const chip = document.createElement('button');
+                chip.className = 'fp-chip' + (historySubFilter === code ? ' active' : '');
+                chip.textContent = code;
+                if (historySubFilter === code) chip.style.cssText = `background:${getSubjectBg(code)}; border-color:${color}; color:${color};`;
+                chip.onclick = () => { fpOpenState.history = true; showRecent(code); };
+                fpRow.appendChild(chip);
+            });
+            fpPanel.appendChild(fpRow);
+            fpToggle.addEventListener('click', () => {
+                const isOpen = fpPanel.classList.contains('open');
+                fpPanel.classList.toggle('open', !isOpen);
+                fpToggle.classList.toggle('open', !isOpen);
+                fpOpenState.history = !isOpen;
+            });
+            if (fpOpenState.history || anyFilter) { fpPanel.classList.add('open'); fpToggle.classList.add('open'); }
+
+            filterWrap.appendChild(fpToggle);
+            filterWrap.appendChild(fpPanel);
+            list.appendChild(filterWrap);
+        }
+
+        // Apply subject filter
+        const filteredDisplay = historySubFilter === 'All' ? displayItems : displayItems.filter(e => {
+            if (e.type === 'week') return e.item.subCode === historySubFilter;
+            if (e.type === 'res-single') return e.item.subCode === historySubFilter;
+            if (e.type === 'res-batch') return e.items.some(i => i.subCode === historySubFilter);
+            return true;
+        });
+
+        // For batch entries filtered to a specific subject, clone and filter internal items
+        const displayWithFilteredBatch = filteredDisplay.map(e => {
+            if (e.type === 'res-batch' && historySubFilter !== 'All') {
+                const filtered = e.items.filter(i => i.subCode === historySubFilter);
+                if (filtered.length === 1) return { type: 'res-single', item: filtered[0], timestamp: filtered[0].timestamp };
+                return { ...e, items: filtered };
+            }
+            return e;
+        });
+
+        if(displayWithFilteredBatch.length === 0) {
+            list.innerHTML += `<div style="text-align:center; color:#666; margin-top:50px">No history found for this subject.</div>`;
         } else {
-            displayItems.forEach(entry => {
+            displayWithFilteredBatch.forEach(entry => {
                 const el = document.createElement('div');
                 el.className = 'recent-card';
 
@@ -1485,7 +1670,10 @@
     }
 
     // --- DEADLINES LOGIC ---
-    function showDeadlines(push = true) {
+    function showDeadlines(push = true, typeFilter = null, subFilter = null) {
+        if (typeFilter !== null) deadlineTypeFilter = typeFilter;
+        if (subFilter !== null) deadlineSubFilter = subFilter;
+
         const ongoingContainer = document.getElementById('ongoing-container');
         const ongoingList = document.getElementById('ongoing-list');
         const upList = document.getElementById('upcoming-list');
@@ -1570,6 +1758,73 @@
         upcoming.sort((a, b) => a.timestamp - b.timestamp);
         completed.sort((a, b) => b.timestamp - a.timestamp);
 
+        // ── Build collapsible filter panel ──────────────────────────────────
+        const filterBarEl = document.getElementById('deadlines-filter-bar');
+        if (filterBarEl) {
+            filterBarEl.innerHTML = '';
+            filterBarEl.style.textAlign = 'center';
+
+            const typeChips = [
+                { key: 'all', label: 'All', color: '#00E5FF' },
+                { key: 'quiz', label: '🧠 Quizzes', color: '#af52de' },
+                { key: 'assignment', label: '📝 Assignments', color: '#007aff' },
+                { key: 'project', label: '🚀 Projects', color: '#34c759' },
+                { key: 'news', label: '📢 News', color: '#e91e8c' }
+            ];
+
+            const subCodesSet = new Set();
+            [...ongoing, ...upcoming, ...completed, ...unscheduled].forEach(item => {
+                if (item.task && item.task.sub && item.task.sub !== 'NEWS') subCodesSet.add(item.task.sub);
+            });
+            const subChips = [{ key: 'All', label: 'All Subjects' }];
+            subCodesSet.forEach(code => subChips.push({ key: code, label: code, color: getSubjectColor(code) }));
+
+            const dlRows = [{ label: 'Type', chips: typeChips }];
+            if (subChips.length > 2) dlRows.push({ label: 'Subject', chips: subChips });
+
+            buildFilterPanel(
+                filterBarEl, filterBarEl,
+                dlRows,
+                () => ({ 0: deadlineTypeFilter, 1: deadlineSubFilter }),
+                (ri, key) => {
+                    if (ri === 0) deadlineTypeFilter = key;
+                    else deadlineSubFilter = key;
+                    showDeadlines(false, deadlineTypeFilter, deadlineSubFilter);
+                },
+                'all',
+                'deadlines'
+            );
+        }
+
+        // ── Apply filters ────────────────────────────────────────────────
+        function applyDeadlineFilters(arr) {
+            return arr.filter(item => {
+                // Type filter
+                if (deadlineTypeFilter !== 'all') {
+                    if (deadlineTypeFilter === 'news' && item.source !== 'news') return false;
+                    if (deadlineTypeFilter !== 'news') {
+                        if (item.source === 'news') return false;
+                        const cat = getTaskTypeCategory(item.task.name);
+                        if (cat !== deadlineTypeFilter) return false;
+                    }
+                }
+                // Subject filter
+                if (deadlineSubFilter !== 'All') {
+                    if (item.task.sub !== deadlineSubFilter) return false;
+                }
+                return true;
+            });
+        }
+
+        const filteredOngoing     = applyDeadlineFilters(ongoing);
+        const filteredUpcoming    = applyDeadlineFilters(upcoming);
+        const filteredCompleted   = applyDeadlineFilters(completed);
+        const filteredUnscheduled = applyDeadlineFilters(unscheduled);
+
+        if (filteredOngoing.length > 0) {
+            ongoingContainer.style.display = 'block';
+        }
+
         function getGroupedHtml(arr, isComp) {
             if (arr.length === 0) return `<div class="empty-state">${isComp ? 'No completed tasks yet.' : 'Hooray! No upcoming deadlines.'}</div>`;
             
@@ -1653,10 +1908,10 @@
         }
 
         // Render ongoing tasks
-        if(ongoing.length > 0) {
+        if(filteredOngoing.length > 0) {
             ongoingContainer.style.display = 'block';
             let ongoingHtml = '';
-            ongoing.forEach(item => {
+            filteredOngoing.forEach(item => {
                 let subName = item.task.sub;
                 if(window.COURSE_DATA) {
                     const sObj = window.COURSE_DATA.find(s => s.code === item.task.sub);
@@ -1691,13 +1946,13 @@
             ongoingList.innerHTML = ongoingHtml;
         }
 
-        upList.innerHTML = getGroupedHtml(upcoming, false);
-        compList.innerHTML = getGroupedHtml(completed, true);
+        upList.innerHTML = getGroupedHtml(filteredUpcoming, false);
+        compList.innerHTML = getGroupedHtml(filteredCompleted, true);
 
-        if(unscheduled.length > 0) {
+        if(filteredUnscheduled.length > 0) {
             unschContainer.style.display = 'block';
             let unschHtml = '';
-            unscheduled.forEach(item => {
+            filteredUnscheduled.forEach(item => {
                 let subName = item.source === 'news' ? 'News Announcement' : item.task.sub;
                 if(window.COURSE_DATA && item.source !== 'news') {
                     const sObj = window.COURSE_DATA.find(s => s.code === item.task.sub);
@@ -1731,9 +1986,10 @@
     }
 
     // --- USEFUL LINKS GLOBAL PAGE ---
-    function showUsefulLinks(push = true, filterType = 'All Links', subjectFilter = 'All Subjects') {
+    function showUsefulLinks(push = true, filterType = 'All Links', subjectFilter = 'All Subjects', badgeFilters = null) {
         currentUsefulFilter = filterType;
         currentUsefulSubject = subjectFilter;
+        if (badgeFilters !== null) currentUsefulBadgeFilters = new Set(badgeFilters);
 
         const filterBar = document.getElementById('useful-links-filter-bar');
         const list = document.getElementById('all-links-list');
@@ -1742,24 +1998,18 @@
 
         let hasLinksAnywhere = false;
         let activeSubjects = [];
-        let catCounts = { 'Lectures':0, 'Tutorials':0, 'Labs':0, 'Projects':0, 'Presentations':0 };
+        // Collect all unique badge texts across all playlists for current subject filter
+        const allBadgeSet = new Map(); // badge text -> badge color
 
         window.COURSE_DATA.forEach(sub => {
             if (sub.playlists && sub.playlists.length > 0) {
                 hasLinksAnywhere = true;
                 activeSubjects.push(sub);
-
                 if (subjectFilter === 'All Subjects' || subjectFilter === sub.code) {
                     sub.playlists.forEach(p => {
-                        const t = (p.title || '').toLowerCase();
-                        const n = (p.note || '').toLowerCase();
-                        const btext = (p.badges||[]).map(b=>(b.text||'').toLowerCase()).join(' ');
-                        const all = t + ' ' + n + ' ' + btext;
-                        if(all.includes('lecture')) catCounts['Lectures']++;
-                        if(all.includes('section') || all.includes('tutorial')) catCounts['Tutorials']++;
-                        if(all.includes('lab')) catCounts['Labs']++;
-                        if(all.includes('project')) catCounts['Projects']++;
-                        if(all.includes('presentation')) catCounts['Presentations']++;
+                        (p.badges || []).forEach(b => {
+                            if (b.text && b.text.trim()) allBadgeSet.set(b.text.trim(), b.color || '#e91e8c');
+                        });
                     });
                 }
             }
@@ -1771,213 +2021,191 @@
             return;
         }
 
-        let selectHtml = `<select class="useful-select" onchange="showUsefulLinks(false, currentUsefulFilter, this.value)">`;
+        // ── Subject dropdown (always visible) + collapsible badge filter ──
+        // Subject selector row
+        const subRow = document.createElement('div');
+        subRow.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:10px; justify-content:center; flex-wrap:wrap;';
+        let selectHtml = `<select class="useful-select" onchange="showUsefulLinks(false, 'All Links', this.value, [])">`;
         selectHtml += `<option value="All Subjects" ${subjectFilter === 'All Subjects' ? 'selected' : ''}>All Subjects</option>`;
         activeSubjects.forEach(s => {
             selectHtml += `<option value="${s.code}" ${subjectFilter === s.code ? 'selected' : ''}>${s.code} - ${s.name}</option>`;
         });
         selectHtml += `</select>`;
-        
-        const selectWrapper = document.createElement('div');
+        const selectWrapper = document.createElement('span');
         selectWrapper.innerHTML = selectHtml;
-        filterBar.appendChild(selectWrapper.firstChild);
+        subRow.appendChild(selectWrapper.firstChild);
+        filterBar.appendChild(subRow);
 
-        const btnAll = document.createElement('button');
-        btnAll.className = `filter-btn ${filterType === 'All Links' ? 'active' : ''}`;
-        btnAll.innerText = 'All Links';
-        btnAll.onclick = () => showUsefulLinks(false, 'All Links', currentUsefulSubject);
-        filterBar.appendChild(btnAll);
+        // Collapsible badge filter panel
+        if (allBadgeSet.size > 0) {
+            const badgeChips = [];
+            allBadgeSet.forEach((color, text) => badgeChips.push({ key: text, label: text, color }));
+            // Multi-select: use custom panel rather than buildFilterPanel (which is single-select per row)
+            const fpToggle = document.createElement('button');
+            const anyBadge = currentUsefulBadgeFilters.size > 0;
+            fpToggle.className = 'fp-toggle' + (anyBadge ? ' has-filter' : '');
+            fpToggle.innerHTML = `🏷 Badges${anyBadge ? ` <span class="fp-badge">${currentUsefulBadgeFilters.size}</span>` : ''} <span class="fp-arrow">▼</span>`;
+            subRow.appendChild(fpToggle);
 
-        Object.keys(catCounts).forEach(cat => {
-            if (catCounts[cat] > 0) {
+            const fpPanel = document.createElement('div');
+            fpPanel.className = 'fp-panel';
+            fpPanel.style.cssText = 'max-width:700px; margin:0 auto;';
+            const fpRow = document.createElement('div');
+            fpRow.className = 'fp-row';
+            fpRow.style.justifyContent = 'center';
+            badgeChips.forEach(chip => {
+                const isActive = currentUsefulBadgeFilters.has(chip.key);
                 const btn = document.createElement('button');
-                btn.className = `filter-btn ${filterType === cat ? 'active' : ''}`;
-                btn.innerText = cat;
-                btn.onclick = () => showUsefulLinks(false, cat, currentUsefulSubject);
-                filterBar.appendChild(btn);
+                btn.className = 'fp-chip' + (isActive ? ' active' : '');
+                btn.textContent = chip.label;
+                if (isActive && chip.color) btn.style.cssText = `background:${chip.color}33; border-color:${chip.color}; color:${chip.color};`;
+                btn.addEventListener('click', () => {
+                    fpOpenState.usefulBadges = true;
+                    const next = new Set(currentUsefulBadgeFilters);
+                    if (next.has(chip.key)) next.delete(chip.key); else next.add(chip.key);
+                    showUsefulLinks(false, 'All Links', currentUsefulSubject, Array.from(next));
+                });
+                fpRow.appendChild(btn);
+            });
+            if (anyBadge) {
+                const clr = document.createElement('button');
+                clr.className = 'fp-chip';
+                clr.textContent = '✕ Clear';
+                clr.style.cssText = 'color:#e91e8c; border-color:rgba(233,30,140,0.25);';
+                clr.addEventListener('click', () => showUsefulLinks(false, 'All Links', currentUsefulSubject, []));
+                fpRow.appendChild(clr);
             }
-        });
+            fpPanel.appendChild(fpRow);
+            fpToggle.addEventListener('click', () => {
+                const isOpen = fpPanel.classList.contains('open');
+                fpPanel.classList.toggle('open', !isOpen);
+                fpToggle.classList.toggle('open', !isOpen);
+                fpOpenState.usefulBadges = !isOpen;
+            });
+            // Restore open state
+            if (fpOpenState.usefulBadges || anyBadge) { fpPanel.classList.add('open'); fpToggle.classList.add('open'); }
+            filterBar.appendChild(fpPanel);
+        }
+
+
+        // ── Render links ──────────────────────────────────────
+        list.style.display = 'flex';
+        list.style.flexDirection = 'column';
+        list.style.maxWidth = '900px';
+        list.style.margin = '0 auto';
+        list.style.gap = '0';
 
         let renderedCount = 0;
-        const isListView = true;
-
-        if (isListView) {
-            list.style.display = 'flex';
-            list.style.flexDirection = 'column';
-            list.style.maxWidth = '900px';
-            list.style.margin = '0 auto';
-            list.style.gap = '0';
-        } else {
-            list.style.display = '';
-            list.style.flexDirection = '';
-            list.style.maxWidth = '';
-            list.style.margin = '';
-            list.style.gap = '';
-        }
 
         window.COURSE_DATA.forEach(sub => {
             if (subjectFilter !== 'All Subjects' && subjectFilter !== sub.code) return;
-            
-            if (sub.playlists && sub.playlists.length > 0) {
-                let filteredPlaylists = sub.playlists.filter(p => {
-                    if (filterType === 'All Links') return true;
-                    const t = (p.title || '').toLowerCase();
-                    const n = (p.note || '').toLowerCase();
-                    const btext = (p.badges||[]).map(b=>(b.text||'').toLowerCase()).join(' ');
-                    const all = t + ' ' + n + ' ' + btext;
-                    const kw = filterType.toLowerCase();
-                    if(kw === 'lectures' && all.includes('lecture')) return true;
-                    if(kw === 'tutorials' && (all.includes('section') || all.includes('tutorial'))) return true;
-                    if(kw === 'labs' && all.includes('lab')) return true;
-                    if(kw === 'projects' && all.includes('project')) return true;
-                    if(kw === 'presentations' && all.includes('presentation')) return true;
-                    return false;
-                });
+            if (!sub.playlists || sub.playlists.length === 0) return;
 
-                if (filteredPlaylists.length > 0) {
-                    if (isListView) {
-                        // --- LIST VIEW: subject section with link rows + compact grouping ---
-                        const color = getSubjectColor(sub.code);
-                        const section = document.createElement('div');
-                        section.style.cssText = 'margin-bottom:30px;';
-
-                        const header = document.createElement('div');
-                        header.style.cssText = `font-family:'Orbitron',sans-serif; font-size:1.3rem; color:${color}; border-bottom:2px solid ${color}; padding-bottom:10px; margin-bottom:12px; margin-top:10px; display:flex; align-items:center; gap:10px;`;
-                        header.innerHTML = `<span style="font-size:1.5rem;"></span>${sub.code} — ${sub.name} <span style="font-size:0.6rem; color:${color}; opacity:0.7; font-family:'Segoe UI',sans-serif; font-weight:600; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; margin-left:4px;">${filteredPlaylists.length}</span>`;
-                        section.appendChild(header);
-
-                        // Build grouped + ungrouped render items
-                        const ulRenderItems = [];
-                        const ulProcessedGroups = new Set();
-                        filteredPlaylists.forEach(p => {
-                            const grp = (p.group || '').trim();
-                            if (grp) {
-                                if (!ulProcessedGroups.has(grp)) {
-                                    ulProcessedGroups.add(grp);
-                                    ulRenderItems.push({ type: 'group', name: grp, items: filteredPlaylists.filter(gp => (gp.group||'').trim() === grp) });
-                                }
-                            } else {
-                                ulRenderItems.push({ type: 'single', playlist: p });
-                            }
-                        });
-
-                        ulRenderItems.forEach(item => {
-                            if (item.type === 'single') {
-                                renderedCount++;
-                                const p = item.playlist;
-                                const row = document.createElement('div');
-                                row.style.cssText = `display:flex; align-items:center; gap:14px; padding:12px 16px; border-radius:12px; cursor:pointer; transition:all 0.2s; border-left:3px solid ${color}; margin-bottom:8px; background:rgba(0,0,0,0.2);`;
-                                row.onmouseenter = () => { row.style.background = 'rgba(255,255,255,0.06)'; row.style.transform = 'translateX(6px)'; };
-                                row.onmouseleave = () => { row.style.background = 'rgba(0,0,0,0.2)'; row.style.transform = 'translateX(0)'; };
-                                const lbadges = p.badges || (p.badgeText ? [{text:p.badgeText, color:p.badgeColor||'#e91e8c'}] : []);
-                                const badgeHtml = lbadges.filter(b=>b.text).map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.65rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px; flex-shrink:0;">${b.text}</span>`).join('');
-                                const noteHtml = p.note ? `<div style="color:var(--text-sub); font-size:0.8rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:500px;">${p.note.split('\n')[0]}</div>` : '';
-                                row.innerHTML = `<span style="font-size:1.5rem; flex-shrink:0;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.95rem;">${p.title || 'Link'}</span>${badgeHtml}</div>${noteHtml}</div><span style="color:${color}; font-size:1rem; flex-shrink:0; opacity:0.6;">→</span>`;
-                                row.onclick = () => { if(p.link && p.link !== '#' && p.link.trim() !== '') window.open(p.link, '_blank'); else alert('No link assigned.'); };
-                                section.appendChild(row);
-                            } else {
-                                // Compact group: collapsible row with count badge
-                                const gWrap = document.createElement('div');
-                                gWrap.style.cssText = `border-left:3px solid ${color}; margin-bottom:8px; border-radius:12px; background:rgba(0,0,0,0.15); overflow:hidden;`;
-                                const firstBadges = (item.items[0].badges || []).filter(b=>b.text);
-                                const gBadgeHtml = firstBadges.map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${b.text}</span>`).join('');
-                                const gHeader = document.createElement('div');
-                                gHeader.style.cssText = `display:flex; align-items:center; gap:10px; padding:10px 16px; cursor:pointer; transition:background 0.2s;`;
-                                gHeader.onmouseenter = () => { gHeader.style.background = 'rgba(255,255,255,0.04)'; };
-                                gHeader.onmouseleave = () => { gHeader.style.background = 'transparent'; };
-                                gHeader.innerHTML = `<span style="font-size:1.3rem;">${item.items[0].icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-weight:700; color:white; font-size:0.95rem;">${item.name}</span>${gBadgeHtml}<span style="font-size:0.65rem; color:#888; background:rgba(255,255,255,0.08); padding:2px 8px; border-radius:10px;">${item.items.length} links</span></div></div><span class="ul-group-arrow" style="color:${color}; font-size:0.8rem; transition:transform 0.2s;">▼</span>`;
-                                gWrap.appendChild(gHeader);
-                                
-                                const gBody = document.createElement('div');
-                                gBody.style.cssText = 'padding:0 8px 8px 8px; display:none;';
-                                item.items.forEach(p => {
-                                    renderedCount++;
-                                    const subRow = document.createElement('div');
-                                    subRow.style.cssText = 'display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; cursor:pointer; transition:all 0.15s; margin-bottom:2px;';
-                                    subRow.onmouseenter = () => { subRow.style.background = 'rgba(255,255,255,0.05)'; subRow.style.transform = 'translateX(4px)'; };
-                                    subRow.onmouseleave = () => { subRow.style.background = 'transparent'; subRow.style.transform = 'translateX(0)'; };
-                                    const pBadges = (p.badges||[]).filter(b=>b.text);
-                                    const pBadgeHtml = pBadges.map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.55rem; padding:1px 6px; border-radius:6px; font-weight:800;">${b.text}</span>`).join('');
-                                    const noteSnip = p.note ? `<div style="color:var(--text-sub); font-size:0.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.note.split('\n')[0]}</div>` : '';
-                                    subRow.innerHTML = `<span style="font-size:1rem;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.85rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnip}</div><span style="color:${color}; opacity:0.4; font-size:0.8rem;">→</span>`;
-                                    subRow.onclick = () => { if(p.link && p.link !== '#' && p.link.trim() !== '') window.open(p.link, '_blank'); else alert('No link assigned.'); };
-                                    gBody.appendChild(subRow);
-                                });
-                                gWrap.appendChild(gBody);
-                                
-                                gHeader.onclick = () => {
-                                    const isOpen = gBody.style.display !== 'none';
-                                    gBody.style.display = isOpen ? 'none' : 'block';
-                                    gHeader.querySelector('.ul-group-arrow').style.transform = isOpen ? '' : 'rotate(180deg)';
-                                };
-                                section.appendChild(gWrap);
-                            }
-                        });
-
-                        list.appendChild(section);
-                    } else {
-                        // --- CARD GRID VIEW (filtered or single subject) ---
-                        if (subjectFilter === 'All Subjects') {
-                            const header = document.createElement('div');
-                            header.style.gridColumn = '1 / -1';
-                            header.style.fontFamily = "'Orbitron', sans-serif";
-                            header.style.fontSize = '1.3rem';
-                            header.style.color = getSubjectColor(sub.code);
-                            header.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
-                            header.style.paddingBottom = '10px';
-                            header.style.marginTop = '20px';
-                            header.innerHTML = `${sub.code} - ${sub.name} <span style="font-size:0.55rem; color:${getSubjectColor(sub.code)}; opacity:0.7; font-family:'Segoe UI',sans-serif; font-weight:600; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; margin-left:6px;">${filteredPlaylists.length}</span>`;
-                            list.appendChild(header);
-                        }
-
-                        filteredPlaylists.forEach(p => {
-                            renderedCount++;
-                            const el = document.createElement('div');
-                            el.className = 'card';
-                            const cbadges = p.badges || (p.badgeText ? [{text:p.badgeText, color:p.badgeColor||'#e91e8c'}] : []);
-                            const badgeHtml = cbadges.filter(b=>b.text).map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${b.text}</span>`).join('');
-                            const badgeWrapHtml = badgeHtml ? `<div style="position:absolute; top:12px; right:12px; display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; max-width:70%;">${badgeHtml}</div>` : '';
-                            const noteHtml = (p.note) ? `<div style="color:var(--text-sub); margin-top:15px; font-size:0.9rem; line-height:1.4; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px; white-space:pre-wrap;">${p.note}</div>` : '';
-                            
-                            el.innerHTML = `
-                                ${badgeWrapHtml}
-                                <span class="sub-badge" style="position:absolute; top:15px; left:15px; background:${getSubjectBg(sub.code)}; color:${getSubjectColor(sub.code)}; padding:4px 8px; border-radius:6px; font-size:0.7rem; border-left: 2px solid ${getSubjectColor(sub.code)};">${sub.code}</span>
-                                <div style="font-size:2.5rem; margin-bottom:10px; margin-top:20px;">${p.icon || '🔗'}</div>
-                                <div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${p.title || 'Link'}</div>
-                                ${noteHtml}
-                            `;
-                            el.onclick = () => {
-                                if(p.link && p.link !== "#" && p.link.trim() !== "") window.open(p.link, "_blank");
-                                else alert("No link assigned.");
-                            };
-                            list.appendChild(el);
-                        });
-                    }
+            let filteredPlaylists = sub.playlists.filter(p => {
+                if (currentUsefulBadgeFilters.size === 0) return true;
+                // playlist passes if it has ALL selected badge filters
+                const pBadges = new Set((p.badges || []).map(b => (b.text || '').trim()));
+                for (const f of currentUsefulBadgeFilters) {
+                    if (!pBadges.has(f)) return false;
                 }
-            }
+                return true;
+            });
+
+            if (filteredPlaylists.length === 0) return;
+
+            const color = getSubjectColor(sub.code);
+            const section = document.createElement('div');
+            section.style.cssText = 'margin-bottom:30px;';
+
+            const header = document.createElement('div');
+            header.style.cssText = `font-family:'Orbitron',sans-serif; font-size:1.3rem; color:${color}; border-bottom:2px solid ${color}; padding-bottom:10px; margin-bottom:12px; margin-top:10px; display:flex; align-items:center; gap:10px;`;
+            header.innerHTML = `${sub.code} — ${sub.name} <span style="font-size:0.6rem; color:${color}; opacity:0.7; font-family:'Segoe UI',sans-serif; font-weight:600; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; margin-left:4px;">${filteredPlaylists.length}</span>`;
+            section.appendChild(header);
+
+            const ulRenderItems = [];
+            const ulProcessedGroups = new Set();
+            filteredPlaylists.forEach(p => {
+                const grp = (p.group || '').trim();
+                if (grp) {
+                    if (!ulProcessedGroups.has(grp)) {
+                        ulProcessedGroups.add(grp);
+                        ulRenderItems.push({ type: 'group', name: grp, items: filteredPlaylists.filter(gp => (gp.group||'').trim() === grp) });
+                    }
+                } else {
+                    ulRenderItems.push({ type: 'single', playlist: p });
+                }
+            });
+
+            ulRenderItems.forEach(item => {
+                if (item.type === 'single') {
+                    renderedCount++;
+                    const p = item.playlist;
+                    const row = document.createElement('div');
+                    row.style.cssText = `display:flex; align-items:center; gap:14px; padding:12px 16px; border-radius:12px; cursor:pointer; transition:all 0.2s; border-left:3px solid ${color}; margin-bottom:8px; background:rgba(0,0,0,0.2);`;
+                    row.onmouseenter = () => { row.style.background = 'rgba(255,255,255,0.06)'; row.style.transform = 'translateX(6px)'; };
+                    row.onmouseleave = () => { row.style.background = 'rgba(0,0,0,0.2)'; row.style.transform = 'translateX(0)'; };
+                    const lbadges = p.badges || (p.badgeText ? [{text:p.badgeText, color:p.badgeColor||'#e91e8c'}] : []);
+                    const badgeHtml = lbadges.filter(b=>b.text).map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.65rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px; flex-shrink:0;">${b.text}</span>`).join('');
+                    const noteHtml = p.note ? `<div style="color:var(--text-sub); font-size:0.8rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:500px;">${p.note.split('\n')[0]}</div>` : '';
+                    row.innerHTML = `<span style="font-size:1.5rem; flex-shrink:0;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.95rem;">${p.title || 'Link'}</span>${badgeHtml}</div>${noteHtml}</div><span style="color:${color}; font-size:1rem; flex-shrink:0; opacity:0.6;">→</span>`;
+                    row.onclick = () => { if(p.link && p.link !== '#' && p.link.trim() !== '') window.open(p.link, '_blank'); else alert('No link assigned.'); };
+                    section.appendChild(row);
+                } else {
+                    const gWrap = document.createElement('div');
+                    gWrap.style.cssText = `border-left:3px solid ${color}; margin-bottom:8px; border-radius:12px; background:rgba(0,0,0,0.15); overflow:hidden;`;
+                    const firstBadges = (item.items[0].badges || []).filter(b=>b.text);
+                    const gBadgeHtml = firstBadges.map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${b.text}</span>`).join('');
+                    const gHeader = document.createElement('div');
+                    gHeader.style.cssText = `display:flex; align-items:center; gap:10px; padding:10px 16px; cursor:pointer; transition:background 0.2s;`;
+                    gHeader.onmouseenter = () => { gHeader.style.background = 'rgba(255,255,255,0.04)'; };
+                    gHeader.onmouseleave = () => { gHeader.style.background = 'transparent'; };
+                    gHeader.innerHTML = `<span style="font-size:1.3rem;">${item.items[0].icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-weight:700; color:white; font-size:0.95rem;">${item.name}</span>${gBadgeHtml}<span style="font-size:0.65rem; color:#888; background:rgba(255,255,255,0.08); padding:2px 8px; border-radius:10px;">${item.items.length} links</span></div></div><span class="ul-group-arrow" style="color:${color}; font-size:0.8rem; transition:transform 0.2s;">▼</span>`;
+                    gWrap.appendChild(gHeader);
+                    const gBody = document.createElement('div');
+                    gBody.style.cssText = 'padding:0 8px 8px 8px; display:none;';
+                    item.items.forEach(p => {
+                        renderedCount++;
+                        const subRow = document.createElement('div');
+                        subRow.style.cssText = 'display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; cursor:pointer; transition:all 0.15s; margin-bottom:2px;';
+                        subRow.onmouseenter = () => { subRow.style.background = 'rgba(255,255,255,0.05)'; subRow.style.transform = 'translateX(4px)'; };
+                        subRow.onmouseleave = () => { subRow.style.background = 'transparent'; subRow.style.transform = 'translateX(0)'; };
+                        const pBadges = (p.badges||[]).filter(b=>b.text);
+                        const pBadgeHtml = pBadges.map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.55rem; padding:1px 6px; border-radius:6px; font-weight:800;">${b.text}</span>`).join('');
+                        const noteSnip = p.note ? `<div style="color:var(--text-sub); font-size:0.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.note.split('\n')[0]}</div>` : '';
+                        subRow.innerHTML = `<span style="font-size:1rem;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.85rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnip}</div><span style="color:${color}; opacity:0.4; font-size:0.8rem;">→</span>`;
+                        subRow.onclick = () => { if(p.link && p.link !== '#' && p.link.trim() !== '') window.open(p.link, '_blank'); else alert('No link assigned.'); };
+                        gBody.appendChild(subRow);
+                    });
+                    gWrap.appendChild(gBody);
+                    gHeader.onclick = () => {
+                        const isOpen = gBody.style.display !== 'none';
+                        gBody.style.display = isOpen ? 'none' : 'block';
+                        gHeader.querySelector('.ul-group-arrow').style.transform = isOpen ? '' : 'rotate(180deg)';
+                    };
+                    section.appendChild(gWrap);
+                }
+            });
+            list.appendChild(section);
         });
 
         if (renderedCount === 0) {
             list.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">No links match your selected filters.</div>`;
         }
-        
-        nav('useful-links', push, { filter: filterType, subject: subjectFilter });
 
-        // Keep current history entry in sync with live filter changes.
-        // This ensures browser Back returns to the same Useful Links filter state.
+        nav('useful-links', push, { filter: filterType, subject: subjectFilter });
         if (!push) {
             history.replaceState(
                 { page: 'useful-links', filter: filterType, subject: subjectFilter },
-                null,
-                '#useful-links'
+                null, '#useful-links'
             );
         }
     }
 
     // --- SCHEDULE LOGIC ---
-    let scheduleViewMode = 'list';  // 'list' or 'calendar'
-    let scheduleTaskFilter = 'all'; // 'all', 'quiz', 'assignment', 'project'
-    let calendarMonth = null; // will be auto-set
+    let scheduleViewMode = 'list';
+    let scheduleTaskFilter = 'all';
+    let scheduleSubFilter = 'all'; // subject filter for schedule
+    let calendarMonth = null;
     let calendarAvailableMonths = []; // stored for keyboard nav
 
     function getTaskTypeCategory(taskName) {
@@ -2038,26 +2266,47 @@
         const grid = document.getElementById('deliverables-grid');
         grid.innerHTML = '';
 
-        // View Toggle (list vs calendar)
-        let toggleHtml = `<div class="calendar-toggle" style="grid-column:1/-1;">
-            <button class="cal-toggle-btn ${scheduleViewMode==='list'?'active':''}" onclick="scheduleViewMode='list'; renderScheduleContent();">📋 List</button>
-            <button class="cal-toggle-btn ${scheduleViewMode==='calendar'?'active':''}" onclick="scheduleViewMode='calendar'; renderScheduleContent();">📅 Calendar</button>
-        </div>`;
+        // View toggle (always visible, tiny)
+        const viewToggleWrap = document.createElement('div');
+        viewToggleWrap.style.cssText = 'grid-column:1/-1; display:flex; justify-content:center; gap:8px; margin-bottom:10px;';
+        viewToggleWrap.innerHTML = `
+            <button class="fp-chip ${scheduleViewMode==='list'?'active':''}" style="${scheduleViewMode==='list'?'background:rgba(255,149,0,0.15); border-color:#ff9500; color:#ff9500;':''}" onclick="scheduleViewMode='list'; renderScheduleContent();">📋 List</button>
+            <button class="fp-chip ${scheduleViewMode==='calendar'?'active':''}" style="${scheduleViewMode==='calendar'?'background:rgba(255,149,0,0.15); border-color:#ff9500; color:#ff9500;':''}" onclick="scheduleViewMode='calendar'; renderScheduleContent();">📅 Calendar</button>
+        `;
+        grid.appendChild(viewToggleWrap);
 
-        // Filter chips
-        const filterTypes = [
+        // Collapsible filter panel
+        const subCodes = new Set();
+        window.SCHEDULE_DATA.forEach(wk => { (wk.tasks||[]).forEach(t => { if(t.sub) subCodes.add(t.sub); }); });
+
+        const typeChips = [
             { key: 'all', label: 'All' },
             { key: 'quiz', label: '🧠 Quizzes' },
             { key: 'assignment', label: '📝 Assignments' },
             { key: 'project', label: '🚀 Projects' }
         ];
-        let filterHtml = `<div class="schedule-filters" style="grid-column:1/-1;">`;
-        filterTypes.forEach(f => {
-            filterHtml += `<button class="schedule-filter-chip ${scheduleTaskFilter===f.key?'active':''}" onclick="scheduleTaskFilter='${f.key}'; renderScheduleContent();">${f.label}</button>`;
-        });
-        filterHtml += `</div>`;
+        const subChips = [{ key: 'all', label: 'All Subjects' }];
+        subCodes.forEach(code => subChips.push({ key: code, label: code, color: getSubjectColor(code) }));
 
-        grid.innerHTML = toggleHtml + filterHtml;
+        const fpWrap = document.createElement('div');
+        fpWrap.style.cssText = 'grid-column:1/-1; text-align:center; margin-bottom:16px;';
+        grid.appendChild(fpWrap);
+
+        const rows = [{ label: 'Type', chips: typeChips }];
+        if (subChips.length > 2) rows.push({ label: 'Subject', chips: subChips });
+
+        buildFilterPanel(
+            fpWrap, fpWrap,
+            rows,
+            () => ({ 0: scheduleTaskFilter, 1: scheduleSubFilter }),
+            (ri, key) => {
+                if (ri === 0) scheduleTaskFilter = key;
+                else scheduleSubFilter = key;
+                renderScheduleContent();
+            },
+            'all',
+            'schedule'
+        );
 
         if (scheduleViewMode === 'calendar') {
             renderCalendarView(grid);
@@ -2078,6 +2327,9 @@
             let filteredTasks = (data.tasks || []).map((t, i) => ({task: t, origIdx: i}));
             if(scheduleTaskFilter !== 'all') {
                 filteredTasks = filteredTasks.filter(x => getTaskTypeCategory(x.task.name) === scheduleTaskFilter);
+            }
+            if(scheduleSubFilter !== 'all') {
+                filteredTasks = filteredTasks.filter(x => x.task.sub === scheduleSubFilter);
             }
 
             // Sort by time
@@ -2331,34 +2583,128 @@
     function showMidterms(push = true, from = 'home') {
         const container = document.getElementById('midterm-list');
         container.innerHTML = '';
-        
+
+        // Hidden indicator + panel slot — using addEventListener so onclick survives re-renders
+        const hiddenCount = midtermHiddenSet.size;
+        if (hiddenCount > 0) {
+            const hiddenBtn = document.createElement('button');
+            hiddenBtn.className = 'midterm-hidden-btn';
+            hiddenBtn.textContent = '👁️ Hidden (' + hiddenCount + ') — tap to manage';
+            hiddenBtn.addEventListener('click', openMidtermHiddenPanel);
+            container.appendChild(hiddenBtn);
+            const slot = document.createElement('div');
+            slot.id = 'midterm-hidden-panel-slot';
+            container.appendChild(slot);
+        }
+
         let lastDate = '';
-        window.MIDTERM_DATA.forEach((exam, idx) => {
+        window.MIDTERM_DATA.forEach(function(exam, idx) {
+            if (midtermHiddenSet.has(idx)) return;
+
             if (exam.dateLabel !== lastDate) {
-                container.innerHTML += `<div style="font-family: 'Orbitron', sans-serif; font-size: 1.1rem; letter-spacing: 2px; color: var(--accent-blue); text-transform: uppercase; margin-bottom: 10px; margin-top: 30px; padding-left: 2px; font-weight: bold;">${exam.dateLabel}</div>`;
+                const dateEl = document.createElement('div');
+                dateEl.style.cssText = "font-family:'Orbitron',sans-serif; font-size:1.1rem; letter-spacing:2px; color:var(--accent-blue); text-transform:uppercase; margin-bottom:10px; margin-top:30px; padding-left:2px; font-weight:bold;";
+                dateEl.textContent = exam.dateLabel;
+                container.appendChild(dateEl);
                 lastDate = exam.dateLabel;
             }
-            
+
             let subName = exam.sub;
             if(window.COURSE_DATA) {
-                const sObj = window.COURSE_DATA.find(s => s.code === exam.sub);
+                const sObj = window.COURSE_DATA.find(function(s){ return s.code === exam.sub; });
                 if(sObj) subName = sObj.name;
             }
 
-            container.innerHTML += `
-                <div class="card" style="border-left: 4px solid ${getSubjectColor(exam.sub)}; flex-direction: row; cursor: pointer; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center;" onclick="openMidtermModal(${idx})">
-                    <span class="sub-badge" style="background: ${getSubjectBg(exam.sub)}; color: ${getSubjectColor(exam.sub)}; min-width: 52px; font-size: 0.72rem; padding: 5px 10px; border-radius:8px;">${exam.sub}</span>
-                    <div style="flex: 1; margin-left: 15px;">
-                        <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${subName}</div>
-                        <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">${exam.examCode}</div>
-                    </div>
-                    <div style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--accent-blue); white-space: nowrap; flex-shrink: 0;">${exam.time}</div>
-                </div>
-            `;
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.cssText = 'border-left:4px solid ' + getSubjectColor(exam.sub) + '; flex-direction:row; cursor:pointer; padding:14px 18px; margin-bottom:10px; display:flex; align-items:center;';
+            card.addEventListener('click', (function(i){ return function(){ openMidtermModal(i); }; })(idx));
+
+            const badge = document.createElement('span');
+            badge.className = 'sub-badge';
+            badge.style.cssText = 'background:' + getSubjectBg(exam.sub) + '; color:' + getSubjectColor(exam.sub) + '; min-width:52px; font-size:0.72rem; padding:5px 10px; border-radius:8px;';
+            badge.textContent = exam.sub;
+
+            const info = document.createElement('div');
+            info.style.flex = '1';
+            info.style.marginLeft = '15px';
+            const n1 = document.createElement('div');
+            n1.style.cssText = 'font-weight:600; font-size:0.95rem; color:var(--text-main);';
+            n1.textContent = subName;
+            const n2 = document.createElement('div');
+            n2.style.cssText = 'font-size:0.78rem; color:var(--text-sub); margin-top:2px;';
+            n2.textContent = exam.examCode;
+            info.appendChild(n1); info.appendChild(n2);
+
+            const time = document.createElement('div');
+            time.style.cssText = "font-family:'Orbitron',sans-serif; font-size:0.9rem; font-weight:700; color:var(--accent-blue); white-space:nowrap; flex-shrink:0; margin-right:10px;";
+            time.textContent = exam.time;
+
+            const hideBtn = document.createElement('button');
+            hideBtn.textContent = 'Hide';
+            hideBtn.style.cssText = 'background:none; border:1px solid rgba(255,255,255,0.1); color:#555; padding:4px 8px; border-radius:8px; cursor:pointer; font-size:0.72rem; flex-shrink:0;';
+            hideBtn.addEventListener('mouseenter', function(){ hideBtn.style.color='#ff3b30'; hideBtn.style.borderColor='rgba(255,59,48,0.3)'; });
+            hideBtn.addEventListener('mouseleave', function(){ hideBtn.style.color='#555'; hideBtn.style.borderColor='rgba(255,255,255,0.1)'; });
+            hideBtn.addEventListener('click', (function(i){ return function(e){ e.stopPropagation(); midtermHiddenSet.add(i); saveMidtermHidden(); showMidterms(false); }; })(idx));
+
+            card.appendChild(badge); card.appendChild(info); card.appendChild(time); card.appendChild(hideBtn);
+            container.appendChild(card);
         });
-        container.innerHTML += `<div style="text-align: center; margin-top: 52px; margin-bottom: 20px; font-size: 0.75rem; color: var(--text-sub); letter-spacing: 3px; opacity: 0.5;">GOOD LUCK &nbsp;✦&nbsp; SPRING 2026</div>`;
-        
+
+        const footer = document.createElement('div');
+        footer.style.cssText = 'text-align:center; margin-top:52px; margin-bottom:20px; font-size:0.75rem; color:var(--text-sub); letter-spacing:3px; opacity:0.5;';
+        footer.textContent = 'GOOD LUCK · SPRING 2026';
+        container.appendChild(footer);
+
         nav('midterm', push, { from: from });
+    }
+
+    function openMidtermHiddenPanel() {
+        const slot = document.getElementById('midterm-hidden-panel-slot');
+        if (!slot) return;
+        const existing = document.getElementById('midterm-hidden-panel');
+        if (existing) { existing.remove(); return; }
+
+        const panel = document.createElement('div');
+        panel.id = 'midterm-hidden-panel';
+        panel.style.cssText = 'background:rgba(255,149,0,0.06); border:1px solid rgba(255,149,0,0.25); border-radius:14px; padding:16px 20px; margin-bottom:16px;';
+
+        const title = document.createElement('div');
+        title.style.cssText = "font-family:'Orbitron',sans-serif; font-size:0.75rem; letter-spacing:2px; color:#ff9500; margin-bottom:12px; text-transform:uppercase;";
+        title.textContent = 'Hidden Exams';
+        panel.appendChild(title);
+
+        if (midtermHiddenSet.size === 0) {
+            const empty = document.createElement('div');
+            empty.style.cssText = 'color:#888; font-size:0.85rem; font-style:italic;';
+            empty.textContent = 'Nothing hidden.';
+            panel.appendChild(empty);
+        } else {
+            midtermHiddenSet.forEach(function(idx) {
+                const exam = window.MIDTERM_DATA[idx];
+                if (!exam) return;
+                let subName = exam.sub;
+                if(window.COURSE_DATA) {
+                    const sObj = window.COURSE_DATA.find(function(s){ return s.code === exam.sub; });
+                    if(sObj) subName = sObj.name;
+                }
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:8px; padding:8px 12px; background:rgba(0,0,0,0.2); border-radius:10px;';
+                const sb = document.createElement('span');
+                sb.style.cssText = 'background:' + getSubjectBg(exam.sub) + '; color:' + getSubjectColor(exam.sub) + "; font-size:0.72rem; padding:3px 8px; border-radius:6px; font-weight:bold; font-family:'Orbitron',sans-serif;";
+                sb.textContent = exam.sub;
+                const nm = document.createElement('span');
+                nm.style.cssText = 'flex:1; color:#ccc; font-size:0.85rem;';
+                nm.textContent = subName;
+                const ub = document.createElement('button');
+                ub.textContent = 'Unhide';
+                ub.style.cssText = 'background:rgba(52,199,89,0.15); border:1px solid rgba(52,199,89,0.35); color:#34c759; padding:3px 10px; border-radius:8px; cursor:pointer; font-size:0.75rem; font-weight:bold;';
+                ub.addEventListener('click', (function(i){ return function(){ midtermHiddenSet.delete(i); saveMidtermHidden(); showMidterms(false); }; })(idx));
+                row.appendChild(sb); row.appendChild(nm); row.appendChild(ub);
+                panel.appendChild(row);
+            });
+        }
+        slot.appendChild(panel);
     }
 
     function openModal(wIndex, tIndex) {
@@ -2408,12 +2754,19 @@
             submitHtml = (task.submitText ? task.submitText + ' ' : '') + `<a href="${task.submitLink}" target="_blank" rel="noopener" class="modal-url-badge">🔗 ${submitNote}</a>`;
         }
 
+        // Notes field with optional URL
+        let noteHtml = task.note || '';
+        if (task.noteLink && task.noteLink.trim() !== '') {
+            const noteNote = task.noteNote || 'Read more';
+            noteHtml = (task.note ? task.note + ' ' : '') + `<a href="${task.noteLink}" target="_blank" rel="noopener" class="modal-url-badge">🔗 ${noteNote}</a>`;
+        }
+
         const fields = [
             { label: '🕒 When', val: whenHtml },
             { label: '📍 Where', val: whereHtml },
             { label: '📚 Coverage', val: coverageHtml },
             { label: '📤 Submit', val: submitHtml },
-            { label: '📝 Extra Notes', val: task.note }
+            { label: '📝 Extra Notes', val: noteHtml }
         ];
 
         fields.forEach(f => {
@@ -2514,16 +2867,16 @@
 
     function showWeeks(sub, push = true) {
         currSub = sub;
-        document.getElementById('subject-title').innerText = `${sub.code} - ${sub.name}`;
+        document.getElementById('subject-title').innerText = `${sub.code} — ${sub.name}`;
         
         const dContainer = document.getElementById('drive-container');
         dContainer.innerHTML = '';
         if(sub.driveLink && sub.driveLink.trim() !== "") {
             const a = document.createElement('a');
-            a.className = 'drive-btn';
+            a.className = 'drive-btn-inline';
             a.href = sub.driveLink;
             a.target = "_blank";
-            a.innerHTML = "📂 Course Drive";
+            a.innerHTML = "📂 Drive";
             dContainer.appendChild(a);
         }
 
@@ -2547,11 +2900,12 @@
             filterBar.style.display = 'none';
             gridWeeks.style.display = 'none';
             gridPlaylists.style.display = 'grid';
-            renderPlaylistGrid();
+            renderPlaylistGrid(true); // reset filters on tab switch
         } else {
             filterBar.style.display = 'flex';
             gridPlaylists.style.display = 'none';
             gridWeeks.style.display = 'grid';
+            playlistBadgeFilters.clear();
             renderFilterBar(viewType);
         }
         if(pushState) {
@@ -2562,7 +2916,8 @@
         renderQuickActions();
     }
 
-    function renderPlaylistGrid() {
+    function renderPlaylistGrid(resetFilters = false) {
+        if (resetFilters) playlistBadgeFilters = new Set();
         const grid = document.getElementById('playlists-grid');
         grid.innerHTML = '';
         if(!currSub.playlists || currSub.playlists.length === 0) {
@@ -2570,15 +2925,92 @@
             return;
         }
 
+        // Collect all badge texts
+        const allBadgeMap = new Map();
+        currSub.playlists.forEach(p => {
+            (p.badges || []).forEach(b => { if (b.text && b.text.trim()) allBadgeMap.set(b.text.trim(), b.color || '#e91e8c'); });
+        });
+
+        // Collapsible badge filter panel
+        if (allBadgeMap.size > 0) {
+            const filterWrap = document.createElement('div');
+            filterWrap.style.cssText = 'grid-column:1/-1; text-align:center; margin-bottom:14px;';
+
+            const anyBadge = playlistBadgeFilters.size > 0;
+            const fpToggle = document.createElement('button');
+            fpToggle.className = 'fp-toggle' + (anyBadge ? ' has-filter' : '');
+            fpToggle.innerHTML = `🏷 Filter${anyBadge ? ` <span class="fp-badge">${playlistBadgeFilters.size}</span>` : ''} <span class="fp-arrow">▼</span>`;
+
+            const fpPanel = document.createElement('div');
+            fpPanel.className = 'fp-panel';
+            const fpRow = document.createElement('div');
+            fpRow.className = 'fp-row';
+            fpRow.style.justifyContent = 'center';
+
+            allBadgeMap.forEach((color, text) => {
+                const isActive = playlistBadgeFilters.has(text);
+                const chip = document.createElement('button');
+                chip.className = 'fp-chip' + (isActive ? ' active' : '');
+                chip.textContent = text;
+                if (isActive) chip.style.cssText = `background:${color}33; border-color:${color}; color:${color};`;
+                chip.onclick = () => {
+                    fpOpenState.playlist = true;
+                    if (playlistBadgeFilters.has(text)) playlistBadgeFilters.delete(text);
+                    else playlistBadgeFilters.add(text);
+                    renderPlaylistGrid();
+                };
+                fpRow.appendChild(chip);
+            });
+            if (anyBadge) {
+                const clr = document.createElement('button');
+                clr.className = 'fp-chip';
+                clr.textContent = '✕ Clear';
+                clr.style.cssText = 'color:#e91e8c; border-color:rgba(233,30,140,0.25);';
+                clr.onclick = () => { playlistBadgeFilters.clear(); renderPlaylistGrid(); };
+                fpRow.appendChild(clr);
+            }
+            fpPanel.appendChild(fpRow);
+            fpToggle.addEventListener('click', () => {
+                const isOpen = fpPanel.classList.contains('open');
+                fpPanel.classList.toggle('open', !isOpen);
+                fpToggle.classList.toggle('open', !isOpen);
+                fpOpenState.playlist = !isOpen;
+            });
+            if (fpOpenState.playlist || anyBadge) { fpPanel.classList.add('open'); fpToggle.classList.add('open'); }
+
+            filterWrap.appendChild(fpToggle);
+            filterWrap.appendChild(fpPanel);
+            grid.appendChild(filterWrap);
+        }
+
+        const color = getSubjectColor(currSub.code);
+
+        // Filter playlists
+        let playlists = currSub.playlists;
+        if (playlistBadgeFilters.size > 0) {
+            playlists = playlists.filter(p => {
+                const pBadges = new Set((p.badges || []).map(b => (b.text || '').trim()));
+                for (const f of playlistBadgeFilters) { if (!pBadges.has(f)) return false; }
+                return true;
+            });
+        }
+
+        if (playlists.length === 0) {
+            const emptyEl = document.createElement('div');
+            emptyEl.style.cssText = 'grid-column:1/-1; text-align:center; color:#666; margin-top:20px; font-style:italic;';
+            emptyEl.textContent = 'No links match selected filters.';
+            grid.appendChild(emptyEl);
+            return;
+        }
+
         const renderItems = [];
         const processedGroups = new Set();
-        currSub.playlists.forEach((p, i) => {
+        playlists.forEach(p => {
             const group = (p.group || '').trim();
             if (group) {
                 if (!processedGroups.has(group)) {
                     processedGroups.add(group);
-                    const groupItems = currSub.playlists.filter(gp => (gp.group || '').trim() === group);
-                    renderItems.push({ type: 'group', name: group, items: groupItems });
+                    renderItems.push({ type: 'group', name: group, items: playlists.filter(gp => (gp.group || '').trim() === group) });
                 }
             } else {
                 renderItems.push({ type: 'single', playlist: p });
@@ -2594,16 +3026,8 @@
                 const badgeHtml = badges.filter(b=>b.text).map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${b.text}</span>`).join('');
                 const badgeWrap = badgeHtml ? `<div style="position:absolute; top:12px; right:12px; display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; max-width:70%;">${badgeHtml}</div>` : '';
                 const noteHtml = (p.note) ? `<div style="color:var(--text-sub); margin-top:15px; font-size:0.9rem; line-height:1.4; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px; white-space:pre-wrap;">${p.note}</div>` : '';
-                el.innerHTML = `
-                    ${badgeWrap}
-                    <div style="font-size:2.5rem; margin-bottom:10px">${p.icon || '🔗'}</div>
-                    <div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${p.title || 'Link'}</div>
-                    ${noteHtml}
-                `;
-                el.onclick = () => {
-                    if(p.link && p.link !== "#" && p.link.trim() !== "") window.open(p.link, "_blank");
-                    else alert("No link assigned.");
-                };
+                el.innerHTML = `${badgeWrap}<div style="font-size:2.5rem; margin-bottom:10px">${p.icon || '🔗'}</div><div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${p.title || 'Link'}</div>${noteHtml}`;
+                el.onclick = () => { if(p.link && p.link !== "#" && p.link.trim() !== "") window.open(p.link, "_blank"); else alert("No link assigned."); };
                 grid.appendChild(el);
             } else {
                 const groupEl = document.createElement('div');
@@ -2611,22 +3035,13 @@
                 const firstItem = item.items[0];
                 const commonBadges = firstItem.badges || [];
                 const hBadgeHtml = commonBadges.filter(b=>b.text).map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${b.text}</span>`).join('');
-                let innerHtml = `<div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);">
-                    <span style="font-size:1.8rem;">${firstItem.icon || '🔗'}</span>
-                    <div style="flex:1;"><div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${item.name}</div></div>
-                    <div style="display:flex; gap:4px; flex-wrap:wrap;">${hBadgeHtml}</div>
-                    <span style="color:var(--text-sub); font-size:0.8rem; white-space:nowrap;">${item.items.length} links</span>
-                </div>`;
+                let innerHtml = `<div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);"><span style="font-size:1.8rem;">${firstItem.icon || '🔗'}</span><div style="flex:1;"><div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${item.name}</div></div><div style="display:flex; gap:4px; flex-wrap:wrap;">${hBadgeHtml}</div><span style="color:var(--text-sub); font-size:0.8rem; white-space:nowrap;">${item.items.length} links</span></div>`;
                 item.items.forEach(p => {
                     const pBadges = (p.badges || []).filter(b=>b.text);
                     const pBadgeHtml = pBadges.map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.55rem; padding:1px 6px; border-radius:6px; font-weight:800;">${b.text}</span>`).join('');
                     const noteSnippet = p.note ? `<div style="color:var(--text-sub); font-size:0.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.note.split('\n')[0]}</div>` : '';
                     const safeLink = (p.link || '').replace(/'/g, "\\'");
-                    innerHtml += `<div class="group-link-row" onclick="window.open('${safeLink}','_blank')" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; transition:all 0.2s; margin-bottom:4px;">
-                        <span style="font-size:1.2rem;">${p.icon || '🔗'}</span>
-                        <div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.9rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnippet}</div>
-                        <span style="color:var(--accent); opacity:0.5; font-size:0.9rem;">→</span>
-                    </div>`;
+                    innerHtml += `<div class="group-link-row" onclick="window.open('${safeLink}','_blank')" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; transition:all 0.2s; margin-bottom:4px;"><span style="font-size:1.2rem;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.9rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnippet}</div><span style="color:${color}; opacity:0.5; font-size:0.9rem;">→</span></div>`;
                 });
                 groupEl.innerHTML = innerHtml;
                 grid.appendChild(groupEl);
@@ -2634,64 +3049,159 @@
         });
     }
 
+    // ── Universal collapsible filter panel builder ────────────────────────
+    // anchorEl: element to render the toggle button into
+    // panelEl: element to render the expanded panel into (can be same as anchor)
+    // rows: array of { label, chips: [{key, label, color?}] }
+    // getActive: fn() => { rowIndex: key } map
+    // onSelect: fn(rowIndex, key)
+    // allKey: the key that means "no filter" (default 'ALL' / 'all')
+    function buildFilterPanel(anchorEl, panelEl, rows, getActive, onSelect, allKey = 'ALL', openStateKey = null) {
+        anchorEl.innerHTML = '';
+        panelEl.innerHTML = '';
+
+        const active = getActive();
+        const anyActive = Object.values(active).some(v => v && v !== allKey && v !== 'all' && v !== 'All' && v !== 'All Subjects');
+        const activeLabels = [];
+        rows.forEach((row, ri) => {
+            const ak = active[ri];
+            if (ak && ak !== allKey && ak !== 'all' && ak !== 'All' && ak !== 'All Subjects') {
+                const chip = row.chips.find(c => c.key === ak);
+                if (chip) activeLabels.push(chip.label.replace(/^[^\w\u{1F300}-\u{1F9FF}]*/u,'').trim().split(' ').slice(-1)[0]);
+            }
+        });
+
+        // Restore open state: open if was open, or if any filter is active
+        const shouldBeOpen = openStateKey ? (fpOpenState[openStateKey] || anyActive) : anyActive;
+
+        // Active filter summary — plain text, not a pill
+        const summaryParts = [];
+        rows.forEach((row, ri) => {
+            const ak = active[ri];
+            if (ak && ak !== allKey && ak !== 'all' && ak !== 'All' && ak !== 'All Subjects') {
+                const chip = row.chips.find(c => c.key === ak);
+                if (chip) summaryParts.push(chip.label.replace(/^\p{Emoji}\s*/u, '').trim());
+            }
+        });
+
+        const toggle = document.createElement('button');
+        toggle.className = 'fp-toggle' + (anyActive ? ' has-filter' : '') + (shouldBeOpen ? ' open' : '');
+        if (anyActive) {
+            toggle.innerHTML = `🎛 Filter: <span class="fp-active-label">${summaryParts.join(', ')}</span> <span class="fp-arrow">▼</span>`;
+        } else {
+            toggle.innerHTML = `🎛 Filter <span class="fp-arrow">▼</span>`;
+        }
+
+        const panel = document.createElement('div');
+        panel.className = 'fp-panel' + (shouldBeOpen ? ' open' : '');
+
+        rows.forEach((row, ri) => {
+            if (row.chips.length <= 1) return;
+            const rowEl = document.createElement('div');
+            rowEl.className = 'fp-row';
+            if (row.label) {
+                const lbl = document.createElement('span');
+                lbl.className = 'fp-label';
+                lbl.textContent = row.label;
+                rowEl.appendChild(lbl);
+            }
+            row.chips.forEach(chip => {
+                const btn = document.createElement('button');
+                btn.className = 'fp-chip';
+                btn.textContent = chip.label;
+                const isActive = (active[ri] || allKey) === chip.key;
+                if (isActive) {
+                    btn.classList.add('active');
+                    if (chip.color) btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
+                    else btn.style.cssText = 'background:rgba(233,30,140,0.18); border-color:var(--accent-pink); color:var(--accent-pink);';
+                }
+                // Never close panel on chip click — user closes explicitly
+                btn.addEventListener('click', () => {
+                    if (openStateKey) fpOpenState[openStateKey] = true;
+                    onSelect(ri, chip.key);
+                });
+                rowEl.appendChild(btn);
+            });
+            panel.appendChild(rowEl);
+        });
+
+        toggle.addEventListener('click', () => {
+            const isOpen = panel.classList.contains('open');
+            panel.classList.toggle('open', !isOpen);
+            toggle.classList.toggle('open', !isOpen);
+            if (openStateKey) fpOpenState[openStateKey] = !isOpen;
+        });
+
+        // Separator + clear button at bottom of panel
+        const sep = document.createElement('div');
+        sep.className = 'fp-sep';
+        panel.appendChild(sep);
+
+        const clearRow = document.createElement('div');
+        clearRow.style.cssText = 'display:flex; justify-content:center; margin-top:10px;';
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'fp-clear-btn';
+        clearBtn.innerHTML = '✕ Clear all filters';
+        clearBtn.style.display = anyActive ? 'inline-flex' : 'none';
+        clearBtn.addEventListener('click', () => {
+            if (openStateKey) fpOpenState[openStateKey] = true;
+            // Reset all rows to their allKey
+            rows.forEach((row, ri) => onSelect(ri, allKey === 'ALL' ? (row.chips[0] ? row.chips[0].key : allKey) : allKey));
+        });
+        clearRow.appendChild(clearBtn);
+        panel.appendChild(clearRow);
+
+        anchorEl.appendChild(toggle);
+        panelEl.appendChild(panel);
+    }
+
     function renderFilterBar(viewType) {
-        const bar = document.getElementById('filter-bar');
-        bar.innerHTML = '';
+        const wrapEl = document.getElementById('filter-bar-wrap');
+        const barEl = document.getElementById('filter-bar');
+        wrapEl.style.display = 'block';
+        barEl.style.display = 'none'; // old bar hidden; we use wrap now
+        wrapEl.innerHTML = '';
 
         const filterKey = `${currSub.code}:${viewType}`;
-        
         const sourceArr = viewType === 'events' ? currSub.events : currSub.weeks;
         const availableTypes = new Set();
-        
         if(sourceArr) {
             sourceArr.forEach(w => {
-                if(w.resources) {
-                    Object.keys(w.resources).forEach(key => {
-                        if(w.resources[key].vis) availableTypes.add(key);
-                    });
-                }
+                if(w.resources) Object.keys(w.resources).forEach(k => { if(w.resources[k].vis) availableTypes.add(k); });
             });
         }
 
-        const btnAll = document.createElement('button');
-        btnAll.className = 'filter-btn';
-        btnAll.innerText = 'ALL';
-        btnAll.onclick = () => {
-            subjectViewFilters[filterKey] = 'ALL';
-            setActiveFilter(btnAll, 'filter-bar');
+        // Build chips list for resource filter
+        const resourceChips = [{ key: 'ALL', label: 'All' }];
+        if(window.CONFIG && window.CONFIG.resources) {
+            window.CONFIG.resources.forEach(res => {
+                if(availableTypes.has(res.name)) resourceChips.push({ key: res.name, label: res.name });
+            });
+        }
+
+        // If only "All" available, render grid immediately and hide panel
+        if (resourceChips.length <= 1) {
+            wrapEl.style.display = 'none';
             renderWeekGrid('ALL', viewType === 'events');
-        };
-        bar.appendChild(btnAll);
-
-        if(window.CONFIG && window.CONFIG.resources) {
-            window.CONFIG.resources.forEach(res => {
-                if(availableTypes.has(res.name)) {
-                    const btn = document.createElement('button');
-                    btn.className = 'filter-btn';
-                    btn.innerText = res.name;
-                    btn.onclick = () => {
-                        subjectViewFilters[filterKey] = res.name;
-                        setActiveFilter(btn, 'filter-bar');
-                        renderWeekGrid(res.name, viewType === 'events');
-                    };
-                    bar.appendChild(btn);
-                }
-            });
-        }
-
-        const availableFilters = new Set(['ALL']);
-        if(window.CONFIG && window.CONFIG.resources) {
-            window.CONFIG.resources.forEach(res => {
-                if(availableTypes.has(res.name)) availableFilters.add(res.name);
-            });
+            return;
         }
 
         let activeFilter = subjectViewFilters[filterKey] || 'ALL';
-        if (!availableFilters.has(activeFilter)) activeFilter = 'ALL';
+        if (!resourceChips.find(c => c.key === activeFilter)) activeFilter = 'ALL';
         subjectViewFilters[filterKey] = activeFilter;
 
-        const activeBtn = [...bar.querySelectorAll('.filter-btn')].find(b => b.innerText === activeFilter);
-        if (activeBtn) activeBtn.classList.add('active');
+        buildFilterPanel(
+            wrapEl, wrapEl,
+            [{ label: '', chips: resourceChips }],
+            () => ({ 0: activeFilter }),
+            (ri, key) => {
+                subjectViewFilters[filterKey] = key;
+                activeFilter = key;
+                renderFilterBar(viewType);
+            },
+            'ALL',
+            'playlist'
+        );
 
         renderWeekGrid(activeFilter, viewType === 'events');
     }
@@ -3943,7 +4453,7 @@
             clone.style.boxSizing = 'border-box';
             clone.style.width = targetWidth + 'px';
             if (active === 'schedule') {
-                clone.querySelectorAll('.calendar-toggle, .schedule-filters').forEach(el => el.remove());
+                clone.querySelectorAll('.calendar-toggle, .schedule-filters, .ctrl-bar').forEach(el => el.remove());
                 // Prevent cloned cards from being captured mid-waterfall at opacity 0.
                 clone.querySelectorAll('.waterfall-item').forEach(el => {
                     el.classList.remove('waterfall-item');
@@ -3965,7 +4475,7 @@
 
         // --- Schedule: hide toggle & filter rows before capture ---
         if (active === 'schedule') {
-            const toHide = [target.querySelector('.calendar-toggle'), target.querySelector('.schedule-filters')];
+            const toHide = [target.querySelector('.calendar-toggle'), target.querySelector('.schedule-filters'), target.querySelector('.ctrl-bar')];
             toHide.forEach(el => {
                 if (!el) return;
                 restoreList.push({ el, prev: el.style.cssText });
@@ -4064,6 +4574,8 @@
             item && item.body || '',
             item && item.publishedAt || '',
             item && item.sub || '',
+            item && item.eventDate || '',
+            item && item.eventTime || '',
             item && item.deadlineDate || '',
             item && item.deadlineTime || ''
         ].join('||');
@@ -4085,16 +4597,26 @@
 
     function isNewsVisibleToViewer(item) {
         if (!item) return false;
+        if (item.hasEvent && item.eventDate) {
+            const timeStr = item.eventTime ? item.eventTime : '00:00'; 
+            const eventDateTime = new Date(`${item.eventDate}T${timeStr}`);
+            if (!isNaN(eventDateTime) && eventDateTime < new Date()) {
+                return false; 
+            }
+        }
         if (item.hasDeadline && item.deadlineDate) {
             const deadlineTs = parseNewsDeadlineTs(item.deadlineDate, item.deadlineTime);
             if (deadlineTs > 0 && Date.now() > deadlineTs) return false;
         }
-        if (!item.publishedAt) return true;
-        const ts = new Date(item.publishedAt).getTime();
-        if (!ts || isNaN(ts)) return true;
-        const now = Date.now();
-        if (ts > now) return true;
-        return (now - ts) <= (NEWS_MAX_VISIBLE_DAYS * 24 * 60 * 60 * 1000);
+        if (!item.hasEvent) {
+            if (!item.publishedAt) return true;
+            const ts = new Date(item.publishedAt).getTime();
+            if (!ts || isNaN(ts)) return true;
+            const now = Date.now();
+            if (ts > now) return true;
+            return (now - ts) <= (NEWS_MAX_VISIBLE_DAYS * 24 * 60 * 60 * 1000);
+        }
+        return true;
     }
 
     function getVisibleNewsItems() {
@@ -4115,9 +4637,11 @@
 
     function openNewsPanel() {
         if (typeof window.NEWS_DATA === 'undefined') window.NEWS_DATA = [];
+        dismissNewsToast();
         renderNewsPanelItems();
-        document.getElementById('news-panel').classList.add('active');
-        // Show unread highlights first, then mark as viewed
+        const panel = document.getElementById('news-panel');
+        panel.style.display = 'flex';
+        requestAnimationFrame(() => panel.classList.add('active'));
         setTimeout(() => {
             const seen = new Set(getSeenNewsKeys());
             getVisibleNewsItems().forEach(item => seen.add(getNewsItemKey(item)));
@@ -4128,7 +4652,49 @@
 
     function closeNewsPanel(e, force = false) {
         if (!force && e && !e.target.classList.contains('news-panel')) return;
-        document.getElementById('news-panel').classList.remove('active');
+        const panel = document.getElementById('news-panel');
+        const card = panel.querySelector('.news-panel-card');
+        if (!card) { panel.classList.remove('active'); return; }
+        card.classList.add('closing');
+        panel.classList.remove('active');
+        setTimeout(() => {
+            panel.style.display = '';
+            card.classList.remove('closing');
+        }, 300);
+    }
+
+    let _newsToastTimer = null;
+    function showNewsToast(count) {
+        const toast = document.getElementById('news-toast');
+        const body = document.getElementById('news-toast-body');
+        const timerBar = document.getElementById('news-toast-timer-bar');
+        if (!toast || !body) return;
+        body.textContent = `You have ${count} unread announcement${count !== 1 ? 's' : ''} you haven't seen yet.`;
+        toast.classList.remove('hiding');
+        toast.classList.add('show');
+        // Progress bar countdown
+        timerBar.style.transition = 'none';
+        timerBar.style.width = '100%';
+        requestAnimationFrame(() => {
+            timerBar.style.transition = 'width 12s linear';
+            timerBar.style.width = '0%';
+        });
+        if (_newsToastTimer) clearTimeout(_newsToastTimer);
+        _newsToastTimer = setTimeout(() => dismissNewsToast(), 12000);
+    }
+
+    function dismissNewsToast() {
+        const toast = document.getElementById('news-toast');
+        if (!toast) return;
+        if (_newsToastTimer) { clearTimeout(_newsToastTimer); _newsToastTimer = null; }
+        toast.classList.add('hiding');
+        toast.classList.remove('show');
+        setTimeout(() => toast.classList.remove('hiding'), 350);
+    }
+
+    function maybeShowNewsToast() {
+        const count = getNewsUnreadCount();
+        if (count > 0) showNewsToast(count);
     }
 
     function renderNewsPanelItems() {
@@ -4136,6 +4702,13 @@
         if (!list) return;
         const seen = new Set(getSeenNewsKeys());
         const items = getVisibleNewsItems().slice().sort((a, b) => {
+            if (a.hasEvent && !b.hasEvent) return -1;
+            if (!a.hasEvent && b.hasEvent) return 1;
+            if (a.hasEvent && b.hasEvent) {
+                const ta = parseNewsDeadlineTs(a.eventDate, a.eventTime) || 0;
+                const tb = parseNewsDeadlineTs(b.eventDate, b.eventTime) || 0;
+                return ta - tb;
+            }
             const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
             const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
             return tb - ta;
@@ -4153,6 +4726,11 @@
                 const dlabel = formatNewsDeadline(item.deadlineDate, item.deadlineTime);
                 dlHtml = `<span class="ni-dl">⏰ ${eHtml(dlabel)}</span>`;
             }
+            let evtHtml = '';
+            if (item.hasEvent && item.eventDate) {
+                const elabel = formatNewsDeadline(item.eventDate, item.eventTime);
+                evtHtml = `<span class="ni-dl" style="background:rgba(0, 229, 255, 0.15); border-color:#00E5FF; color:#00E5FF; box-shadow:0 0 10px rgba(0,229,255,0.4);">🗓️ Held on: ${eHtml(elabel)}</span>`;
+            }
             const subHtml = item.sub ? `<span class="ni-sub">${eHtml(item.sub)}</span>` : '';
             return `<div class="news-item${isUnread ? ' news-unread' : ''}">
                 <div class="ni-inner">
@@ -4160,7 +4738,7 @@
                     <div class="ni-body">
                         <div class="ni-title">${eHtml(item.title || '')}</div>
                         ${item.body ? `<div class="ni-note">${eHtml(item.body)}</div>` : ''}
-                        <div class="ni-meta">${subHtml}${dlHtml}<span class="ni-time">${timeAgo}</span></div>
+                        <div class="ni-meta">${subHtml}${evtHtml}${dlHtml}<span class="ni-time">${timeAgo}</span></div>
                     </div>
                 </div>
             </div>`;
@@ -4194,7 +4772,15 @@
         try {
             const d = new Date(dateStr);
             const label = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-            return timeStr ? `${label} at ${timeStr}` : label;
+            let formattedTime = timeStr;
+            if (timeStr && /^(\d{2}):(\d{2})$/.test(timeStr)) {
+                let [hh, mm] = timeStr.split(':').map(Number);
+                let ampm = hh >= 12 ? 'PM' : 'AM';
+                let h = hh % 12;
+                if (h === 0) h = 12;
+                formattedTime = `${h}:${mm.toString().padStart(2, '0')} ${ampm}`;
+            }
+            return formattedTime ? `${label} at ${formattedTime}` : label;
         } catch(e) { return dateStr + (timeStr ? ' ' + timeStr : ''); }
     }
 
@@ -4573,8 +5159,16 @@
             list.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666; margin-top:30px; font-style:italic;">No updates yet.</div>';
             return;
         }
-        // Show newest first
-        [...data].reverse().forEach(item => {
+        // Sort by date descending; entries without a valid date fall to the bottom
+        const sorted = [...data].sort((a, b) => {
+            const ta = a.date ? new Date(a.date).getTime() : 0;
+            const tb = b.date ? new Date(b.date).getTime() : 0;
+            if (ta === 0 && tb === 0) return 0;
+            if (ta === 0) return 1;
+            if (tb === 0) return -1;
+            return tb - ta;
+        });
+        sorted.forEach(item => {
             const card = document.createElement('div');
             card.className = 'update-card';
             card.innerHTML = `
@@ -4585,7 +5179,6 @@
             `;
             list.appendChild(card);
         });
-
         applyWaterfallToContainer(list, '.update-card');
     }
 
@@ -4609,6 +5202,7 @@
     let gpaSubjects = [];
     let gpaSemesters = [];
     let gpaGroupMode = false;
+    let gpaCardMode = false;
     let gpaCumulativeOn = false;
     let gpaCumGpa = '';
     let gpaCumHours = '';
@@ -4671,6 +5265,7 @@
                 subjects: gpaSubjects,
                 semesters: gpaSemesters,
                 groupMode: gpaGroupMode,
+                cardMode: gpaCardMode,
                 cumulativeOn: gpaCumulativeOn,
                 cumGpa: gpaCumGpa,
                 cumHours: gpaCumHours
@@ -4692,6 +5287,7 @@
             const saved = gpaLoadState();
             if (saved) {
                 gpaGroupMode = !!saved.groupMode;
+                gpaCardMode = !!saved.cardMode;
                 gpaCumulativeOn = !!saved.cumulativeOn;
                 gpaCumGpa = saved.cumGpa || '';
                 gpaCumHours = saved.cumHours || '';
@@ -4728,6 +5324,21 @@
 
     function toggleGpaGroupMode() {
         gpaGroupMode = !gpaGroupMode;
+        renderGpaPage();
+        gpaRecalc();
+        gpaSaveState();
+    }
+
+    function toggleGpaCardMode() {
+        gpaCardMode = !gpaCardMode;
+        gpaSaveState();
+        renderGpaPage();
+    }
+
+    function gpaSelectTab(tab) {
+        const wantsGroup = (tab === 'group');
+        if (gpaGroupMode === wantsGroup) return; // already on this tab
+        gpaGroupMode = wantsGroup;
         renderGpaPage();
         gpaRecalc();
         gpaSaveState();
@@ -4774,21 +5385,38 @@
     }
 
     function renderGpaPage() {
-        const cumToggle = document.getElementById('gpa-cum-toggle');
-        const groupToggle = document.getElementById('gpa-group-toggle');
-        if (cumToggle) {
-            cumToggle.style.display = gpaGroupMode ? 'none' : 'inline-block';
-            if (!gpaGroupMode) cumToggle.classList.toggle('active', gpaCumulativeOn);
-        }
-        if (groupToggle) groupToggle.classList.toggle('active', gpaGroupMode);
+        // Update tab active states
+        const tabSingle = document.getElementById('gpa-tab-single');
+        const tabGroup  = document.getElementById('gpa-tab-group');
+        if (tabSingle) tabSingle.classList.toggle('active', !gpaGroupMode);
+        if (tabGroup)  tabGroup.classList.toggle('active',  gpaGroupMode);
 
         const container = document.getElementById('gpa-content-area');
         if (!container) return;
         container.innerHTML = '';
 
+        const captureWrap = document.getElementById('gpa-capture-wrap');
+        if (captureWrap) captureWrap.classList.toggle('card-active', gpaGroupMode && gpaCardMode);
+
         if (!gpaGroupMode) {
+            // ── This Semester tab ──────────────────────────────────────
+            // Inline cumulative sub-toggle
+            const cumWrap = document.createElement('div');
+            cumWrap.className = 'gpa-cum-sub-wrap';
+            cumWrap.innerHTML = `<button class="gpa-cum-sub-btn ${gpaCumulativeOn ? 'active' : ''}" id="gpa-cum-toggle" onclick="toggleGpaCumulative()">📈 Include Previous GPA</button>`;
+            container.appendChild(cumWrap);
             renderGpaNormal(container);
         } else {
+            // ── All Semesters tab ──────────────────────────────────────
+            // Inline card/list sub-toggle
+            const viewWrap = document.createElement('div');
+            viewWrap.className = 'gpa-view-toggle-wrap';
+            viewWrap.innerHTML = `
+                <span style="color:#555; font-size:0.78rem; font-weight:600; letter-spacing:0.5px;">VIEW</span>
+                <button class="gpa-view-pill ${!gpaCardMode ? 'active' : ''}" id="gpa-list-pill" onclick="if(gpaCardMode){toggleGpaCardMode();}">📋 List</button>
+                <button class="gpa-view-pill ${gpaCardMode ? 'active' : ''}"  id="gpa-card-pill" onclick="if(!gpaCardMode){toggleGpaCardMode();}">🪟 Cards</button>
+            `;
+            container.appendChild(viewWrap);
             renderGpaGrouped(container);
         }
     }
@@ -4823,13 +5451,23 @@
     }
 
     function renderGpaGrouped(container) {
+        const wrap = document.createElement('div');
+        if (gpaCardMode) {
+            wrap.className = 'gpa-grid-view';
+        } else {
+            wrap.style.width = '100%';
+        }
+
         gpaSemesters.forEach((sem, idx) => {
             const card = document.createElement('div');
-            card.className = 'gpa-semester-card';
-            card.style.cssText = 'background: rgba(255,255,255,0.02); border: 1px solid rgba(233,30,140,0.15); border-radius: 12px; margin-bottom: 24px; padding: 24px; position:relative;';
+            // Card mode uses grid card style; list mode uses stacked list-card style
+            card.className = gpaCardMode ? 'gpa-semester-card' : 'gpa-list-card';
+            card.id = `card-${sem.id}`;
+
+            let htmlCore = '';
 
             if (sem.mode === 'summary') {
-                card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                htmlCore = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
                         <h3 style="margin:0; font-size:1.1rem; color:var(--accent-pink); padding:4px; display:flex; align-items:center; gap:8px;">
                             <span contenteditable="true" onblur="gpaUpdateSemName('${sem.id}', this.innerText)" style="border-bottom:1px dashed rgba(255,255,255,0.5); outline:none; min-width:50px;" title="Click to rename">${sem.name}</span>
                             <span style="font-size:0.8rem; opacity:0.6; pointer-events:none;">✏️</span>
@@ -4851,7 +5489,6 @@
                             <input type="number" class="gpa-input" value="${sem.summaryHours}" oninput="gpaUpdateSummary('${sem.id}', 'hours', this.value)" placeholder="e.g. 15" min="0" step="1">
                         </div>
                     </div>`;
-                container.appendChild(card);
             } else {
                 const totalCr = sem.subjects.reduce((sum, s) => sum + s.credits, 0);
                 let gpaLabel = '';
@@ -4867,7 +5504,7 @@
                     const sLtr = getGpaLetterForValue(sGPA);
                     gpaLabel = `<span style="background:${sLtr.bg}; color:${sLtr.color}; padding:4px 10px; border-radius:10px; font-weight:bold; font-size:0.9rem; border:1px solid ${sLtr.color}; margin-right:12px;">${sGPA.toFixed(2)}</span>`;
                 }
-                card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:16px; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                htmlCore = `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:16px; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
                         <h3 style="margin:0; font-size:1.15rem; color:var(--accent-pink); flex:1; padding:4px; min-width:120px; display:flex; align-items:center; gap:8px;">
                             <span contenteditable="true" onblur="gpaUpdateSemName('${sem.id}', this.innerText)" style="border-bottom:1px dashed rgba(255,255,255,0.5); outline:none; min-width:50px;" title="Click to rename">${sem.name}</span>
                             <span style="font-size:0.8rem; opacity:0.6; pointer-events:none;">✏️</span>
@@ -4882,7 +5519,17 @@
                     </div>
                     <div id="gpa-subj-list-${sem.id}" style="min-height:50px; padding-bottom:10px;" ondragover="gpaDragOver(event, '${sem.id}')" ondrop="gpaDrop(event, '${sem.id}')"></div>
                     ${renderGpaAddBar(sem.id)}`;
-                container.appendChild(card);
+            }
+
+            card.innerHTML = htmlCore;
+            wrap.appendChild(card);
+        });
+
+        container.appendChild(wrap);
+
+        // Render subjective datasets reliably 
+        gpaSemesters.forEach(sem => {
+            if (sem.mode !== 'summary') {
                 renderSubjectRows(sem, document.getElementById(`gpa-subj-list-${sem.id}`));
             }
         });
@@ -4948,70 +5595,7 @@
             row.ondragleave = () => { row.style.borderTop = ""; };
             row.ondrop = (e) => { e.preventDefault(); e.stopPropagation(); row.style.borderTop = ""; gpaDropOnSubject(sem.id, sIdx); };
 
-            row.addEventListener('touchstart', (e) => {
-                if(e.touches.length > 1) return;
-                if(['INPUT','SELECT','BUTTON', 'OPTION'].includes(e.target.tagName)) return;
-                gpaTouchTimeout = setTimeout(() => {
-                    if(window.navigator.vibrate) window.navigator.vibrate(50);
-                    gpaDragSubject = sub; gpaDragSourceSemId = sem.id;
-                    row.classList.add('gpa-dragging');
-                    row.style.position = 'fixed';
-                    row.style.zIndex = 9999;
-                    row.style.width = row.offsetWidth + 'px';
-                    row.style.boxShadow = '0 10px 30px rgba(233,30,140,0.5)';
-                    const touch = e.touches[0];
-                    row.style.left = (touch.clientX - row.offsetWidth/2) + 'px';
-                    row.style.top = (touch.clientY - row.offsetHeight/2) + 'px';
-                }, 400);
-            }, {passive: false});
-
-            row.addEventListener('touchmove', (e) => {
-                if(row.classList.contains('gpa-dragging')) {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    row.style.left = (touch.clientX - row.offsetWidth/2) + 'px';
-                    row.style.top = (touch.clientY - row.offsetHeight/2) + 'px';
-                } else clearTimeout(gpaTouchTimeout);
-            }, {passive: false});
-
-            row.addEventListener('touchend', (e) => {
-                clearTimeout(gpaTouchTimeout);
-                if(row.classList.contains('gpa-dragging')) {
-                    e.preventDefault();
-                    row.classList.remove('gpa-dragging');
-                    row.style.position = ''; row.style.zIndex = ''; row.style.width = ''; row.style.boxShadow = '';
-                    row.style.left = ''; row.style.top = '';
-                    
-                    const touch = e.changedTouches[0];
-                    row.style.display = 'none';
-                    const elem = document.elementFromPoint(touch.clientX, touch.clientY);
-                    row.style.display = 'flex';
-                    
-                    if(elem) {
-                        const targetRow = elem.closest('.gpa-row');
-                        if (targetRow) {
-                            let tSemId = null;
-                            if (targetRow.id.includes('normal')) {
-                                tSemId = 'normal';
-                            } else {
-                                const tSemObj = gpaSemesters.find(s => targetRow.id.includes(s.id));
-                                if (tSemObj) tSemId = tSemObj.id;
-                            }
-                            if (tSemId) {
-                                const m = targetRow.id.match(/-([0-9]+)$/);
-                                if (m) gpaDropOnSubject(tSemId, parseInt(m[1], 10));
-                            }
-                        } else {
-                            const targetSemContainer = elem.closest('[id^="gpa-subj-list-"]');
-                            if (targetSemContainer) {
-                                const tSemId = targetSemContainer.id.replace('gpa-subj-list-', '');
-                                gpaDrop(null, tSemId);
-                            } else renderGpaPage();
-                        }
-                    } else renderGpaPage();
-                }
-            });
-            row.addEventListener('touchcancel', () => clearTimeout(gpaTouchTimeout));
+            // Mobile drag and drop touch events replaced with Up/Down buttons
 
             let gradeOpts = '<option value="">Grade</option>';
             GPA_GRADE_SCALE.forEach(g => {
@@ -5029,6 +5613,10 @@
 
             row.innerHTML = `<div class="gpa-drag-handle gpa-row-name" style="flex:1; display:flex; align-items:center;">
                 <span style="opacity:0.3; padding:0 6px 0 0; cursor:grab; font-weight:normal;" title="Drag to reorder">⋮⋮</span>
+                <div class="gpa-row-updown">
+                    <button class="gpa-row-btn" onclick="gpaMoveSubject('${sem.id}', ${sIdx}, -1)" ${sIdx === 0 ? 'disabled' : ''}>↑</button>
+                    <button class="gpa-row-btn" onclick="gpaMoveSubject('${sem.id}', ${sIdx}, 1)" ${sIdx === sem.subjects.length - 1 ? 'disabled' : ''}>↓</button>
+                </div>
                 <div>
                     ${sub.code ? `<span style="color:var(--accent-purple); font-family:'Orbitron',sans-serif; font-size:0.7rem; margin-right:6px;">${sub.code}</span>` : ''}
                     ${sub.name}
@@ -5109,6 +5697,19 @@
         const subList = semId === 'normal' ? gpaSubjects : gpaSemesters.find(s => s.id === semId)?.subjects;
         if (!subList) return;
         subList.splice(idx, 1);
+        renderGpaPage();
+        gpaRecalc();
+        gpaSaveState();
+    }
+
+    function gpaMoveSubject(semId, idx, dir) {
+        const subList = semId === 'normal' ? gpaSubjects : gpaSemesters.find(s => s.id === semId)?.subjects;
+        if (!subList) return;
+        const newIdx = idx + dir;
+        if (newIdx < 0 || newIdx >= subList.length) return;
+        const temp = subList[idx];
+        subList[idx] = subList[newIdx];
+        subList[newIdx] = temp;
         renderGpaPage();
         gpaRecalc();
         gpaSaveState();
@@ -5303,6 +5904,7 @@
         const exportBar = document.getElementById('gpa-export-bar');
 
         if (!hasAnyGrade) {
+            resultArea.style.cssText = 'margin: 30px auto; display: block; max-width: 400px;';
             resultArea.innerHTML = `<div class="gpa-result-card">
                 <div class="gpa-result-label">Cumulative GPA</div>
                 <div class="gpa-result-value" style="font-size:1.5rem; -webkit-text-fill-color:#555;">Enter grades above</div>
@@ -5316,6 +5918,7 @@
 
         const cumGpa = globalPoints / globalCredits;
 
+        resultArea.style.cssText = 'margin: 30px auto; display: block; max-width: 400px;';
         resultArea.innerHTML = `<div class="gpa-result-card" id="gpa-capture-area">
             <div class="gpa-result-label">Cumulative GPA</div>
             <div class="gpa-result-value">${cumGpa.toFixed(2)}</div>
@@ -5348,7 +5951,55 @@
         const exportBar = document.getElementById('gpa-export-bar');
         const backBtn = document.querySelector('#gpa-page > .back-btn');
         const toggles = document.getElementById('gpa-mode-toggles');
-        capturePageImage(el, 'gpa-calculator.png', [exportBar, backBtn, toggles]);
+
+        if (!el) { showToast('Nothing to capture', 'locked'); return; }
+        showToast('📸 Generating image...', 'locked');
+
+        [exportBar, backBtn, toggles].forEach(item => { if (item) item.style.display = 'none'; });
+
+        // In card/grid mode, force a wide container so the grid renders at full columns
+        const isGrid = gpaGroupMode && gpaCardMode;
+        const GRID_CAPTURE_WIDTH = 1400; // wide enough for 3 × 420px columns + gaps
+
+        const origMaxWidth = el.style.maxWidth;
+        const origWidth = el.style.width;
+        const origPadding = el.style.padding;
+        const origBg = el.style.background;
+
+        if (isGrid) {
+            el.style.maxWidth = GRID_CAPTURE_WIDTH + 'px';
+            el.style.width = GRID_CAPTURE_WIDTH + 'px';
+        }
+        el.style.padding = '40px 20px';
+        el.style.background = '#0a0012';
+
+        // Let the browser reflow before measuring
+        requestAnimationFrame(() => {
+            const captureWidth = isGrid ? GRID_CAPTURE_WIDTH : el.scrollWidth;
+
+            html2canvas(el, {
+                backgroundColor: '#0a0012',
+                scale: 2,
+                useCORS: true,
+                scrollY: -window.scrollY,
+                width: captureWidth,
+                windowWidth: captureWidth
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'gpa-calculator.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('📸 Image saved!', 'locked');
+            }).catch(() => {
+                showToast('⚠️ Could not generate image', 'locked');
+            }).finally(() => {
+                [exportBar, backBtn, toggles].forEach(item => { if (item) item.style.display = (item && item.id && item.id.includes('bar')) ? 'flex' : ''; });
+                el.style.maxWidth = origMaxWidth;
+                el.style.width = origWidth;
+                el.style.padding = origPadding;
+                el.style.background = origBg;
+            });
+        });
     }
 
     function capturePageImage(el, fileName, hideElements = []) {
@@ -5367,6 +6018,7 @@
             scale: 2,
             useCORS: true,
             scrollY: -window.scrollY,
+            width: el.scrollWidth,
             windowWidth: el.scrollWidth
         }).then(canvas => {
             const link = document.createElement('a');
@@ -5405,6 +6057,7 @@
             subjects: gpaSubjects,
             semesters: gpaSemesters,
             groupMode: gpaGroupMode,
+            cardMode: gpaCardMode,
             cumulativeOn: gpaCumulativeOn,
             cumGpa: gpaCumGpa,
             cumHours: gpaCumHours
@@ -5466,6 +6119,7 @@
                 gpaSubjects = parsed.subjects;
                 gpaSemesters = parsed.semesters || [];
                 gpaGroupMode = !!parsed.groupMode;
+                gpaCardMode = !!parsed.cardMode;
                 gpaCumulativeOn = !!parsed.cumulativeOn;
                 gpaCumGpa = parsed.cumGpa || '';
                 gpaCumHours = parsed.cumHours || '';
