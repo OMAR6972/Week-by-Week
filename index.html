@@ -1558,9 +1558,26 @@
 
         // Group resource items that are within the same day of each other
         resItems.sort((a, b) => b.timestamp - a.timestamp);
-        const BATCH_GAP_MS = 24 * 60 * 60 * 1000; // 24 hours
+        const BATCH_GAP_MS = 24 * 60 * 60 * 1000; // 24 hours — batch grouping window (unchanged)
+        const THREE_HOURS_MS = 3 * 60 * 60 * 1000; // 3 hours — week absorption window
+
+        // Build a lookup of week isRecent timestamps so resources that fall
+        // within 3h of their own week's full-update timestamp get absorbed into
+        // the week card rather than appearing as separate batch/single entries.
+        const weekTimestampByObj = {};
+        weekItems.forEach(w => {
+            if (w.timestamp > 0) weekTimestampByObj[w.wkObj] = w.timestamp;
+        });
+
+        // Filter out resources that are within 3h of their own week's timestamp
+        const standaloneResItems = resItems.filter(item => {
+            const weekTs = weekTimestampByObj[item.wkObj];
+            if (!weekTs) return true; // no week timestamp — show independently
+            return Math.abs(item.timestamp - weekTs) > THREE_HOURS_MS;
+        });
+
         let resGroups = [];
-        resItems.forEach(item => {
+        standaloneResItems.forEach(item => {
             if(resGroups.length === 0) {
                 resGroups.push([item]);
             } else {
