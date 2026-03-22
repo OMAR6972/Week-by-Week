@@ -2690,7 +2690,6 @@
             }
             btn.addEventListener('click', () => {
                 scheduleTaskFilter = chip.key;
-                calendarMonth = null; // reset so calendar auto-picks correct month
                 typeRow.querySelectorAll('.fp-chip').forEach(b => {
                     const isNow = b.dataset.key === chip.key;
                     b.classList.toggle('active', isNow);
@@ -2721,7 +2720,6 @@
             if (scheduleSubFilter === 'all') allSubBtn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
             allSubBtn.addEventListener('click', () => {
                 scheduleSubFilter = 'all';
-                calendarMonth = null;
                 subRow.querySelectorAll('.fp-chip').forEach(b => {
                     b.classList.toggle('active', b.dataset.key === 'all');
                     b.style.cssText = b.dataset.key === 'all' ? 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;' : '';
@@ -2740,7 +2738,6 @@
                 if (scheduleSubFilter === code) btn.style.cssText = `background:${getSubjectBg(code)}; color:${color}; border-color:${color}; box-shadow:0 0 10px ${color}55;`;
                 btn.addEventListener('click', () => {
                     scheduleSubFilter = code;
-                    calendarMonth = null;
                     subRow.querySelectorAll('.fp-chip').forEach(b => {
                         const isNow = b.dataset.key === code;
                         b.classList.toggle('active', isNow);
