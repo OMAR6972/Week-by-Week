@@ -734,7 +734,7 @@
         </div>
         <div class="nav-item" id="nav-item-schedule">
             <div class="nav-link nav-link-schedule" data-nav="schedule" onclick="navFromBar('schedule')">
-                <span class="nav-icon">📅</span> Task Schedule <span class="nav-chevron">▼</span>
+                <span class="nav-icon">🗓️</span> Semester Map <span class="nav-chevron">▼</span>
             </div>
             <div class="nav-dropdown" id="dd-schedule"></div>
         </div>
@@ -790,7 +790,7 @@
         </header>
         <div class="header-actions">
             <button class="recent-btn" onclick="showRecent()">📜 History</button>
-            <button class="schedule-btn" onclick="showSchedule()">📅 Task Schedule</button>
+            <button class="schedule-btn" onclick="showSchedule()">🗓️ Semester Map</button>
             <button class="deadline-btn" onclick="showDeadlines()">⏳ Deadlines</button>
             <button class="others-toggle-btn" onclick="toggleHomeOthers()">📂 Others <span class="others-arrow">▼</span></button>
             <div class="others-expand-area" id="home-others-expand">
@@ -4509,7 +4509,13 @@
             upcoming.slice(0, 4).forEach(item => {
                 const d = new Date(item.ts);
                 const diff = item.compareTs - now;
-                const daysLeft = Math.ceil(diff / (1000*60*60*24));
+                const daysLeft = (() => {
+                    const totalHours = diff / (1000 * 60 * 60);
+                    const fullDays = Math.floor(totalHours / 24);
+                    const remainHours = totalHours - fullDays * 24;
+                    // Round up only if remainder >= 16h, otherwise floor
+                    return remainHours >= 16 ? fullDays + 1 : fullDays;
+                })();
                 let urgency = 'dd-deadline-ok';
                 let timeLabel = daysLeft + 'd';
                 if(item.isOngoing) { urgency = ''; timeLabel = 'NOW'; }
