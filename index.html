@@ -1479,7 +1479,6 @@
     }
 
     function showRecent(subFilter = null) {
-        fpOpenState.history = false;
         if (subFilter !== null) historySubFilter = subFilter;
         const list = document.getElementById('recent-list');
         list.innerHTML = '';
@@ -1813,7 +1812,6 @@
 
     // --- DEADLINES LOGIC ---
     function showDeadlines(push = true, typeFilter = null, subFilter = null) {
-        fpOpenState.deadlines = false;
         if (typeFilter !== null) deadlineTypeFilter = typeFilter;
         if (subFilter !== null) deadlineSubFilter = subFilter;
 
@@ -2257,7 +2255,6 @@
 
     // --- USEFUL LINKS GLOBAL PAGE ---
     function showUsefulLinks(push = true, filterType = 'All Links', subjectFilter = 'All Subjects', badgeFilters = null) {
-        fpOpenState.usefulBadges = false;
         currentUsefulFilter = filterType;
         currentUsefulSubject = subjectFilter;
         if (badgeFilters !== null) currentUsefulBadgeFilters = new Set(badgeFilters);
@@ -2571,7 +2568,6 @@
     }
 
     function showSchedule(push = true, from = 'home') {
-        fpOpenState.schedule = false;
         renderScheduleContent();
         nav('schedule', push, { from: from });
     }
@@ -2967,7 +2963,7 @@
             for(let d = 1; d <= daysInMonth; d++) {
                 const thisDate = new Date(yr, mo-1, d);
                 if(semStartDate && thisDate < semStartDate) {
-                    calHtml += `<div class="cal-day empty"></div>`;
+                    calHtml += `<div class="cal-day empty" style="min-height:0;height:0;padding:0;border:none;"></div>`;
                     continue;
                 }
                 const dateKey = `${yr}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
