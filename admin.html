@@ -576,7 +576,7 @@
                             
                             <div style="display:flex; align-items:center; gap:5px; background:#2a1b3d; padding:2px 8px; border-radius:4px; border:1px solid #444;">
                                 <label class="checkbox-label"><input type="checkbox" ${val.isRecent ? 'checked' : ''} onchange="toggleRecentRes('${key}', this.checked)"> History</label>
-                                <input type="text" style="width:140px; margin:0; font-size:0.8rem;" placeholder="Date..." value="${val.recentDate || ''}" oninput="updateRes('${key}', 'recentDate', this.value); autoMarkNewRes('${key}'); renderEditor()">
+                                <input type="text" style="width:140px; margin:0; font-size:0.8rem;" placeholder="Date..." value="${val.recentDate || ''}" oninput="updateRes('${key}', 'recentDate', this.value); autoMarkNewRes('${key}')">
                                 <button class="btn-time" onclick="setNowRes('${key}')">🕒</button>
                                 <button class="btn-time" style="background:#3d1a1a; color:#ff6b6b; border-color:#ff6b6b44;" onclick="clearHistoryRes('${key}')" title="Clear history & New badge">✕</button>
                             </div>
