@@ -419,6 +419,9 @@
         .cal-month-nav button { background: rgba(255,149,0,0.2); border: 1px solid #ff9500; color: #ff9500; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .cal-month-nav button:hover { background: #ff9500; color: black; }
         .cal-month-label { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; color: #ff9500; min-width: 200px; text-align: center; }
+        .cal-view-btn { background: rgba(255,149,0,0.1); border: 1px solid rgba(255,149,0,0.4); color: rgba(255,149,0,0.7); padding: 6px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Work Sans', sans-serif; font-size: 0.85rem; transition: all 0.2s; white-space: nowrap; }
+        .cal-view-btn:hover { background: rgba(255,149,0,0.2); border-color: #ff9500; color: #ff9500; }
+        .cal-view-btn.active { background: rgba(255,149,0,0.2); border: 1px solid #ff9500; color: #ff9500; box-shadow: 0 0 12px rgba(255,149,0,0.3); }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day-header { text-align: center; font-size: 0.75rem; color: #888; font-weight: bold; padding: 8px 0; text-transform: uppercase; letter-spacing: 1px; }
         .cal-day { min-height: 90px; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 6px; border: 1px solid rgba(255,255,255,0.05); position: relative; }
@@ -2544,7 +2547,7 @@
         ['📋 List','📅 Calendar'].forEach((label, i) => {
             const mode = i === 0 ? 'list' : 'calendar';
             const btn = document.createElement('button');
-            btn.className = 'schedule-filter-chip' + (scheduleViewMode === mode ? ' active' : '');
+            btn.className = 'cal-view-btn' + (scheduleViewMode === mode ? ' active' : '');
             btn.textContent = label;
             btn.addEventListener('click', () => { scheduleViewMode = mode; renderScheduleWeeksGrid(); renderScheduleFilters(); });
             viewToggleContainer.appendChild(btn);
