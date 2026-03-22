@@ -440,6 +440,28 @@
         .cal-tbd-week-label { font-size: 0.75rem; color: #888; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
         .cal-tbd-tasks { display: flex; flex-wrap: wrap; gap: 6px; }
 
+        @media (max-width: 600px) {
+            .calendar-container { padding: 0 2px; }
+            .cal-month-nav { gap: 8px; margin-bottom: 12px; }
+            .cal-month-nav button { padding: 4px 10px; font-size: 0.78rem; }
+            .cal-month-label { font-size: 0.95rem; min-width: 0; }
+            .cal-grid { gap: 2px; }
+            .cal-day-header { font-size: 0.55rem; padding: 5px 0; letter-spacing: 0; }
+            .cal-day { min-height: 52px; padding: 3px 2px; border-radius: 6px; }
+            .cal-day.today::after { display: none; }
+            .cal-day-num { font-size: 0.62rem; margin-bottom: 3px; text-align: center; }
+            .cal-day.today .cal-day-num { font-size: 0.68rem; }
+            /* On mobile: hide all task text, show only a slim colored bar per task */
+            .cal-task { font-size: 0; padding: 0; height: 5px; border-radius: 3px; margin-bottom: 2px; border-left: none !important; white-space: nowrap; overflow: hidden; }
+            .cal-task div { display: none; } /* hide time sub-lines */
+            .cal-task span { display: none; } /* hide subject label span */
+            .cal-tbd-section { padding: 10px 12px; }
+            .cal-tbd-title { font-size: 0.72rem; }
+            .cal-tbd-week-label { font-size: 0.65rem; }
+            .cal-tbd-tasks .cal-task { font-size: 0.6rem; height: auto; padding: 2px 6px; border-left: 2px solid !important; }
+            .cal-tbd-tasks .cal-task span { display: inline; }
+        }
+
         @media (max-width: 768px) {
             .navbar { padding: 0 16px; overflow: visible; }
             .nav-links { position: absolute; top: 100%; left: 0; right: 0; background: rgba(10, 0, 18, 0.97); backdrop-filter: blur(18px); flex-direction: column; padding: 10px 16px 16px; gap: 4px; border-bottom: 1px solid rgba(233, 30, 140, 0.2); transform: translateY(-110%); opacity: 0; transition: transform 0.18s ease, opacity 0.15s ease; pointer-events: none; height: calc(100vh - 60px); overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 910; }
@@ -464,9 +486,6 @@
             .scroll-btn { right: 14px; width: 34px; height: 34px; font-size: 0.85rem; }
             .back-to-top { bottom: 14px; }
             .scroll-to-bottom { bottom: 56px; }
-            .cal-day { min-height: 60px; padding: 3px; }
-            .cal-task { font-size: 0.55rem; padding: 2px 3px; }
-            .cal-day-num { font-size: 0.65rem; }
         }
 
         /* Hotkeys Panel - PC only */
