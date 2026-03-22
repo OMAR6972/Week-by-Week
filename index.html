@@ -2018,25 +2018,33 @@
                 outerBar.appendChild(subRow);
             }
 
-            // Clear all button (only shown when something is active)
-            if (anyActive) {
-                const clearDivider = document.createElement('div');
-                clearDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
-                outerBar.appendChild(clearDivider);
-                const clearRow = document.createElement('div');
-                clearRow.style.cssText = 'display:flex; justify-content:center;';
-                const clearBtn = document.createElement('button');
-                clearBtn.className = 'fp-clear-btn';
-                clearBtn.innerHTML = '✕ Clear all filters';
-                clearBtn.addEventListener('click', () => {
-                    deadlineTypeFilter = 'all';
-                    deadlineSubFilter = 'All';
-                    showDeadlines(false, 'all', 'All');
-                });
-                clearRow.appendChild(clearBtn);
-                outerBar.appendChild(clearRow);
-            }
+            // Clear all button — always in DOM, show/hide based on active state
+            const dlClearDivider = document.createElement('div');
+            dlClearDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
+            outerBar.appendChild(dlClearDivider);
+            const dlClearRow = document.createElement('div');
+            dlClearRow.style.cssText = 'display:flex; justify-content:center;';
+            const dlClearBtn = document.createElement('button');
+            dlClearBtn.className = 'fp-clear-btn';
+            dlClearBtn.innerHTML = '✕ Clear all filters';
+            dlClearBtn.addEventListener('click', () => {
+                deadlineTypeFilter = 'all';
+                deadlineSubFilter = 'All';
+                showDeadlines(false, 'all', 'All');
+            });
+            dlClearRow.appendChild(dlClearBtn);
+            outerBar.appendChild(dlClearRow);
+            // Helper to sync clear button + divider visibility
+            const syncDlClear = () => {
+                const active = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+                dlClearDivider.style.display = active ? '' : 'none';
+                dlClearRow.style.display = active ? 'flex' : 'none';
+            };
+            syncDlClear(); // set initial state
             collapsible.appendChild(outerBar);
+
+            // Patch chip click handlers to also sync clear button
+            outerBar.addEventListener('click', () => { setTimeout(syncDlClear, 0); });
 
             togBtn.addEventListener('click', () => {
                 const nowOpen = collapsible.classList.contains('open');
@@ -2343,18 +2351,25 @@
                 });
                 fpRow.appendChild(btn);
             });
-            if (anyBadge) {
-                const clr = document.createElement('button');
-                clr.className = 'fp-clear-btn';
-                clr.innerHTML = '✕ Clear all filters';
-                clr.style.cssText = 'margin-top:8px;';
-                clr.addEventListener('click', () => { currentUsefulBadgeFilters = new Set(); fpOpenState.usefulBadges = true; showUsefulLinks(false,'All Links',currentUsefulSubject,[]); });
-                // Put it below the badge row in its own centered row
-                const clrRow = document.createElement('div');
-                clrRow.style.cssText = 'display:flex; justify-content:center; margin-top:6px;';
-                clrRow.appendChild(clr);
-                badgePanel.appendChild(clrRow);
-            }
+            // Clear button — always in DOM, visible only when badges active
+            const ulClrRow = document.createElement('div');
+            ulClrRow.style.cssText = 'display:' + (anyBadge ? 'flex' : 'none') + '; justify-content:center; margin-top:6px;';
+            const ulClr = document.createElement('button');
+            ulClr.className = 'fp-clear-btn';
+            ulClr.innerHTML = '✕ Clear all filters';
+            ulClr.addEventListener('click', () => {
+                currentUsefulBadgeFilters = new Set();
+                fpOpenState.usefulBadges = true;
+                showUsefulLinks(false,'All Links',currentUsefulSubject,[]);
+            });
+            ulClrRow.appendChild(ulClr);
+            badgePanel.appendChild(ulClrRow);
+            // After each badge chip click, sync visibility
+            fpRow.addEventListener('click', () => {
+                setTimeout(() => {
+                    ulClrRow.style.display = currentUsefulBadgeFilters.size > 0 ? 'flex' : 'none';
+                }, 0);
+            });
             badgePanel.appendChild(fpRow);
             filterBar.appendChild(badgePanel);
 
@@ -2698,26 +2713,33 @@
             outerBar.appendChild(subRow);
         }
 
-        // Clear all button (only shown when something is active)
-        if (anyActive) {
-            const clearDivider = document.createElement('div');
-            clearDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
-            outerBar.appendChild(clearDivider);
-            const clearRow = document.createElement('div');
-            clearRow.style.cssText = 'display:flex; justify-content:center;';
-            const clearBtn = document.createElement('button');
-            clearBtn.className = 'fp-clear-btn';
-            clearBtn.innerHTML = '✕ Clear all filters';
-            clearBtn.addEventListener('click', () => {
-                scheduleTaskFilter = 'all';
-                scheduleSubFilter = 'all';
-                renderScheduleFilters();
-                renderScheduleWeeksGrid();
-            });
-            clearRow.appendChild(clearBtn);
-            outerBar.appendChild(clearRow);
-        }
+        // Clear all button — always in DOM, show/hide based on active state
+        const scClearDivider = document.createElement('div');
+        scClearDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
+        outerBar.appendChild(scClearDivider);
+        const scClearRow = document.createElement('div');
+        scClearRow.style.cssText = 'display:flex; justify-content:center;';
+        const scClearBtn = document.createElement('button');
+        scClearBtn.className = 'fp-clear-btn';
+        scClearBtn.innerHTML = '✕ Clear all filters';
+        scClearBtn.addEventListener('click', () => {
+            scheduleTaskFilter = 'all';
+            scheduleSubFilter = 'all';
+            renderScheduleFilters();
+            renderScheduleWeeksGrid();
+        });
+        scClearRow.appendChild(scClearBtn);
+        outerBar.appendChild(scClearRow);
+        const syncScClear = () => {
+            const active = scheduleTaskFilter !== 'all' || scheduleSubFilter !== 'all';
+            scClearDivider.style.display = active ? '' : 'none';
+            scClearRow.style.display = active ? 'flex' : 'none';
+        };
+        syncScClear();
         collapsible.appendChild(outerBar);
+
+        // Sync clear visibility on any chip click
+        outerBar.addEventListener('click', () => { setTimeout(syncScClear, 0); });
 
         togBtn.addEventListener('click', () => {
             const nowOpen = collapsible.classList.contains('open');
