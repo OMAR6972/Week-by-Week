@@ -9815,7 +9815,7 @@ window.COURSE_DATA = [
                     "Lecture": {
                         "vis": false,
                         "link": "#",
-                        "desc": "Not allowed to share on social media, Instead Dr.Mona provide the recording on Teams.",
+                        "desc": "",
                         "isNew": false,
                         "isRecent": false,
                         "recentDate": ""
@@ -9851,7 +9851,7 @@ window.COURSE_DATA = [
                     "Slides": {
                         "vis": true,
                         "link": "https://drive.google.com/file/d/1l1TkoHWMvUpCUrFo9CXXtEAbWm80BmdK/view?usp=drive_link",
-                        "desc": "",
+                        "desc": "Note: Lecture video is not allowed to share on social media, instead Dr. Mona provide the recording on Teams.",
                         "isNew": false,
                         "isRecent": false,
                         "recentDate": ""
@@ -9963,7 +9963,7 @@ window.COURSE_DATA = [
                     "Lecture": {
                         "vis": false,
                         "link": "#",
-                        "desc": "Not allowed to share on social media, Instead Dr.Mona provide the recording on Teams.",
+                        "desc": "",
                         "isNew": false,
                         "isRecent": false,
                         "recentDate": ""
@@ -9971,7 +9971,7 @@ window.COURSE_DATA = [
                     "Slides": {
                         "vis": true,
                         "link": "https://drive.google.com/file/d/1Dcky3-zCtByYifoljhCgM2ML413IbR1l/view?usp=drive_link",
-                        "desc": "",
+                        "desc": "Note: Lecture video is not allowed to share on social media, instead Dr. Mona provide the recording on Teams.",
                         "isNew": false,
                         "isRecent": false,
                         "recentDate": ""
@@ -10098,7 +10098,7 @@ window.COURSE_DATA = [
                         "isRecent": false
                     }
                 },
-                "recentDate": "22/3/2026 7:21 PM",
+                "recentDate": "22/3/2026 7:22 PM",
                 "isRecent": true,
                 "isNew": true
             },
@@ -10108,14 +10108,14 @@ window.COURSE_DATA = [
                     "Lecture": {
                         "vis": false,
                         "link": "#",
-                        "desc": "Not allowed to share on social media, Instead Dr.Mona provide the recording on Teams.",
+                        "desc": "",
                         "isNew": false,
                         "isRecent": false
                     },
                     "Slides": {
                         "vis": true,
                         "link": "https://drive.google.com/file/d/11aheczxdkpxj4wHne3h3hYuNFmshfr5O/view?usp=drive_link",
-                        "desc": "",
+                        "desc": "Note: Lecture video is not allowed to share on social media, instead Dr. Mona provide the recording on Teams.",
                         "isNew": false,
                         "isRecent": false,
                         "recentDate": ""
@@ -10133,7 +10133,8 @@ window.COURSE_DATA = [
                         "link": "#",
                         "desc": "",
                         "isNew": false,
-                        "isRecent": false
+                        "isRecent": false,
+                        "recentDate": ""
                     },
                     "Lab": {
                         "vis": true,
@@ -10245,7 +10246,7 @@ window.COURSE_DATA = [
                 },
                 "badgeText": "Quiz1 till here",
                 "showBadge": true,
-                "recentDate": "22/3/2026 7:21 PM",
+                "recentDate": "22/3/2026 7:23 PM",
                 "isRecent": true,
                 "isNew": true
             },
@@ -10255,7 +10256,7 @@ window.COURSE_DATA = [
                     "Lecture": {
                         "vis": false,
                         "link": "#",
-                        "desc": "Not allowed to share on social media, Instead Dr.Mona provide the recording on Teams.",
+                        "desc": "",
                         "isNew": false,
                         "isRecent": false,
                         "recentDate": ""
@@ -10263,7 +10264,7 @@ window.COURSE_DATA = [
                     "Slides": {
                         "vis": true,
                         "link": "https://drive.google.com/file/d/1BBaaxmOml8s5F5IyFGd-4rIWQ14eznu-/view?usp=drive_link",
-                        "desc": "",
+                        "desc": "Note: Lecture video is not allowed to share on social media, instead Dr. Mona provide the recording on Teams.",
                         "isNew": false,
                         "isRecent": false,
                         "recentDate": ""
@@ -10400,7 +10401,7 @@ window.COURSE_DATA = [
                     "Lecture": {
                         "vis": false,
                         "link": "#",
-                        "desc": "Not allowed to share on social media, Instead Dr.Mona provide the recording on Teams.",
+                        "desc": "",
                         "isNew": false,
                         "isRecent": false,
                         "recentDate": ""
@@ -10408,7 +10409,7 @@ window.COURSE_DATA = [
                     "Slides": {
                         "vis": true,
                         "link": "https://drive.google.com/file/d/19EFyHlSar9aNWUGatdSVp0uyi_WfacO9/view?usp=drive_link",
-                        "desc": "",
+                        "desc": "Note: Lecture video is not allowed to share on social media, instead Dr. Mona provide the recording on Teams.",
                         "isNew": false,
                         "isRecent": false,
                         "recentDate": ""
@@ -11684,7 +11685,31 @@ window.SCHEDULE_DATA = [
     },
     {
         "week": 2,
-        "tasks": []
+        "tasks": [
+            {
+                "sub": "SW",
+                "name": "Assignment sheet1",
+                "icon": "📝",
+                "when": "Sun(15/2) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "LMS",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "15/02/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": true
+            }
+        ]
     },
     {
         "week": 3,
@@ -11704,6 +11729,29 @@ window.SCHEDULE_DATA = [
                 "coverageNote": "Check the assignment details here!",
                 "coverageLink": "https://drive.google.com/file/d/1pizuDsEPggA4eDCmfayKvTvKZXtENAEx/view?usp=drive_link",
                 "submitText": "Outlook"
+            },
+            {
+                "sub": "SW",
+                "name": "Assignment sheet1",
+                "icon": "📝",
+                "when": "Fri (20/2) 11:59PM",
+                "where": "",
+                "coverage": "",
+                "note": "",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "LMS",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "20/02/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": true
             }
         ],
         "isMidterm": false
@@ -11727,6 +11775,52 @@ window.SCHEDULE_DATA = [
                 "coverageLink": "https://drive.google.com/drive/folders/1Hnjz6q4glALWv_r9nfig0d1twnDGk9cf?usp=drive_link",
                 "whereNote": "",
                 "coverageNote": "Check the assignment details here!"
+            },
+            {
+                "sub": "SW",
+                "name": "Quiz",
+                "icon": "🧠",
+                "when": "Thrus (5/3) 4:30 PM",
+                "where": "",
+                "coverage": "",
+                "note": "From lec1 to lec3 (Introduction till Test plan &test case)",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "LMS",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "05/03/2026 4:30 PM",
+                "deadlineEndDate": "",
+                "isCompleted": true
+            },
+            {
+                "sub": "SW",
+                "name": "Assignment sheet2",
+                "icon": "📝",
+                "when": "Fri (27/2) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "LMS",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "27/02/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": true
             }
         ]
     },
@@ -11756,8 +11850,8 @@ window.SCHEDULE_DATA = [
             },
             {
                 "sub": "DB",
-                "name": "Lab 2 Task",
-                "icon": "🧪",
+                "name": "Assignment sheet3",
+                "icon": "📝",
                 "when": "Friday (12/3) at 11:59 PM",
                 "where": "",
                 "coverage": "",
@@ -11801,6 +11895,52 @@ window.SCHEDULE_DATA = [
                 "submitText": "LMS",
                 "submitLink": "https://lms.eng.asu.edu.eg/mod/assign/view.php?id=190473",
                 "submitNote": "Submit here now!"
+            },
+            {
+                "sub": "SW",
+                "name": " Practical Assignment 2",
+                "icon": "📝",
+                "when": "Sun (8/3) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "08/03/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": true
+            },
+            {
+                "sub": "SW",
+                "name": "Project Submission1",
+                "icon": "✔️",
+                "when": "Mon (9/3) 12:00 AM",
+                "where": "",
+                "coverage": "",
+                "note": "Project submission 1\nDeveloped Java-based movie recommendation system",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "LMS",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "09/03/2026 12:00 AM",
+                "deadlineEndDate": "",
+                "isCompleted": true
             }
         ]
     },
@@ -11874,6 +12014,52 @@ window.SCHEDULE_DATA = [
                 "submitText": "LMS",
                 "submitLink": "https://lms.eng.asu.edu.eg/mod/assign/view.php?id=196081",
                 "submitNote": "Submit here!"
+            },
+            {
+                "sub": "SW",
+                "name": "Assignment sheet 3",
+                "icon": "📝",
+                "when": "Fri (13/3) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "LMS",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "13/03/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": true
+            },
+            {
+                "sub": "SW",
+                "name": "Project Submission 2",
+                "icon": "✔️",
+                "when": "Sun (14/3) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "Project submission 2\nTest planning",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "14/03/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": true
             }
         ]
     },
@@ -11991,7 +12177,7 @@ window.SCHEDULE_DATA = [
                 "submitNote": "Submit here!",
                 "deadlineDate": "23/03/2026 11:59 PM",
                 "deadlineEndDate": "",
-                "isCompleted": false
+                "isCompleted": true
             }
         ]
     },
@@ -12055,6 +12241,75 @@ window.SCHEDULE_DATA = [
                 "deadlineDate": "",
                 "deadlineEndDate": "",
                 "isCompleted": false
+            },
+            {
+                "sub": "SW",
+                "name": "Project Submission 3",
+                "icon": "✔️",
+                "when": "Sat (11/4) 11:59 PM ",
+                "where": "",
+                "coverage": "",
+                "note": "Project submission 3\nDesigned Test Cases and Scenarios, Manual execution and bug reporting",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "11/04/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": false
+            },
+            {
+                "sub": "SW",
+                "name": " Practical Assignment 3",
+                "icon": "📝",
+                "when": "Mon (4/4) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "Submission status\nThis assignment will accept submissions from Saturday, 4 April 2026, 12:00 AM",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "06/04/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": false
+            },
+            {
+                "sub": "SW",
+                "name": "Project Presentation",
+                "icon": "📽️",
+                "when": "",
+                "where": "",
+                "coverage": "",
+                "note": "This session will be for the final presentation of the selected topics of the 4 groups. The agenda will be as follows: \nFrom 6:30 - 7 pm: Bug tracking using Jira                           \nFrom 7 - 7:30 pm: Test case management using TestRail\nFrom 7:30 - 8 pm: AI/ML in Testing                          \nFrom 8 - 8:30 pm: Shift-left & Shift-Right testing",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "",
+                "deadlineEndDate": "",
+                "isCompleted": false
             }
         ]
     },
@@ -12097,6 +12352,29 @@ window.SCHEDULE_DATA = [
                 "whenLink": "",
                 "whereLink": "",
                 "deadlineDate": "",
+                "isCompleted": false
+            },
+            {
+                "sub": "SW",
+                "name": " Practical Assignment 4",
+                "icon": "📝",
+                "when": "Fri (17/4) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "Submission status\nThis assignment will accept submissions from Thursday, 9 April 2026, 12:00 AM , Practical 4- Selenium \nIt will be held during the lecture time. Date is 9th of April \n ",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "17/04/2026 11:59 PM",
+                "deadlineEndDate": "",
                 "isCompleted": false
             }
         ]
@@ -12155,6 +12433,75 @@ window.SCHEDULE_DATA = [
                 "deadlineDate": "19/04/2026 11:59 PM",
                 "deadlineEndDate": "",
                 "isCompleted": false
+            },
+            {
+                "sub": "SW",
+                "name": "Practical Assignment 5",
+                "icon": "📝",
+                "when": "Mon (20/4) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "Submission status\nThis assignment will accept submissions from Wednesday, 1 April 2026, 12:00 AM ,Practical Assignment 5\nIt will be held by is 18th of April",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "20/04/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": false
+            },
+            {
+                "sub": "SW",
+                "name": "Assignment sheet 4",
+                "icon": "📝",
+                "when": "Fri (24/4) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "Submission status\nThis assignment will accept submissions from Thursday, 23 April 2026, 11:59 PM",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "24/04/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": false
+            },
+            {
+                "sub": "SW",
+                "name": "Quiz 2",
+                "icon": "🧠",
+                "when": " thrus (23/4) ",
+                "where": "",
+                "coverage": "",
+                "note": "the time not scheduled yet :)",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "",
+                "deadlineEndDate": "",
+                "isCompleted": false
             }
         ]
     },
@@ -12178,6 +12525,29 @@ window.SCHEDULE_DATA = [
                 "where": "",
                 "coverage": "",
                 "note": ""
+            },
+            {
+                "sub": "SW",
+                "name": "Assignment sheet5",
+                "icon": "📝",
+                "when": "Fri (1/5) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "Submission status\nThis assignment will accept submissions from Friday, 24 April 2026, 1:00 AM",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "01/05/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": false
             }
         ]
     },
@@ -12245,6 +12615,29 @@ window.SCHEDULE_DATA = [
                 "whereLink": "",
                 "deadlineDate": "",
                 "isCompleted": false
+            },
+            {
+                "sub": "SW",
+                "name": "Project Submission final",
+                "icon": "✔️",
+                "when": "Fri (8/5) 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "Project submission 4- Final\nFinal Project submission",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "08/05/2026 11:59 PM",
+                "deadlineEndDate": "",
+                "isCompleted": false
             }
         ]
     },
@@ -12298,6 +12691,29 @@ window.SCHEDULE_DATA = [
                 "whenLink": "",
                 "whereLink": "",
                 "deadlineDate": "",
+                "isCompleted": false
+            },
+            {
+                "sub": "SW",
+                "name": "Quiz 3",
+                "icon": "🧠",
+                "when": "Thrus (14/4)",
+                "where": "",
+                "coverage": "",
+                "note": "the time not scheduled yet :)",
+                "noteLink": "",
+                "noteNote": "",
+                "whenLink": "",
+                "whereLink": "",
+                "whenNote": "",
+                "whereNote": "",
+                "coverageLink": "",
+                "coverageNote": "",
+                "submitText": "",
+                "submitLink": "",
+                "submitNote": "",
+                "deadlineDate": "",
+                "deadlineEndDate": "",
                 "isCompleted": false
             }
         ]
