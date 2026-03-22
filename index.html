@@ -127,8 +127,8 @@
         .sub-filter-chip:hover { background: rgba(255,255,255,0.08); color: #ccc; }
         .sub-filter-chip.active { color: #fff; }
         /* Midterm hidden subjects indicator */
-        .midterm-hidden-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(255,149,0,0.3); color: #ff9500; background: rgba(255,149,0,0.08); transition: all 0.2s; margin-bottom: 16px; }
-        .midterm-hidden-btn:hover { background: rgba(255,149,0,0.15); }
+        .midterm-hidden-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(0,122,255,0.3); color: #007aff; background: rgba(0,122,255,0.08); transition: all 0.2s; margin-bottom: 16px; }
+        .midterm-hidden-btn:hover { background: rgba(0,122,255,0.15); }
         
         .useful-select { background: rgba(181, 25, 214, 0.15); border: 1px solid rgba(181, 25, 214, 0.4); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; outline: none; font-weight: bold; font-family: 'Work Sans', sans-serif; transition: 0.3s; }
         .useful-select:hover { background: rgba(181, 25, 214, 0.3); }
@@ -3230,7 +3230,7 @@
         if (hiddenCount > 0) {
             const hiddenBtn = document.createElement('button');
             hiddenBtn.className = 'midterm-hidden-btn';
-            hiddenBtn.textContent = '👁️ Hidden (' + hiddenCount + ') — tap to manage';
+            hiddenBtn.textContent = '🔒 Hidden (' + hiddenCount + ') — tap to manage';
             hiddenBtn.addEventListener('click', openMidtermHiddenPanel);
             container.appendChild(hiddenBtn);
             const slot = document.createElement('div');
