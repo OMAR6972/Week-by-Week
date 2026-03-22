@@ -376,7 +376,7 @@
         .fp-inline-bar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; background: rgba(8,2,18,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 10px 18px; }
         /* Collapsible bar container wrapping toggle + chip bar */
         .fp-bar-section { text-align: center; margin-bottom: 4px; }
-        .fp-bar-collapsible { display: none; margin-top: 8px; margin-bottom: 18px; }
+        .fp-bar-collapsible { display: none; margin-top: 8px; margin-bottom: 8px; }
         .fp-bar-collapsible.open { display: flex; flex-wrap: wrap; justify-content: center; }
         @media (max-width: 600px) { .fp-chip { padding: 4px 10px; font-size: 0.72rem; } .fp-panel { padding: 11px 12px 13px; } .fp-toggle { padding: 6px 13px; font-size: 0.78rem; } }
         @media (max-width: 500px) { .sub-tab { padding: 7px 12px; font-size: 0.72rem; letter-spacing: 0; } .subject-tabs { gap: 8px; } }
@@ -885,7 +885,7 @@
         <button class="back-btn" onclick="smartBack()">← Back</button>
         <h1 style="color:#34c759">STAFF CONTACTS</h1>
         <p class="subtitle" style="margin-bottom: 30px;">Instructors &amp; Teaching Assistants</p>
-        <div id="directory-filter-bar" class="filter-bar"></div>
+        <div id="directory-filter-bar" style="text-align:center; margin-bottom:6px;"></div>
         <div class="grid weeks-grid" id="directory-list" style="gap:15px;"></div>
     </div>
 
@@ -1140,7 +1140,7 @@
     let playlistBadgeFilters = new Set();
     let historySubFilter = new Set();
     // Filter panel open states — survive re-renders
-    let fpOpenState = { schedule: false, deadlines: false, usefulBadges: false, playlist: false, history: false };
+    let fpOpenState = { schedule: false, deadlines: false, usefulBadges: false, playlist: false, history: false, directory: false };
     let deadlineSubFilter = new Set();
     let deadlineTypeFilter = new Set();
     let midtermHiddenSet = (() => {
@@ -5815,42 +5815,190 @@
             return;
         }
 
-        // Collect unique subjects
         const subjects = [...new Set(staffData.flatMap(s => s.subjects))].sort();
-
-        // Role filter
         const roles = [
-            { key: 'all', label: 'All' },
-            { key: 'doctor', label: '🎓 Doctors' },
-            { key: 'ta', label: '👨‍🏫 TAs' }
+            { key: 'all', label: 'All',          color: '#00E5FF' },
+            { key: 'doctor', label: '🎓 Doctors', color: '#007aff' },
+            { key: 'ta',     label: '👨‍🏫 TAs',    color: '#34c759' }
         ];
+
+        const anyActive = directoryRoleFilter !== 'all' || directorySubFilter !== 'all';
+        const isOpen = fpOpenState.directory || false;
+
+        // Toggle button
+        const togBtn = document.createElement('button');
+        const getTogLabel = (open) => {
+            if (directoryRoleFilter !== 'all' || directorySubFilter !== 'all') {
+                const parts = [];
+                if (directoryRoleFilter !== 'all') { const r = roles.find(x=>x.key===directoryRoleFilter); if(r) parts.push(r.label.replace(/^\S+\s/,'')); }
+                if (directorySubFilter !== 'all') parts.push(directorySubFilter);
+                return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open?'▲':'▼'}</span>`;
+            }
+            return `Filter <span class="fp-arrow">${open?'▲':'▼'}</span>`;
+        };
+        togBtn.className = 'fp-toggle' + (anyActive ? ' has-filter' : '') + (isOpen ? ' open' : '');
+        togBtn.innerHTML = getTogLabel(isOpen);
+        togBtn.style.cssText = 'display:block; margin:0 auto 8px;';
+        filterBar.appendChild(togBtn);
+
+        const collapsible = document.createElement('div');
+        collapsible.className = 'fp-bar-collapsible' + (isOpen ? ' open' : '');
+        collapsible.style.cssText = 'flex-direction:column; gap:0; margin-top:8px; margin-bottom:12px; align-items:stretch; max-width:900px; margin-left:auto; margin-right:auto;';
+
+        const refreshTog = () => {
+            const open = collapsible.classList.contains('open');
+            const active = directoryRoleFilter !== 'all' || directorySubFilter !== 'all';
+            togBtn.className = 'fp-toggle' + (active ? ' has-filter' : '') + (open ? ' open' : '');
+            togBtn.innerHTML = getTogLabel(open);
+        };
+
+        const outerBar = document.createElement('div');
+        outerBar.style.cssText = 'background:rgba(8,2,18,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:10px 18px; display:flex; flex-direction:column; gap:10px;';
+
+        // ROW 1 — Staff (role) chips
+        const roleRowWrapper = document.createElement('div');
+        roleRowWrapper.style.cssText = 'display:flex; align-items:center; gap:10px;';
+        const roleLabel = document.createElement('span');
+        roleLabel.textContent = 'Staff';
+        roleLabel.style.cssText = 'font-size:0.58rem; font-weight:700; color:rgba(196,181,219,0.45); text-transform:uppercase; letter-spacing:1.5px; white-space:nowrap; flex-shrink:0; min-width:46px;';
+        const roleRow = document.createElement('div');
+        roleRow.style.cssText = 'flex:1; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+
+        const refreshRoleChips = () => {
+            roleRow.querySelectorAll('.fp-chip').forEach(b => {
+                const k = b.dataset.key;
+                const act = directoryRoleFilter === k;
+                b.classList.toggle('active', act);
+                const r = roles.find(x=>x.key===k);
+                b.style.cssText = act && r && r.color ? `background:${r.color}22; border-color:${r.color}; color:${r.color}; box-shadow:0 0 10px ${r.color}55;` : '';
+            });
+        };
+
         roles.forEach(r => {
             const btn = document.createElement('button');
-            btn.className = 'filter-btn' + (directoryRoleFilter === r.key ? ' active' : '');
+            btn.className = 'fp-chip' + (directoryRoleFilter === r.key ? ' active' : '');
             btn.textContent = r.label;
-            btn.onclick = () => { directoryRoleFilter = r.key; renderDirectory(); };
-            filterBar.appendChild(btn);
+            btn.dataset.key = r.key;
+            if (directoryRoleFilter === r.key && r.color) btn.style.cssText = `background:${r.color}22; border-color:${r.color}; color:${r.color}; box-shadow:0 0 10px ${r.color}55;`;
+            btn.addEventListener('click', () => {
+                directoryRoleFilter = r.key;
+                refreshRoleChips();
+                refreshTog();
+                syncDirClear();
+                renderDirectoryList(staffData, subjects, list);
+            });
+            roleRow.appendChild(btn);
+        });
+        roleRowWrapper.appendChild(roleLabel);
+        roleRowWrapper.appendChild(roleRow);
+        outerBar.appendChild(roleRowWrapper);
+
+        // ROW 2 — Subjects chips (if any)
+        if (subjects.length > 0) {
+            const rowDivider = document.createElement('div');
+            rowDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
+            outerBar.appendChild(rowDivider);
+
+            const subRowWrapper = document.createElement('div');
+            subRowWrapper.style.cssText = 'display:flex; align-items:center; gap:10px;';
+            const subLabelEl = document.createElement('span');
+            subLabelEl.textContent = 'Subjects';
+            subLabelEl.style.cssText = 'font-size:0.58rem; font-weight:700; color:rgba(196,181,219,0.45); text-transform:uppercase; letter-spacing:1.5px; white-space:nowrap; flex-shrink:0; min-width:46px;';
+            const subRow = document.createElement('div');
+            subRow.style.cssText = 'flex:1; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+
+            const refreshSubChips = () => {
+                subRow.querySelectorAll('.fp-chip').forEach(b => {
+                    const k = b.dataset.key;
+                    const isAll = k === '__all__';
+                    const act = isAll ? directorySubFilter === 'all' : directorySubFilter === k;
+                    b.classList.toggle('active', act);
+                    if (act && isAll) b.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+                    else if (act) { const col = getSubjectColor(k); b.style.cssText = `background:${getSubjectBg(k)}; border-color:${col}; color:${col};`; }
+                    else b.style.cssText = '';
+                });
+            };
+
+            const allSubBtn = document.createElement('button');
+            allSubBtn.className = 'fp-chip' + (directorySubFilter === 'all' ? ' active' : '');
+            allSubBtn.textContent = 'All';
+            allSubBtn.dataset.key = '__all__';
+            if (directorySubFilter === 'all') allSubBtn.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
+            allSubBtn.addEventListener('click', () => {
+                directorySubFilter = 'all';
+                refreshSubChips();
+                refreshTog();
+                syncDirClear();
+                renderDirectoryList(staffData, subjects, list);
+            });
+            subRow.appendChild(allSubBtn);
+
+            subjects.forEach(sub => {
+                const color = getSubjectColor(sub);
+                const btn = document.createElement('button');
+                btn.className = 'fp-chip' + (directorySubFilter === sub ? ' active' : '');
+                btn.textContent = sub;
+                btn.dataset.key = sub;
+                if (directorySubFilter === sub) btn.style.cssText = `background:${getSubjectBg(sub)}; border-color:${color}; color:${color};`;
+                btn.addEventListener('click', () => {
+                    directorySubFilter = sub;
+                    refreshSubChips();
+                    refreshTog();
+                    syncDirClear();
+                    renderDirectoryList(staffData, subjects, list);
+                });
+                subRow.appendChild(btn);
+            });
+            subRowWrapper.appendChild(subLabelEl);
+            subRowWrapper.appendChild(subRow);
+            outerBar.appendChild(subRowWrapper);
+        }
+
+        // Clear all button
+        const dirClearDivider = document.createElement('div');
+        dirClearDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px; display:' + (anyActive ? '' : 'none') + ';';
+        outerBar.appendChild(dirClearDivider);
+        const dirClearRow = document.createElement('div');
+        dirClearRow.style.cssText = 'display:' + (anyActive ? 'flex' : 'none') + '; justify-content:center;';
+        const dirClearBtn = document.createElement('button');
+        dirClearBtn.className = 'fp-clear-btn';
+        dirClearBtn.innerHTML = '✕ Clear all filters';
+        dirClearBtn.addEventListener('click', () => {
+            directoryRoleFilter = 'all';
+            directorySubFilter = 'all';
+            fpOpenState.directory = true;
+            renderDirectory();
+        });
+        dirClearRow.appendChild(dirClearBtn);
+        outerBar.appendChild(dirClearRow);
+
+        const syncDirClear = () => {
+            const active = directoryRoleFilter !== 'all' || directorySubFilter !== 'all';
+            dirClearDivider.style.display = active ? '' : 'none';
+            dirClearRow.style.display = active ? 'flex' : 'none';
+        };
+
+        collapsible.appendChild(outerBar);
+
+        togBtn.addEventListener('click', () => {
+            const nowOpen = collapsible.classList.contains('open');
+            collapsible.classList.toggle('open', !nowOpen);
+            fpOpenState.directory = !nowOpen;
+            refreshTog();
         });
 
-        // Subject dropdown
-        const select = document.createElement('select');
-        select.className = 'useful-select';
-        select.style.marginLeft = '10px';
-        const optAll = document.createElement('option');
-        optAll.value = 'all'; optAll.textContent = 'All Subjects';
-        select.appendChild(optAll);
-        subjects.forEach(sub => {
-            const opt = document.createElement('option');
-            opt.value = sub;
-            const sObj = window.COURSE_DATA ? window.COURSE_DATA.find(s => s.code === sub) : null;
-            opt.textContent = sObj ? `${sub} — ${sObj.name}` : sub;
-            if (directorySubFilter === sub) opt.selected = true;
-            select.appendChild(opt);
-        });
-        select.onchange = () => { directorySubFilter = select.value; renderDirectory(); };
-        filterBar.appendChild(select);
+        filterBar.appendChild(collapsible);
 
-        // Filter staff
+        renderDirectoryList(staffData, subjects, list);
+    }
+
+    function renderDirectoryList(staffData, subjects, list) {
+        list.innerHTML = '';
+        list.style.display = 'flex';
+        list.style.flexDirection = 'column';
+        list.style.maxWidth = '900px';
+        list.style.margin = '0 auto';
+
         let filtered = staffData;
         if (directoryRoleFilter !== 'all') filtered = filtered.filter(s => s.role === directoryRoleFilter);
         if (directorySubFilter !== 'all') filtered = filtered.filter(s => s.subjects.includes(directorySubFilter));
@@ -5859,12 +6007,6 @@
             list.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666; margin-top:30px; font-style:italic;">No staff match this filter.</div>';
             return;
         }
-
-        // Group by subject
-        list.style.display = 'flex';
-        list.style.flexDirection = 'column';
-        list.style.maxWidth = '900px';
-        list.style.margin = '0 auto';
 
         const subjectGroups = {};
         filtered.forEach(person => {
@@ -5876,13 +6018,7 @@
         });
 
         const orderedSubjects = subjects.filter(s => subjectGroups[s] && subjectGroups[s].length > 0);
-        if (directorySubFilter !== 'all') {
-            // Single subject view
-            const subs = orderedSubjects;
-            subs.forEach(sub => renderSubjectGroup(sub, subjectGroups[sub], list));
-        } else {
-            orderedSubjects.forEach(sub => renderSubjectGroup(sub, subjectGroups[sub], list));
-        }
+        orderedSubjects.forEach(sub => renderSubjectGroup(sub, subjectGroups[sub], list));
     }
 
     function renderSubjectGroup(subCode, people, container) {
