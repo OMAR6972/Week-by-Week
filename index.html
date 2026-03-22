@@ -371,7 +371,11 @@
         .fp-clear-btn:hover { border-color: var(--accent-pink); color: var(--accent-pink); background: rgba(233,30,140,0.08); }
         @keyframes fpFadeIn { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         /* Inline chip bar (history & deadlines filters — always visible, pushes content down) */
-        .fp-inline-bar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; background: rgba(8,2,18,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 10px 18px; margin-bottom: 18px; }
+        .fp-inline-bar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; background: rgba(8,2,18,0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 10px 18px; }
+        /* Collapsible bar container wrapping toggle + chip bar */
+        .fp-bar-section { text-align: center; margin-bottom: 4px; }
+        .fp-bar-collapsible { display: none; margin-top: 8px; margin-bottom: 18px; }
+        .fp-bar-collapsible.open { display: flex; flex-wrap: wrap; justify-content: center; }
         @media (max-width: 600px) { .fp-chip { padding: 4px 10px; font-size: 0.72rem; } .fp-panel { padding: 11px 12px 13px; } .fp-toggle { padding: 6px 13px; font-size: 0.78rem; } }
         @media (max-width: 500px) { .sub-tab { padding: 7px 12px; font-size: 0.72rem; letter-spacing: 0; } .subject-tabs { gap: 8px; } }
         /* ── Drive button inline style ───────────────────── */
@@ -1533,16 +1537,32 @@
         });
 
         if (allSubCodes.size > 1) {
-            const filterWrap = document.createElement('div');
-            filterWrap.className = 'fp-inline-bar';
+            const anyFilter = historySubFilter !== 'All';
+            // Outer section: toggle button + collapsible bar
+            const section = document.createElement('div');
+            section.className = 'fp-bar-section';
+            section.dataset.historyFilterSection = '1';
+
+            const togBtn = document.createElement('button');
+            togBtn.className = 'fp-toggle' + (anyFilter ? ' has-filter open' : '');
+            if (anyFilter) {
+                const col = getSubjectColor(historySubFilter);
+                togBtn.innerHTML = `Subject: <span class="fp-active-label">${historySubFilter}</span> <span class="fp-arrow">▲</span>`;
+                togBtn.style.cssText = `border-color:${col}; color:${col}; background:${col}22; box-shadow:0 0 12px ${col}44;`;
+            } else {
+                togBtn.innerHTML = `Subject <span class="fp-arrow">▼</span>`;
+            }
+
+            const bar = document.createElement('div');
+            bar.className = 'fp-bar-collapsible fp-inline-bar' + (anyFilter || fpOpenState.history ? ' open' : '');
 
             const allChip = document.createElement('button');
             allChip.className = 'fp-chip' + (historySubFilter === 'All' ? ' active' : '');
             allChip.textContent = 'All';
             allChip.dataset.code = '';
             if (historySubFilter === 'All') allChip.style.cssText = 'background:rgba(74,144,226,0.15); border-color:rgba(74,144,226,0.5); color:#4a90e2;';
-            allChip.onclick = () => { historySubFilter = 'All'; renderHistoryCards(list, displayWithFilteredBatch, displayItems); updateHistoryFilterUI(filterWrap); };
-            filterWrap.appendChild(allChip);
+            allChip.onclick = () => { historySubFilter = 'All'; renderHistoryCards(list, displayWithFilteredBatch, displayItems); updateHistoryFilterUI(section); };
+            bar.appendChild(allChip);
 
             allSubCodes.forEach(code => {
                 const color = getSubjectColor(code);
@@ -1551,11 +1571,22 @@
                 chip.textContent = code;
                 chip.dataset.code = code;
                 if (historySubFilter === code) chip.style.cssText = `background:${getSubjectBg(code)}; border-color:${color}; color:${color};`;
-                chip.onclick = () => { historySubFilter = code; renderHistoryCards(list, displayWithFilteredBatch, displayItems); updateHistoryFilterUI(filterWrap); };
-                filterWrap.appendChild(chip);
+                chip.onclick = () => { historySubFilter = code; renderHistoryCards(list, displayWithFilteredBatch, displayItems); updateHistoryFilterUI(section); };
+                bar.appendChild(chip);
             });
 
-            list.appendChild(filterWrap);
+            togBtn.addEventListener('click', () => {
+                const isOpen = bar.classList.contains('open');
+                bar.classList.toggle('open', !isOpen);
+                togBtn.classList.toggle('open', !isOpen);
+                fpOpenState.history = !isOpen;
+                const arrow = togBtn.querySelector('.fp-arrow');
+                if (arrow) arrow.textContent = !isOpen ? '▲' : '▼';
+            });
+
+            section.appendChild(togBtn);
+            section.appendChild(bar);
+            list.appendChild(section);
         }
 
         // Apply subject filter
@@ -1650,9 +1681,10 @@
         nav('recent');
     }
 
-    function updateHistoryFilterUI(filterWrap) {
-        if (!filterWrap) return;
-        filterWrap.querySelectorAll('.fp-chip').forEach(btn => {
+    function updateHistoryFilterUI(section) {
+        if (!section) return;
+        // Update chips
+        section.querySelectorAll('.fp-chip').forEach(btn => {
             const code = btn.dataset.code || '';
             const isActive = (code === '' && historySubFilter === 'All') || (code === historySubFilter);
             btn.classList.toggle('active', isActive);
@@ -1665,14 +1697,30 @@
                 btn.style.cssText = '';
             }
         });
+        // Update toggle button label
+        const tog = section.querySelector('.fp-toggle');
+        const bar = section.querySelector('.fp-bar-collapsible');
+        if (tog) {
+            const anyFilter = historySubFilter !== 'All';
+            const isOpen = bar && bar.classList.contains('open');
+            if (anyFilter) {
+                const col = getSubjectColor(historySubFilter);
+                tog.className = 'fp-toggle has-filter' + (isOpen ? ' open' : '');
+                tog.innerHTML = `Subject: <span class="fp-active-label">${historySubFilter}</span> <span class="fp-arrow">${isOpen ? '▲' : '▼'}</span>`;
+                tog.style.cssText = `border-color:${col}; color:${col}; background:${col}22; box-shadow:0 0 12px ${col}44;`;
+            } else {
+                tog.className = 'fp-toggle' + (isOpen ? ' open' : '');
+                tog.innerHTML = `Subject <span class="fp-arrow">${isOpen ? '▲' : '▼'}</span>`;
+                tog.style.cssText = '';
+            }
+        }
     }
 
     function renderHistoryCards(list, displayWithFilteredBatch, displayItems) {
-        // Remove existing cards (everything after the filterWrap)
-        const filterWrap = list.querySelector('.fp-toggle') ? list.querySelector('.fp-toggle').closest('div') : null;
-        // Remove all children except filterWrap
+        // Keep the filter section, remove everything else
+        const filterSection = list.querySelector('[data-history-filter-section]');
         Array.from(list.children).forEach(child => {
-            if (!child.contains(filterWrap)) child.remove();
+            if (child !== filterSection) child.remove();
         });
         // Re-apply subject filter
         const filteredDisplay = historySubFilter === 'All' ? displayItems : displayItems.filter(e => {
@@ -1854,10 +1902,10 @@
 
             const typeChips = [
                 { key: 'all', label: 'All', color: '#00E5FF' },
-                { key: 'quiz', label: '🧠 Quizzes', color: '#af52de' },
-                { key: 'assignment', label: '📝 Assignments', color: '#007aff' },
-                { key: 'project', label: '🚀 Projects', color: '#34c759' },
-                { key: 'news', label: '📢 News', color: '#e91e8c' }
+                { key: 'quiz', label: '\ud83e\udde0 Quizzes', color: '#af52de' },
+                { key: 'assignment', label: '\ud83d\udcdd Assignments', color: '#007aff' },
+                { key: 'project', label: '\ud83d\ude80 Projects', color: '#34c759' },
+                { key: 'news', label: '\ud83d\udce2 News', color: '#e91e8c' }
             ];
 
             const subCodesSet = new Set();
@@ -1870,12 +1918,42 @@
             const dlRows = [{ label: 'Type', chips: typeChips }];
             if (subChips.length > 2) dlRows.push({ label: 'Subject', chips: subChips });
 
-            // Render as inline bar (no toggle, always visible, pushes content down)
+            const anyActive = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+            const isOpen = fpOpenState.deadlines || anyActive;
+
+            // Toggle button ("Filter")
+            const togBtn = document.createElement('button');
+            togBtn.className = 'fp-toggle' + (anyActive ? ' has-filter' : '') + (isOpen ? ' open' : '');
+            const getTogLabel = (open) => {
+                const nowActive = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+                if (nowActive) {
+                    const parts = [];
+                    if (deadlineTypeFilter !== 'all') { const c = typeChips.find(t=>t.key===deadlineTypeFilter); if(c) parts.push(c.label.replace(/^\S+\s/,'')); }
+                    if (deadlineSubFilter !== 'All') parts.push(deadlineSubFilter);
+                    return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '\u25b2' : '\u25bc'}</span>`;
+                }
+                return `Filter <span class="fp-arrow">${open ? '\u25b2' : '\u25bc'}</span>`;
+            };
+            togBtn.innerHTML = getTogLabel(isOpen);
+            filterBarEl.appendChild(togBtn);
+
+            // Collapsible area
+            const collapsible = document.createElement('div');
+            collapsible.className = 'fp-bar-collapsible' + (isOpen ? ' open' : '');
+            collapsible.style.cssText = 'flex-direction:column; gap:8px; align-items:center;';
+
+            const refreshTogBtn = () => {
+                const nowActive = deadlineTypeFilter !== 'all' || deadlineSubFilter !== 'All';
+                const open = collapsible.classList.contains('open');
+                togBtn.className = 'fp-toggle' + (nowActive ? ' has-filter' : '') + (open ? ' open' : '');
+                togBtn.innerHTML = getTogLabel(open);
+            };
+
             dlRows.forEach((row, ri) => {
                 if (row.chips.length <= 1) return;
                 const bar = document.createElement('div');
                 bar.className = 'fp-inline-bar';
-                bar.style.marginBottom = ri < dlRows.length - 1 ? '8px' : '18px';
+                bar.style.cssText = 'flex-wrap:wrap; justify-content:center;';
                 if (row.label) {
                     const lbl = document.createElement('span');
                     lbl.className = 'fp-label';
@@ -1883,32 +1961,42 @@
                     lbl.style.cssText = 'font-size:0.7rem; color:#666; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-right:4px;';
                     bar.appendChild(lbl);
                 }
-                const activeKey = ri === 0 ? deadlineTypeFilter : deadlineSubFilter;
+                const getActiveKey = () => ri === 0 ? deadlineTypeFilter : deadlineSubFilter;
                 row.chips.forEach(chip => {
                     const btn = document.createElement('button');
-                    btn.className = 'fp-chip' + (activeKey === chip.key ? ' active' : '');
+                    btn.className = 'fp-chip' + (getActiveKey() === chip.key ? ' active' : '');
                     btn.textContent = chip.label;
                     btn.dataset.row = ri;
                     btn.dataset.key = chip.key;
-                    if (activeKey === chip.key && chip.color) {
+                    if (getActiveKey() === chip.key && chip.color) {
                         btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
                     }
                     btn.addEventListener('click', () => {
                         if (ri === 0) deadlineTypeFilter = chip.key;
                         else deadlineSubFilter = chip.key;
-                        // Update chip styles in this bar
                         bar.querySelectorAll('.fp-chip').forEach(b => {
                             const isNow = b.dataset.key === chip.key;
                             b.classList.toggle('active', isNow);
-                            b.style.cssText = isNow && chip.color ? `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;` : '';
-                            if (isNow && !chip.color) b.style.cssText = 'background:rgba(233,30,140,0.18); border-color:var(--accent-pink); color:var(--accent-pink);';
+                            if (isNow && chip.color) b.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
+                            else if (isNow) b.style.cssText = 'background:rgba(233,30,140,0.18); border-color:var(--accent-pink); color:var(--accent-pink);';
+                            else b.style.cssText = '';
                         });
+                        refreshTogBtn();
                         renderDeadlineContent();
                     });
                     bar.appendChild(btn);
                 });
-                filterBarEl.appendChild(bar);
+                collapsible.appendChild(bar);
             });
+
+            togBtn.addEventListener('click', () => {
+                const nowOpen = collapsible.classList.contains('open');
+                collapsible.classList.toggle('open', !nowOpen);
+                fpOpenState.deadlines = !nowOpen;
+                refreshTogBtn();
+            });
+
+            filterBarEl.appendChild(collapsible);
         } // end if(filterBarEl)
         } // end if(!_dlSkipFilterRebuild)
 
