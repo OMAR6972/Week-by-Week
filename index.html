@@ -2266,15 +2266,24 @@
                 if (!isComp && hasExplicitTime) {
                     const diffMs = item.timestamp - now;
                     if (diffMs > 0) {
-                        const dd = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                        const hh = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
-                        const mm = Math.floor((diffMs / 1000 / 60) % 60);
-
                         let timeRemaining = '';
-                        if (dd > 0) {
-                            timeRemaining = `${dd} day${dd !== 1 ? 's' : ''} ${hh} hr${hh !== 1 ? 's' : ''}`;
+                        if (diffMs < 60 * 1000) {
+                            const s = Math.floor(diffMs / 1000);
+                            timeRemaining = `${s}s`;
+                        } else if (diffMs < 60 * 60 * 1000) {
+                            const m = Math.floor(diffMs / 60000);
+                            const s = Math.floor((diffMs % 60000) / 1000);
+                            timeRemaining = `${m}m ${s}s`;
+                        } else if (diffMs < 24 * 60 * 60 * 1000) {
+                            const h = Math.floor(diffMs / (60 * 60 * 1000));
+                            const m = Math.floor((diffMs % (60 * 60 * 1000)) / 60000);
+                            timeRemaining = `${h}h ${m}m`;
                         } else {
-                            timeRemaining = `${hh} hr${hh !== 1 ? 's' : ''} ${mm} min`;
+                            const totalHours = diffMs / (1000 * 60 * 60);
+                            const fullDays = Math.floor(totalHours / 24);
+                            const remainHours = totalHours - fullDays * 24;
+                            const daysRounded = remainHours >= 16 ? fullDays + 1 : fullDays;
+                            timeRemaining = `${daysRounded} day${daysRounded !== 1 ? 's' : ''}`;
                         }
                         countdownHtml = `<div style="font-size: 0.75rem; color: #00E5FF; font-weight: bold; background: rgba(0, 229, 255, 0.1); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-top: 6px; border: 1px solid rgba(0, 229, 255, 0.2);">⏳ ${timeRemaining} left</div>`;
                     } else {
