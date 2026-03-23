@@ -1950,7 +1950,7 @@
                     if(t.deadlineEndDate && t.deadlineEndDate.trim() !== '') {
                         const parsedEnd = parseDateMeta(t.deadlineEndDate);
                         const tsEnd = parsedEnd.timestamp;
-                        if(tsEnd !== 0) {
+                        if(tsEnd !== 0 && tsEnd > tsStart) {  // only valid if end is genuinely after start
                             const compareEndTs = parsedEnd.hasTime ? tsEnd : getEndOfDayTimestamp(tsEnd);
                             if(now >= tsStart && now <= compareEndTs) {
                                 ongoing.push({ wIndex, tIndex, task: t, week: wk.week, timestamp: tsStart, endTimestamp: tsEnd, hasExplicitTime, endHasExplicitTime: parsedEnd.hasTime });
