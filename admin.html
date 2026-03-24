@@ -166,6 +166,9 @@
                 { dateLabel: 'Friday · 27 March', sub: 'DSA', examCode: 'CSE-XXX', time: '2:30 PM', note: '', coverage: '', where: '', whereLink: '' }
             ];
         }
+        if(typeof window.FINAL_DATA === 'undefined') {
+            window.FINAL_DATA = [];
+        }
         if(typeof window.SCHEDULE_DATA === 'undefined') {
             window.SCHEDULE_DATA = [{ week: 1, tasks: [] }];
         }
@@ -891,22 +894,24 @@
         alert(`Updated and automatically marked ${count} past tasks as completed!`);
     }
 
-    // --- MIDTERMS EDITOR ---
+    // --- MIDTERMS / FINALS EDITOR ---
     let midtermDragSrc = null;
+    let adminExamView = 'midterms'; // 'midterms' | 'finals'
 
     function addMidterm() {
-        window.MIDTERM_DATA.push({ dateLabel: '', sub: '', examCode: '', time: '', note: '', coverage: '', where: '', whereLink: '', whereNote: '' });
+        const arr = adminExamView === 'finals' ? window.FINAL_DATA : window.MIDTERM_DATA;
+        arr.push({ dateLabel: '', sub: '', examCode: '', time: '', date: '', note: '', coverage: '', where: '', whereLink: '', whereNote: '' });
         renderMidtermsManager();
-        // Scroll to bottom so user sees the new entry
         setTimeout(() => {
             const list = document.getElementById('midterm-list-admin');
-            if (list) list.lastElementChild && list.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (list && list.lastElementChild) list.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 50);
     }
 
     function deleteMidterm(i) {
-        if (!confirm(`Delete "${window.MIDTERM_DATA[i].sub || 'this exam'}"?`)) return;
-        window.MIDTERM_DATA.splice(i, 1);
+        const arr = adminExamView === 'finals' ? window.FINAL_DATA : window.MIDTERM_DATA;
+        if (!confirm(`Delete "${arr[i].sub || 'this exam'}"?`)) return;
+        arr.splice(i, 1);
         renderMidtermsManager();
     }
 
@@ -920,7 +925,7 @@
     function midtermDrop(e, i) {
         e.preventDefault();
         if (midtermDragSrc === null || midtermDragSrc === i) return;
-        const arr = window.MIDTERM_DATA;
+        const arr = adminExamView === 'finals' ? window.FINAL_DATA : window.MIDTERM_DATA;
         const [moved] = arr.splice(midtermDragSrc, 1);
         arr.splice(i, 0, moved);
         midtermDragSrc = null;
@@ -929,97 +934,112 @@
 
     function renderMidtermsManager() {
         const container = document.getElementById('editor-area');
-        const subOptions = window.COURSE_DATA.map(s => `<option value="${escAttr(s.code)}">${escHtml(s.code)} – ${escHtml(s.name)}</option>`).join('');
+        const isFinals = adminExamView === 'finals';
+        const activeArr = isFinals ? window.FINAL_DATA : window.MIDTERM_DATA;
+        const accentColor = isFinals ? '#ff453a' : '#007aff';
+        const accentBg   = isFinals ? 'rgba(255,69,58,0.1)' : 'rgba(0,122,255,0.1)';
+        const label      = isFinals ? 'Finals' : 'Midterms';
+        const icon       = isFinals ? '🏁' : '📝';
+
+        // Tab switcher HTML
+        const tabHtml = `
+            <div style="display:flex; gap:10px; margin-bottom:24px;">
+                <button onclick="adminExamView='midterms'; renderMidtermsManager();" style="flex:1; padding:12px; border-radius:10px; font-weight:bold; font-size:0.9rem; cursor:pointer; border:2px solid ${adminExamView==='midterms' ? '#007aff' : '#333'}; background:${adminExamView==='midterms' ? 'rgba(0,122,255,0.15)' : 'transparent'}; color:${adminExamView==='midterms' ? '#007aff' : '#666'}; transition:all 0.2s;">
+                    📝 Midterms <span style="font-size:0.75rem; opacity:0.7;">(${window.MIDTERM_DATA.length})</span>
+                </button>
+                <button onclick="adminExamView='finals'; renderMidtermsManager();" style="flex:1; padding:12px; border-radius:10px; font-weight:bold; font-size:0.9rem; cursor:pointer; border:2px solid ${adminExamView==='finals' ? '#ff453a' : '#333'}; background:${adminExamView==='finals' ? 'rgba(255,69,58,0.15)' : 'transparent'}; color:${adminExamView==='finals' ? '#ff453a' : '#666'}; transition:all 0.2s;">
+                    🏁 Finals <span style="font-size:0.75rem; opacity:0.7;">(${window.FINAL_DATA.length})</span>
+                </button>
+            </div>`;
 
         container.innerHTML = `
-            <div class="form-section" style="border-color:#007aff; max-width:900px;">
+            <div class="form-section" style="border-color:${accentColor}; max-width:900px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #444; padding-bottom:12px; margin-bottom:20px;">
-                    <h3 style="color:#007aff; margin:0; border:none; padding:0;">📝 Manage Midterms</h3>
+                    <h3 style="color:${accentColor}; margin:0; border:none; padding:0;">${icon} Manage Midterms & Finals</h3>
                     <div style="display:flex; gap:8px; align-items:center;">
-                        <span style="color:#666; font-size:0.8rem;">${window.MIDTERM_DATA.length} exam${window.MIDTERM_DATA.length !== 1 ? 's' : ''} · drag ☰ to reorder</span>
-                        <button class="btn" style="background:#007aff; padding:8px 18px;" onclick="addMidterm()">+ Add Exam</button>
+                        <span style="color:#666; font-size:0.8rem;">${activeArr.length} exam${activeArr.length !== 1 ? 's' : ''} · drag ☰ to reorder</span>
+                        <button class="btn" style="background:${accentColor}; padding:8px 18px;" onclick="addMidterm()">+ Add ${label} Exam</button>
                     </div>
                 </div>
+                ${tabHtml}
                 <div id="midterm-list-admin"></div>
             </div>
         `;
 
         const list = document.getElementById('midterm-list-admin');
 
-        window.MIDTERM_DATA.forEach((m, i) => {
-            const accentColor = getSubjectColor(m.sub) || '#007aff';
+        activeArr.forEach((m, i) => {
+            const accentCardColor = getSubjectColor(m.sub) || accentColor;
             const el = document.createElement('div');
             el.className = 'res-item';
             el.draggable = true;
-            el.style.cssText = `flex-direction:column; border-left:4px solid ${accentColor}; margin-bottom:14px; position:relative; cursor:default;`;
+            el.style.cssText = `flex-direction:column; border-left:4px solid ${accentCardColor}; margin-bottom:14px; position:relative; cursor:default;`;
             el.addEventListener('dragstart', (e) => midtermDragStart(e, i));
             el.addEventListener('dragend',   midtermDragEnd);
             el.addEventListener('dragover',  midtermDragOver);
             el.addEventListener('drop',      (e) => midtermDrop(e, i));
 
+            const dataRef = isFinals ? 'window.FINAL_DATA' : 'window.MIDTERM_DATA';
+
             el.innerHTML = `
-                <!-- Header row -->
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; width:100%; gap:10px;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span class="drag-handle" style="cursor:grab; color:#555; font-size:1.2rem; user-select:none;">☰</span>
-                        <span style="background:${accentColor}22; color:${accentColor}; font-weight:bold; font-size:1rem; padding:3px 10px; border-radius:6px; border:1px solid ${accentColor}44;">
+                        <span style="background:${accentCardColor}22; color:${accentCardColor}; font-weight:bold; font-size:1rem; padding:3px 10px; border-radius:6px; border:1px solid ${accentCardColor}44;">
                             ${m.sub || '—'} &nbsp;·&nbsp; ${m.dateLabel || 'No date'} &nbsp;@&nbsp; ${m.time || '?'}
                         </span>
                     </div>
-                    <button class="btn btn-del" onclick="deleteMidterm(${i})" title="Delete this exam" style="flex-shrink:0;">🗑 Delete</button>
+                    <button class="btn btn-del" onclick="deleteMidterm(${i})" title="Delete" style="flex-shrink:0;">🗑 Delete</button>
                 </div>
 
-                <!-- Row 1: Subject + ExamCode + Date + Time -->
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap:10px; width:100%; margin-bottom:4px;">
                     <div>
                         <label>📖 Subject Code</label>
-                        <select oninput="window.MIDTERM_DATA[${i}].sub = this.value; renderMidtermsManager();" style="width:100%; padding:8px; background:#0a0012; border:1px solid #444; color:white; border-radius:4px; margin-bottom:10px; font-family:inherit;">
+                        <select oninput="${dataRef}[${i}].sub = this.value; renderMidtermsManager();" style="width:100%; padding:8px; background:#0a0012; border:1px solid #444; color:white; border-radius:4px; margin-bottom:10px; font-family:inherit;">
                             <option value="">-- Select --</option>
                             ${window.COURSE_DATA.map(s => `<option value="${escAttr(s.code)}" ${m.sub === s.code ? 'selected' : ''}>${escHtml(s.code)}</option>`).join('')}
-                            <option value="__custom__" ${!window.COURSE_DATA.find(s=>s.code===m.sub) && m.sub ? 'selected':''}>✏️ Custom...</option>
                         </select>
-                        ${!window.COURSE_DATA.find(s=>s.code===m.sub) && m.sub ? `<input type="text" placeholder="Custom code" value="${escAttr(m.sub)}" oninput="window.MIDTERM_DATA[${i}].sub = this.value;" style="margin-top:-6px;">` : ''}
+                        ${!window.COURSE_DATA.find(s=>s.code===m.sub) && m.sub ? `<input type="text" placeholder="Custom code" value="${escAttr(m.sub)}" oninput="${dataRef}[${i}].sub = this.value;" style="margin-top:-6px;">` : ''}
                     </div>
                     <div>
                         <label>🔢 Exam Code</label>
-                        <input type="text" placeholder="e.g. CSE333s" value="${escAttr(m.examCode || '')}" oninput="window.MIDTERM_DATA[${i}].examCode = this.value;">
+                        <input type="text" placeholder="e.g. CSE333s" value="${escAttr(m.examCode || '')}" oninput="${dataRef}[${i}].examCode = this.value;">
                     </div>
                     <div>
                         <label>📅 Date <span style="font-size:0.72rem; color:#666; font-weight:normal;">(sets label auto)</span></label>
                         <input type="date" value="${escAttr(m.date || '')}" oninput="
-                            window.MIDTERM_DATA[${i}].date = this.value;
+                            ${dataRef}[${i}].date = this.value;
                             if(this.value) {
                                 const d = new Date(this.value + 'T12:00:00');
                                 const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
                                 const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-                                window.MIDTERM_DATA[${i}].dateLabel = days[d.getDay()] + ' · ' + d.getDate() + ' ' + months[d.getMonth()];
-                                this.parentElement.nextElementSibling.querySelector('input').value = window.MIDTERM_DATA[${i}].dateLabel;
+                                ${dataRef}[${i}].dateLabel = days[d.getDay()] + ' · ' + d.getDate() + ' ' + months[d.getMonth()];
+                                this.parentElement.nextElementSibling.querySelector('input').value = ${dataRef}[${i}].dateLabel;
                             }
                         " style="color-scheme:dark;">
                     </div>
                     <div>
                         <label>🏷 Date Label <span style="font-size:0.72rem; color:#666; font-weight:normal;">(override)</span></label>
-                        <input type="text" placeholder="e.g. Friday · 27 March" value="${escAttr(m.dateLabel || '')}" oninput="window.MIDTERM_DATA[${i}].dateLabel = this.value;">
+                        <input type="text" placeholder="e.g. Friday · 27 March" value="${escAttr(m.dateLabel || '')}" oninput="${dataRef}[${i}].dateLabel = this.value;">
                     </div>
                     <div>
                         <label>🕐 Time</label>
-                        <input type="text" placeholder="e.g. 2:30 PM" value="${escAttr(m.time || '')}" oninput="window.MIDTERM_DATA[${i}].time = this.value;">
+                        <input type="text" placeholder="e.g. 2:30 PM" value="${escAttr(m.time || '')}" oninput="${dataRef}[${i}].time = this.value;">
                     </div>
                 </div>
 
-                <!-- Row 2: Where + Coverage -->
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; width:100%;">
                     <div>
                         <label>📍 Location</label>
-                        <input type="text" placeholder="e.g. Hall C (150), Hall D (36)" value="${escAttr(m.where || '')}" oninput="window.MIDTERM_DATA[${i}].where = this.value;">
-                        <input type="text" placeholder="Location URL (Optional)" value="${escAttr(m.whereLink || '')}" style="font-size:0.8rem; margin-top:-5px; background:rgba(0,0,0,0.5);" oninput="window.MIDTERM_DATA[${i}].whereLink = this.value;">
-                        <input type="text" placeholder="Link label (e.g. Check your seat here)" value="${escAttr(m.whereNote || '')}" style="font-size:0.75rem; background:rgba(74,144,226,0.1); border-color:rgba(74,144,226,0.3); color:#4a90e2;" oninput="window.MIDTERM_DATA[${i}].whereNote = this.value;">
+                        <input type="text" placeholder="e.g. Hall C (150), Hall D (36)" value="${escAttr(m.where || '')}" oninput="${dataRef}[${i}].where = this.value;">
+                        <input type="text" placeholder="Location URL (Optional)" value="${escAttr(m.whereLink || '')}" style="font-size:0.8rem; margin-top:-5px; background:rgba(0,0,0,0.5);" oninput="${dataRef}[${i}].whereLink = this.value;">
+                        <input type="text" placeholder="Link label (e.g. Check your seat here)" value="${escAttr(m.whereNote || '')}" style="font-size:0.75rem; background:rgba(${isFinals?'255,69,58':'74,144,226'},0.1); border-color:rgba(${isFinals?'255,69,58':'74,144,226'},0.3); color:${accentColor};" oninput="${dataRef}[${i}].whereNote = this.value;">
                     </div>
                     <div>
                         <label>📚 Coverage</label>
-                        <input type="text" placeholder="e.g. Weeks 1–4" value="${escAttr(m.coverage || '')}" oninput="window.MIDTERM_DATA[${i}].coverage = this.value;">
+                        <input type="text" placeholder="e.g. Weeks 1–4" value="${escAttr(m.coverage || '')}" oninput="${dataRef}[${i}].coverage = this.value;">
                         <label style="margin-top:4px;">📝 Extra Notes</label>
-                        <textarea rows="2" placeholder="e.g. Bring Student ID" oninput="window.MIDTERM_DATA[${i}].note = this.value;" style="margin-bottom:0;">${escHtml(m.note || '')}</textarea>
+                        <textarea rows="2" placeholder="e.g. Bring Student ID" oninput="${dataRef}[${i}].note = this.value;" style="margin-bottom:0;">${escHtml(m.note || '')}</textarea>
                     </div>
                 </div>
             `;
@@ -1027,8 +1047,8 @@
             list.appendChild(el);
         });
 
-        if (window.MIDTERM_DATA.length === 0) {
-            list.innerHTML = `<div style="text-align:center; color:#555; padding:40px;">No midterms yet. Click <strong style="color:#007aff;">+ Add Exam</strong> to get started.</div>`;
+        if (activeArr.length === 0) {
+            list.innerHTML = `<div style="text-align:center; color:#555; padding:40px;">No ${label.toLowerCase()} exams yet. Click <strong style="color:${accentColor};">+ Add ${label} Exam</strong> to get started.</div>`;
         }
     }
 
@@ -1197,6 +1217,7 @@
         content += "window.COURSE_DATA = " + JSON.stringify(window.COURSE_DATA, null, 4) + ";\n\n";
         content += "window.SCHEDULE_DATA = " + JSON.stringify(window.SCHEDULE_DATA, null, 4) + ";\n\n";
         content += "window.MIDTERM_DATA = " + JSON.stringify(window.MIDTERM_DATA, null, 4) + ";\n\n";
+        content += "window.FINAL_DATA = " + JSON.stringify(window.FINAL_DATA, null, 4) + ";\n\n";
         content += "window.STAFF_DATA = " + JSON.stringify(window.STAFF_DATA, null, 4) + ";\n\n";
         content += "window.TIMETABLE_DATA = " + JSON.stringify(window.TIMETABLE_DATA, null, 4) + ";\n\n";
         content += "window.UPDATES_DATA = " + JSON.stringify(window.UPDATES_DATA || [], null, 4) + ";";
@@ -1983,11 +2004,11 @@
     let dataSnapshot = '';
 
     function takeSnapshot() {
-        dataSnapshot = JSON.stringify({ c: window.COURSE_DATA, s: window.SCHEDULE_DATA, m: window.MIDTERM_DATA, st: window.STAFF_DATA, tt: window.TIMETABLE_DATA, cfg: window.CONFIG, u: window.UPDATES_DATA, n: window.NEWS_DATA });
+        dataSnapshot = JSON.stringify({ c: window.COURSE_DATA, s: window.SCHEDULE_DATA, m: window.MIDTERM_DATA, f: window.FINAL_DATA, st: window.STAFF_DATA, tt: window.TIMETABLE_DATA, cfg: window.CONFIG, u: window.UPDATES_DATA, n: window.NEWS_DATA });
     }
 
     function markDirty() {
-        const current = JSON.stringify({ c: window.COURSE_DATA, s: window.SCHEDULE_DATA, m: window.MIDTERM_DATA, st: window.STAFF_DATA, tt: window.TIMETABLE_DATA, cfg: window.CONFIG, u: window.UPDATES_DATA, n: window.NEWS_DATA });
+        const current = JSON.stringify({ c: window.COURSE_DATA, s: window.SCHEDULE_DATA, m: window.MIDTERM_DATA, f: window.FINAL_DATA, st: window.STAFF_DATA, tt: window.TIMETABLE_DATA, cfg: window.CONFIG, u: window.UPDATES_DATA, n: window.NEWS_DATA });
         isDirty = current !== dataSnapshot;
     }
 

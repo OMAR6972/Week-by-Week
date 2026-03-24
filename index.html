@@ -129,6 +129,24 @@
         /* Midterm hidden subjects indicator */
         .midterm-hidden-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(0,122,255,0.3); color: #007aff; background: rgba(0,122,255,0.08); transition: all 0.2s; margin-bottom: 16px; }
         .midterm-hidden-btn:hover { background: rgba(0,122,255,0.15); }
+        .finals-hidden-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(255,69,58,0.3); color: #ff453a; background: rgba(255,69,58,0.08); transition: all 0.2s; margin-bottom: 16px; }
+        .finals-hidden-btn:hover { background: rgba(255,69,58,0.15); }
+
+        /* Exam view toggle (big cards) */
+        .exam-view-toggle { display: flex; gap: 14px; justify-content: center; margin-bottom: 36px; flex-wrap: wrap; }
+        .exam-view-card { flex: 1; min-width: 180px; max-width: 260px; border-radius: 18px; padding: 22px 20px 18px; cursor: pointer; border: 2px solid transparent; transition: all 0.25s; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; user-select: none; }
+        .exam-view-card-midterms { background: rgba(0,122,255,0.08); border-color: rgba(0,122,255,0.25); }
+        .exam-view-card-midterms:hover { background: rgba(0,122,255,0.14); border-color: rgba(0,122,255,0.5); box-shadow: 0 0 20px rgba(0,122,255,0.2); }
+        .exam-view-card-midterms.active { background: rgba(0,122,255,0.18); border-color: #007aff; box-shadow: 0 0 28px rgba(0,122,255,0.35); }
+        .exam-view-card-finals { background: rgba(255,69,58,0.08); border-color: rgba(255,69,58,0.25); }
+        .exam-view-card-finals:hover { background: rgba(255,69,58,0.14); border-color: rgba(255,69,58,0.5); box-shadow: 0 0 20px rgba(255,69,58,0.2); }
+        .exam-view-card-finals.active { background: rgba(255,69,58,0.18); border-color: #ff453a; box-shadow: 0 0 28px rgba(255,69,58,0.35); }
+        .exam-view-card-icon { font-size: 2.2rem; line-height: 1; }
+        .exam-view-card-label { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+        .exam-view-card-midterms .exam-view-card-label { color: #007aff; }
+        .exam-view-card-finals .exam-view-card-label { color: #ff453a; }
+        .exam-view-card-count { font-size: 0.75rem; color: #888; margin-top: 2px; }
+        .exam-view-card.active .exam-view-card-count { color: #bbb; }
         
         .useful-select { background: rgba(181, 25, 214, 0.15); border: 1px solid rgba(181, 25, 214, 0.4); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; outline: none; font-weight: bold; font-family: 'Work Sans', sans-serif; transition: 0.3s; }
         .useful-select:hover { background: rgba(181, 25, 214, 0.3); }
@@ -746,7 +764,7 @@
         </div>
         <div class="nav-item" id="nav-item-midterms">
             <div class="nav-link nav-link-midterms" data-nav="midterm" onclick="navFromBar('midterm')">
-                <span class="nav-icon">📝</span> Midterms
+                <span class="nav-icon">📝</span> Midterms / Finals
             </div>
         </div>
         <div class="nav-item" id="nav-item-useful">
@@ -794,7 +812,7 @@
             <button class="deadline-btn" onclick="showDeadlines()">⏳ Deadlines</button>
             <button class="others-toggle-btn" onclick="toggleHomeOthers()">📂 Others <span class="others-arrow">▼</span></button>
             <div class="others-expand-area" id="home-others-expand">
-                <button class="midterm-btn" onclick="showMidterms()">📝 Midterms</button>
+                <button class="midterm-btn" onclick="showMidterms()">📝 Midterms / Finals</button>
                 <button class="useful-btn" onclick="showUsefulLinks()">🔗 Useful Links</button>
                 <button class="timetable-btn" onclick="showTimetable()">🗓️ Timetable</button>
                 <button class="directory-btn" onclick="showDirectory()">👥 Staff Contacts</button>
@@ -849,13 +867,32 @@
 
     <div id="midterm-page" class="page">
         <button id="midterm-back-btn" class="back-btn" onclick="smartBack()">← Back</button>
-        <div id="midterm-capture-wrap">
-            <h1 style="color:#007aff; text-align:center;">MIDTERM EXAMS</h1>
-            <p class="subtitle" style="margin-bottom: 30px;">27 March — 3 April 2026 &nbsp;·&nbsp; Spring 2026</p>
-            <div id="midterm-list" style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column;"></div>
+
+        <!-- Big toggle buttons -->
+        <div class="exam-view-toggle" id="exam-view-toggle"></div>
+
+        <!-- Midterms view -->
+        <div id="exam-midterms-view">
+            <div id="midterm-capture-wrap">
+                <h1 id="midterm-view-title" style="color:#007aff; text-align:center;">MIDTERM EXAMS</h1>
+                <p id="midterm-view-subtitle" class="subtitle" style="margin-bottom: 30px;"></p>
+                <div id="midterm-list" style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column;"></div>
+            </div>
+            <div id="midterm-export-bar" style="display:flex; justify-content:center; margin-top:30px;">
+                <button class="midterm-export-btn" onclick="exportMidtermImage()">📸 Save as Image</button>
+            </div>
         </div>
-        <div id="midterm-export-bar" style="display:flex; justify-content:center; margin-top:30px;">
-            <button class="midterm-export-btn" onclick="exportMidtermImage()">📸 Save as Image</button>
+
+        <!-- Finals view -->
+        <div id="exam-finals-view" style="display:none;">
+            <div id="finals-capture-wrap">
+                <h1 style="color:#ff453a; text-align:center;">FINAL EXAMS</h1>
+                <p id="finals-view-subtitle" class="subtitle" style="margin-bottom: 30px;"></p>
+                <div id="finals-list" style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column;"></div>
+            </div>
+            <div id="finals-export-bar" style="display:flex; justify-content:center; margin-top:30px;">
+                <button class="midterm-export-btn" style="background:rgba(255,69,58,0.15); border-color:#ff453a; color:#ff453a;" onclick="exportFinalsImage()">📸 Save as Image</button>
+            </div>
         </div>
     </div>
 
@@ -1132,6 +1169,7 @@
     }
 
     if(typeof window.MIDTERM_DATA === 'undefined') window.MIDTERM_DATA = [];
+    if(typeof window.FINAL_DATA === 'undefined') window.FINAL_DATA = [];
     if(typeof window.SCHEDULE_DATA === 'undefined') window.SCHEDULE_DATA = [];
     if(typeof window.STAFF_DATA === 'undefined') window.STAFF_DATA = [];
     
@@ -1149,6 +1187,25 @@
     })();
     function saveMidtermHidden() {
         try { localStorage.setItem('midtermHidden', JSON.stringify([...midtermHiddenSet])); } catch(e) {}
+    }
+    let finalHiddenSet = (() => {
+        try { return new Set(JSON.parse(localStorage.getItem('finalHidden') || '[]')); }
+        catch(e) { return new Set(); }
+    })();
+    function saveFinalHidden() {
+        try { localStorage.setItem('finalHidden', JSON.stringify([...finalHiddenSet])); } catch(e) {}
+    }
+    // auto-default: if finals data exists → finals (since finals come after midterms period)
+    // otherwise → midterms. Persisted in localStorage.
+    let examViewMode = (() => {
+        try {
+            const saved = localStorage.getItem('examViewMode');
+            if (saved === 'finals' && window.FINAL_DATA && window.FINAL_DATA.length > 0) return 'finals';
+        } catch(e) {}
+        return (window.FINAL_DATA && window.FINAL_DATA.length > 0) ? 'finals' : 'midterms';
+    })();
+    function saveExamViewMode() {
+        try { localStorage.setItem('examViewMode', examViewMode); } catch(e) {}
     }
     let currentUsefulFilter = 'All Links';
     let currentUsefulSubject = new Set(); // multi-select subject filter
@@ -1169,7 +1226,7 @@
             'recent': 'History',
             'schedule': 'Semester Map',
             'deadlines': 'Deadlines',
-            'midterm': 'Midterms',
+            'midterm': 'Midterms / Finals',
             'useful-links': 'Useful Links',
             'timetable': 'Timetable',
             'directory': 'Staff Contacts',
@@ -3330,12 +3387,9 @@
         }
     });
     
-    function showMidterms(push = true, from = 'home') {
-        const container = document.getElementById('midterm-list');
-        container.innerHTML = '';
-
-        // Sort a copy by date then by time so order is always chronological
-        function parseMidtermTime(t) {
+    // ── shared exam sort helper ──────────────────────────────────────────────
+    function sortExamData(dataArr) {
+        function parseExamTime(t) {
             if (!t) return 0;
             const m = t.match(/(\d+):(\d+)\s*(AM|PM)?/i);
             if (!m) return 0;
@@ -3345,56 +3399,57 @@
             if (ampm === 'AM' && h === 12) h = 0;
             return h * 60 + min;
         }
-        const sortedExams = window.MIDTERM_DATA
+        return dataArr
             .map(function(exam, origIdx) { return { exam: exam, origIdx: origIdx }; })
             .sort(function(a, b) {
-                // Primary: real date field (YYYY-MM-DD) if present, else fall back to array order
-                const da = a.exam.date || '';
-                const db = b.exam.date || '';
+                const da = a.exam.date || '', db = b.exam.date || '';
                 if (da && db && da !== db) return da < db ? -1 : 1;
                 if (da && !db) return -1;
                 if (!da && db) return 1;
-                // Secondary: time within same date
-                return parseMidtermTime(a.exam.time) - parseMidtermTime(b.exam.time);
+                return parseExamTime(a.exam.time) - parseExamTime(b.exam.time);
             });
+    }
 
-        // Hidden indicator + panel slot — using addEventListener so onclick survives re-renders
-        const hiddenCount = midtermHiddenSet.size;
+    // ── shared exam list renderer ────────────────────────────────────────────
+    function renderExamList(container, sortedEntries, accentColor, hiddenSet, saveHiddenFn, openModalFn, openHiddenPanelFn, hiddenPanelSlotId, hiddenBtnClass, footerText) {
+        container.innerHTML = '';
+
+        const hiddenCount = hiddenSet.size;
         if (hiddenCount > 0) {
             const hiddenBtn = document.createElement('button');
-            hiddenBtn.className = 'midterm-hidden-btn';
+            hiddenBtn.className = hiddenBtnClass;
             hiddenBtn.textContent = '🔒 Hidden (' + hiddenCount + ') — tap to manage';
-            hiddenBtn.addEventListener('click', openMidtermHiddenPanel);
+            hiddenBtn.addEventListener('click', openHiddenPanelFn);
             container.appendChild(hiddenBtn);
             const slot = document.createElement('div');
-            slot.id = 'midterm-hidden-panel-slot';
+            slot.id = hiddenPanelSlotId;
             container.appendChild(slot);
         }
 
         let lastDate = '';
-        sortedExams.forEach(function(entry) {
+        sortedEntries.forEach(function(entry) {
             const exam = entry.exam;
             const idx = entry.origIdx;
-            if (midtermHiddenSet.has(idx)) return;
+            if (hiddenSet.has(idx)) return;
 
             if (exam.dateLabel !== lastDate) {
                 const dateEl = document.createElement('div');
-                dateEl.style.cssText = "font-family:'Orbitron',sans-serif; font-size:1.1rem; letter-spacing:2px; color:var(--accent-blue); text-transform:uppercase; margin-bottom:10px; margin-top:30px; padding-left:2px; font-weight:bold;";
+                dateEl.style.cssText = "font-family:'Orbitron',sans-serif; font-size:1.1rem; letter-spacing:2px; color:" + accentColor + "; text-transform:uppercase; margin-bottom:10px; margin-top:30px; padding-left:2px; font-weight:bold;";
                 dateEl.textContent = exam.dateLabel;
                 container.appendChild(dateEl);
                 lastDate = exam.dateLabel;
             }
 
             let subName = exam.sub;
-            if(window.COURSE_DATA) {
+            if (window.COURSE_DATA) {
                 const sObj = window.COURSE_DATA.find(function(s){ return s.code === exam.sub; });
-                if(sObj) subName = sObj.name;
+                if (sObj) subName = sObj.name;
             }
 
             const card = document.createElement('div');
             card.className = 'card';
             card.style.cssText = 'border-left:4px solid ' + getSubjectColor(exam.sub) + '; flex-direction:row; cursor:pointer; padding:14px 18px; margin-bottom:10px; display:flex; align-items:center;';
-            card.addEventListener('click', (function(i){ return function(){ openMidtermModal(i); }; })(idx));
+            card.addEventListener('click', (function(i){ return function(){ openModalFn(i); }; })(idx));
 
             const badge = document.createElement('span');
             badge.className = 'sub-badge';
@@ -3413,7 +3468,7 @@
             info.appendChild(n1); info.appendChild(n2);
 
             const time = document.createElement('div');
-            time.style.cssText = "font-family:'Orbitron',sans-serif; font-size:0.9rem; font-weight:700; color:var(--accent-blue); white-space:nowrap; flex-shrink:0; margin-right:10px;";
+            time.style.cssText = "font-family:'Orbitron',sans-serif; font-size:0.9rem; font-weight:700; color:" + accentColor + "; white-space:nowrap; flex-shrink:0; margin-right:10px;";
             time.textContent = exam.time;
 
             const hideBtn = document.createElement('button');
@@ -3421,7 +3476,14 @@
             hideBtn.style.cssText = 'background:none; border:1px solid rgba(255,255,255,0.1); color:#555; padding:4px 8px; border-radius:8px; cursor:pointer; font-size:0.72rem; flex-shrink:0;';
             hideBtn.addEventListener('mouseenter', function(){ hideBtn.style.color='#ff3b30'; hideBtn.style.borderColor='rgba(255,59,48,0.3)'; });
             hideBtn.addEventListener('mouseleave', function(){ hideBtn.style.color='#555'; hideBtn.style.borderColor='rgba(255,255,255,0.1)'; });
-            hideBtn.addEventListener('click', (function(i){ return function(e){ e.stopPropagation(); const sy = window.scrollY; midtermHiddenSet.add(i); saveMidtermHidden(); showMidterms(false); requestAnimationFrame(()=>window.scrollTo(0,sy)); }; })(idx));
+            hideBtn.addEventListener('click', (function(i){ return function(e){
+                e.stopPropagation();
+                const sy = window.scrollY;
+                hiddenSet.add(i);
+                saveHiddenFn();
+                renderCurrentExamView(false);
+                requestAnimationFrame(()=>window.scrollTo(0,sy));
+            }; })(idx));
 
             card.appendChild(badge); card.appendChild(info); card.appendChild(time); card.appendChild(hideBtn);
             container.appendChild(card);
@@ -3429,40 +3491,39 @@
 
         const footer = document.createElement('div');
         footer.style.cssText = 'text-align:center; margin-top:52px; margin-bottom:20px; font-size:0.75rem; color:var(--text-sub); letter-spacing:3px; opacity:0.5;';
-        footer.textContent = 'GOOD LUCK · SPRING 2026';
+        footer.textContent = footerText;
         container.appendChild(footer);
-
-        nav('midterm', push, { from: from });
     }
 
-    function openMidtermHiddenPanel() {
-        const slot = document.getElementById('midterm-hidden-panel-slot');
+    // ── hidden panel builder (reusable) ──────────────────────────────────────
+    function buildHiddenPanel(slotId, panelId, hiddenSet, dataArr, accentColor, saveHiddenFn, accentRgb) {
+        const slot = document.getElementById(slotId);
         if (!slot) return;
-        const existing = document.getElementById('midterm-hidden-panel');
+        const existing = document.getElementById(panelId);
         if (existing) { existing.remove(); return; }
 
         const panel = document.createElement('div');
-        panel.id = 'midterm-hidden-panel';
-        panel.style.cssText = 'background:rgba(0,122,255,0.06); border:1px solid rgba(0,122,255,0.25); border-radius:14px; padding:16px 20px; margin-bottom:16px;';
+        panel.id = panelId;
+        panel.style.cssText = 'background:rgba(' + accentRgb + ',0.06); border:1px solid rgba(' + accentRgb + ',0.25); border-radius:14px; padding:16px 20px; margin-bottom:16px;';
 
         const title = document.createElement('div');
-        title.style.cssText = "font-family:'Orbitron',sans-serif; font-size:0.75rem; letter-spacing:2px; color:#007aff; margin-bottom:12px; text-transform:uppercase;";
+        title.style.cssText = "font-family:'Orbitron',sans-serif; font-size:0.75rem; letter-spacing:2px; color:" + accentColor + "; margin-bottom:12px; text-transform:uppercase;";
         title.textContent = 'Hidden Exams';
         panel.appendChild(title);
 
-        if (midtermHiddenSet.size === 0) {
+        if (hiddenSet.size === 0) {
             const empty = document.createElement('div');
             empty.style.cssText = 'color:#888; font-size:0.85rem; font-style:italic;';
             empty.textContent = 'Nothing hidden.';
             panel.appendChild(empty);
         } else {
-            midtermHiddenSet.forEach(function(idx) {
-                const exam = window.MIDTERM_DATA[idx];
+            hiddenSet.forEach(function(idx) {
+                const exam = dataArr[idx];
                 if (!exam) return;
                 let subName = exam.sub;
-                if(window.COURSE_DATA) {
+                if (window.COURSE_DATA) {
                     const sObj = window.COURSE_DATA.find(function(s){ return s.code === exam.sub; });
-                    if(sObj) subName = sObj.name;
+                    if (sObj) subName = sObj.name;
                 }
                 const row = document.createElement('div');
                 row.style.cssText = 'display:flex; align-items:center; gap:10px; margin-bottom:8px; padding:8px 12px; background:rgba(0,0,0,0.2); border-radius:10px;';
@@ -3477,13 +3538,12 @@
                 ub.style.cssText = 'background:rgba(52,199,89,0.15); border:1px solid rgba(52,199,89,0.35); color:#34c759; padding:3px 10px; border-radius:8px; cursor:pointer; font-size:0.75rem; font-weight:bold;';
                 ub.addEventListener('click', (function(i){ return function(){
                     const sy = window.scrollY;
-                    midtermHiddenSet.delete(i);
-                    saveMidtermHidden();
-                    showMidterms(false);
+                    hiddenSet.delete(i);
+                    saveHiddenFn();
+                    renderCurrentExamView(false);
                     requestAnimationFrame(() => {
                         window.scrollTo(0, sy);
-                        // Re-open the hidden panel after re-render
-                        openMidtermHiddenPanel();
+                        buildHiddenPanel(slotId, panelId, hiddenSet, dataArr, accentColor, saveHiddenFn, accentRgb);
                     });
                 }; })(idx));
                 row.appendChild(sb); row.appendChild(nm); row.appendChild(ub);
@@ -3491,6 +3551,112 @@
             });
         }
         slot.appendChild(panel);
+    }
+
+    // ── toggle rendering ─────────────────────────────────────────────────────
+    function renderExamToggle() {
+        const wrap = document.getElementById('exam-view-toggle');
+        if (!wrap) return;
+        const hasFinals = window.FINAL_DATA && window.FINAL_DATA.length > 0;
+        const midCount = window.MIDTERM_DATA ? window.MIDTERM_DATA.length : 0;
+        const finCount = window.FINAL_DATA ? window.FINAL_DATA.length : 0;
+
+        wrap.innerHTML = '';
+
+        const midCard = document.createElement('div');
+        midCard.className = 'exam-view-card exam-view-card-midterms' + (examViewMode === 'midterms' ? ' active' : '');
+        midCard.innerHTML = '<div class="exam-view-card-icon">📝</div><div class="exam-view-card-label">Midterms</div><div class="exam-view-card-count">' + midCount + ' exam' + (midCount !== 1 ? 's' : '') + '</div>';
+        midCard.addEventListener('click', function() {
+            examViewMode = 'midterms';
+            saveExamViewMode();
+            renderCurrentExamView(false);
+        });
+        wrap.appendChild(midCard);
+
+        const finCard = document.createElement('div');
+        finCard.className = 'exam-view-card exam-view-card-finals' + (examViewMode === 'finals' ? ' active' : '');
+        finCard.innerHTML = '<div class="exam-view-card-icon">🏁</div><div class="exam-view-card-label">Finals</div><div class="exam-view-card-count">' + (hasFinals ? finCount + ' exam' + (finCount !== 1 ? 's' : '') : 'Coming soon') + '</div>';
+        finCard.addEventListener('click', function() {
+            examViewMode = 'finals';
+            saveExamViewMode();
+            renderCurrentExamView(false);
+        });
+        wrap.appendChild(finCard);
+    }
+
+    // ── renders whichever view is currently active ───────────────────────────
+    function renderCurrentExamView(push) {
+        renderExamToggle();
+        const midView = document.getElementById('exam-midterms-view');
+        const finView = document.getElementById('exam-finals-view');
+
+        if (examViewMode === 'finals') {
+            midView.style.display = 'none';
+            finView.style.display = '';
+            renderFinalsView();
+        } else {
+            midView.style.display = '';
+            finView.style.display = 'none';
+            renderMidtermsView();
+        }
+        if (push !== false) nav('midterm', push !== false, { from: 'home' });
+    }
+
+    function renderMidtermsView() {
+        const container = document.getElementById('midterm-list');
+        renderExamList(
+            container,
+            sortExamData(window.MIDTERM_DATA || []),
+            '#007aff',
+            midtermHiddenSet,
+            saveMidtermHidden,
+            openMidtermModal,
+            openMidtermHiddenPanel,
+            'midterm-hidden-panel-slot',
+            'midterm-hidden-btn',
+            'GOOD LUCK · SPRING 2026'
+        );
+    }
+
+    function renderFinalsView() {
+        const container = document.getElementById('finals-list');
+        const hasFinals = window.FINAL_DATA && window.FINAL_DATA.length > 0;
+
+        if (!hasFinals) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:60px 20px; max-width:500px; margin:0 auto;">
+                    <div style="font-size:3.5rem; margin-bottom:20px; opacity:0.4;">🏁</div>
+                    <div style="font-family:'Orbitron',sans-serif; font-size:1rem; letter-spacing:3px; color:#ff453a; opacity:0.5; text-transform:uppercase; margin-bottom:14px;">Finals Schedule</div>
+                    <div style="color:#666; font-size:0.95rem; line-height:1.7;">Not published yet.<br>Check back here once finals details are announced.</div>
+                </div>`;
+            return;
+        }
+
+        renderExamList(
+            container,
+            sortExamData(window.FINAL_DATA),
+            '#ff453a',
+            finalHiddenSet,
+            saveFinalHidden,
+            openFinalModal,
+            openFinalHiddenPanel,
+            'final-hidden-panel-slot',
+            'finals-hidden-btn',
+            'GOOD LUCK · SPRING 2026'
+        );
+    }
+
+    function showMidterms(push = true, from = 'home') {
+        renderCurrentExamView(push);
+        nav('midterm', push, { from: from });
+    }
+
+    function openMidtermHiddenPanel() {
+        buildHiddenPanel('midterm-hidden-panel-slot', 'midterm-hidden-panel', midtermHiddenSet, window.MIDTERM_DATA, '#007aff', saveMidtermHidden, '0,122,255');
+    }
+
+    function openFinalHiddenPanel() {
+        buildHiddenPanel('final-hidden-panel-slot', 'final-hidden-panel', finalHiddenSet, window.FINAL_DATA, '#ff453a', saveFinalHidden, '255,69,58');
     }
 
     function openModal(wIndex, tIndex) {
@@ -3641,6 +3807,58 @@
 
         if(!hasContent) {
             container.innerHTML = `<div style="text-align:center; color:#666; font-style:italic; padding:20px 0;">No extra details provided.</div>`;
+        }
+        document.getElementById('task-modal').classList.add('active');
+    }
+
+    function openFinalModal(idx) {
+        const exam = window.FINAL_DATA[idx];
+        let subName = exam.sub;
+        let targetSub = null;
+        if (window.COURSE_DATA) {
+            const sObj = window.COURSE_DATA.find(s => s.code === exam.sub);
+            if (sObj) { subName = sObj.name; targetSub = sObj; }
+        }
+
+        document.getElementById('m-title').innerHTML = `🏁 Final Exam`;
+        document.getElementById('m-sub').innerText = `${subName} (${exam.examCode || ''})`;
+
+        const container = document.getElementById('m-fields-container');
+        container.innerHTML = '';
+        let hasContent = false;
+
+        let whereHtml = exam.where || '';
+        if (exam.whereLink && exam.whereLink.trim() !== '') {
+            const wn = exam.whereNote || 'Check your place here';
+            whereHtml = (exam.where ? exam.where + ' ' : '') + `<a href="${exam.whereLink}" target="_blank" rel="noopener" class="modal-url-badge">🔗 ${wn}</a>`;
+        }
+
+        const fields = [
+            { label: '📍 Where', val: whereHtml },
+            { label: '📚 Coverage', val: exam.coverage },
+            { label: '📝 Extra Notes', val: exam.note }
+        ];
+
+        fields.forEach(f => {
+            if (f.val && f.val.trim() !== '') {
+                hasContent = true;
+                container.innerHTML += `<div class="modal-field"><div class="modal-label" style="color:#ff453a;">${f.label}</div><div class="modal-value" style="border-left-color:#ff453a;">${f.val}</div></div>`;
+            }
+        });
+
+        if (targetSub) {
+            hasContent = true;
+            container.innerHTML += `
+                <button style="width:100%; padding:12px; margin-top:15px; border-radius:8px; background:rgba(181,25,214,0.2); color:var(--accent-purple); font-weight:bold; cursor:pointer; border:1px solid var(--accent-purple); font-family:'Orbitron'; transition:0.3s; font-size:0.85rem;"
+                onmouseover="this.style.background='var(--accent-purple)'; this.style.color='white';"
+                onmouseout="this.style.background='rgba(181,25,214,0.2)'; this.style.color='var(--accent-purple)';"
+                onclick="closeModal(null, true); currSub = window.COURSE_DATA.find(s => s.code === '${exam.sub}'); showWeeks(currSub);">
+                    📚 GO TO SUBJECT
+                </button>`;
+        }
+
+        if (!hasContent) {
+            container.innerHTML = `<div style="text-align:center; color:#666; font-style:italic; padding:20px 0;">No extra details provided yet.</div>`;
         }
         document.getElementById('task-modal').classList.add('active');
     }
@@ -6962,6 +7180,13 @@
         const bar = document.getElementById('midterm-export-bar');
         const backBtn = document.querySelector('#midterm-page > .back-btn');
         capturePageImage(el, 'midterm-exams.png', [bar, backBtn]);
+    }
+
+    function exportFinalsImage() {
+        const el = document.getElementById('finals-capture-wrap');
+        const bar = document.getElementById('finals-export-bar');
+        const backBtn = document.querySelector('#midterm-page > .back-btn');
+        capturePageImage(el, 'final-exams.png', [bar, backBtn]);
     }
 
     function exportGpaImage() {
