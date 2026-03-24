@@ -970,7 +970,7 @@
                 </div>
 
                 <!-- Row 1: Subject + ExamCode + Date + Time -->
-                <div style="display:grid; grid-template-columns: 1fr 1fr 2fr 1fr; gap:10px; width:100%; margin-bottom:4px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap:10px; width:100%; margin-bottom:4px;">
                     <div>
                         <label>📖 Subject Code</label>
                         <select oninput="window.MIDTERM_DATA[${i}].sub = this.value; renderMidtermsManager();" style="width:100%; padding:8px; background:#0a0012; border:1px solid #444; color:white; border-radius:4px; margin-bottom:10px; font-family:inherit;">
@@ -985,7 +985,20 @@
                         <input type="text" placeholder="e.g. CSE333s" value="${escAttr(m.examCode || '')}" oninput="window.MIDTERM_DATA[${i}].examCode = this.value;">
                     </div>
                     <div>
-                        <label>📅 Date Label</label>
+                        <label>📅 Date <span style="font-size:0.72rem; color:#666; font-weight:normal;">(sets label auto)</span></label>
+                        <input type="date" value="${escAttr(m.date || '')}" oninput="
+                            window.MIDTERM_DATA[${i}].date = this.value;
+                            if(this.value) {
+                                const d = new Date(this.value + 'T12:00:00');
+                                const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+                                const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                                window.MIDTERM_DATA[${i}].dateLabel = days[d.getDay()] + ' · ' + d.getDate() + ' ' + months[d.getMonth()];
+                                this.parentElement.nextElementSibling.querySelector('input').value = window.MIDTERM_DATA[${i}].dateLabel;
+                            }
+                        " style="color-scheme:dark;">
+                    </div>
+                    <div>
+                        <label>🏷 Date Label <span style="font-size:0.72rem; color:#666; font-weight:normal;">(override)</span></label>
                         <input type="text" placeholder="e.g. Friday · 27 March" value="${escAttr(m.dateLabel || '')}" oninput="window.MIDTERM_DATA[${i}].dateLabel = this.value;">
                     </div>
                     <div>

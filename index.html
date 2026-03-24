@@ -3334,6 +3334,30 @@
         const container = document.getElementById('midterm-list');
         container.innerHTML = '';
 
+        // Sort a copy by date then by time so order is always chronological
+        function parseMidtermTime(t) {
+            if (!t) return 0;
+            const m = t.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+            if (!m) return 0;
+            let h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+            const ampm = (m[3] || '').toUpperCase();
+            if (ampm === 'PM' && h < 12) h += 12;
+            if (ampm === 'AM' && h === 12) h = 0;
+            return h * 60 + min;
+        }
+        const sortedExams = window.MIDTERM_DATA
+            .map(function(exam, origIdx) { return { exam: exam, origIdx: origIdx }; })
+            .sort(function(a, b) {
+                // Primary: real date field (YYYY-MM-DD) if present, else fall back to array order
+                const da = a.exam.date || '';
+                const db = b.exam.date || '';
+                if (da && db && da !== db) return da < db ? -1 : 1;
+                if (da && !db) return -1;
+                if (!da && db) return 1;
+                // Secondary: time within same date
+                return parseMidtermTime(a.exam.time) - parseMidtermTime(b.exam.time);
+            });
+
         // Hidden indicator + panel slot — using addEventListener so onclick survives re-renders
         const hiddenCount = midtermHiddenSet.size;
         if (hiddenCount > 0) {
@@ -3348,7 +3372,9 @@
         }
 
         let lastDate = '';
-        window.MIDTERM_DATA.forEach(function(exam, idx) {
+        sortedExams.forEach(function(entry) {
+            const exam = entry.exam;
+            const idx = entry.origIdx;
             if (midtermHiddenSet.has(idx)) return;
 
             if (exam.dateLabel !== lastDate) {
