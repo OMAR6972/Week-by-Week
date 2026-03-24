@@ -892,45 +892,131 @@
     }
 
     // --- MIDTERMS EDITOR ---
+    let midtermDragSrc = null;
+
+    function addMidterm() {
+        window.MIDTERM_DATA.push({ dateLabel: '', sub: '', examCode: '', time: '', note: '', coverage: '', where: '', whereLink: '', whereNote: '' });
+        renderMidtermsManager();
+        // Scroll to bottom so user sees the new entry
+        setTimeout(() => {
+            const list = document.getElementById('midterm-list-admin');
+            if (list) list.lastElementChild && list.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+    }
+
+    function deleteMidterm(i) {
+        if (!confirm(`Delete "${window.MIDTERM_DATA[i].sub || 'this exam'}"?`)) return;
+        window.MIDTERM_DATA.splice(i, 1);
+        renderMidtermsManager();
+    }
+
+    function midtermDragStart(e, i) {
+        midtermDragSrc = i;
+        e.dataTransfer.effectAllowed = 'move';
+        e.currentTarget.style.opacity = '0.4';
+    }
+    function midtermDragEnd(e) { e.currentTarget.style.opacity = '1'; }
+    function midtermDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+    function midtermDrop(e, i) {
+        e.preventDefault();
+        if (midtermDragSrc === null || midtermDragSrc === i) return;
+        const arr = window.MIDTERM_DATA;
+        const [moved] = arr.splice(midtermDragSrc, 1);
+        arr.splice(i, 0, moved);
+        midtermDragSrc = null;
+        renderMidtermsManager();
+    }
+
     function renderMidtermsManager() {
         const container = document.getElementById('editor-area');
-        let html = `
-            <div class="form-section" style="border-color:#007aff;">
-                <h3 style="color:#007aff;">Manage Midterms Details</h3>
-                <p style="color:#888; font-size:0.9rem; margin-bottom:20px;">Exam times and subjects are fixed. Edit the course codes, locations, coverage, and notes below.</p>
+        const subOptions = window.COURSE_DATA.map(s => `<option value="${escAttr(s.code)}">${escHtml(s.code)} – ${escHtml(s.name)}</option>`).join('');
+
+        container.innerHTML = `
+            <div class="form-section" style="border-color:#007aff; max-width:900px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #444; padding-bottom:12px; margin-bottom:20px;">
+                    <h3 style="color:#007aff; margin:0; border:none; padding:0;">📝 Manage Midterms</h3>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <span style="color:#666; font-size:0.8rem;">${window.MIDTERM_DATA.length} exam${window.MIDTERM_DATA.length !== 1 ? 's' : ''} · drag ☰ to reorder</span>
+                        <button class="btn" style="background:#007aff; padding:8px 18px;" onclick="addMidterm()">+ Add Exam</button>
+                    </div>
+                </div>
                 <div id="midterm-list-admin"></div>
             </div>
         `;
-        container.innerHTML = html;
+
         const list = document.getElementById('midterm-list-admin');
-        
+
         window.MIDTERM_DATA.forEach((m, i) => {
+            const accentColor = getSubjectColor(m.sub) || '#007aff';
             const el = document.createElement('div');
             el.className = 'res-item';
-            el.style.flexDirection = 'column';
-            el.style.borderLeft = `4px solid ${getSubjectColor(m.sub)}`;
+            el.draggable = true;
+            el.style.cssText = `flex-direction:column; border-left:4px solid ${accentColor}; margin-bottom:14px; position:relative; cursor:default;`;
+            el.addEventListener('dragstart', (e) => midtermDragStart(e, i));
+            el.addEventListener('dragend',   midtermDragEnd);
+            el.addEventListener('dragover',  midtermDragOver);
+            el.addEventListener('drop',      (e) => midtermDrop(e, i));
+
             el.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; width:100%;">
-                    <strong style="color:white; font-size:1.1rem;">${m.sub} - ${m.dateLabel} @ ${m.time}</strong>
-                    <span style="color:#888; font-size:0.85rem;">${(function(){ const s = window.COURSE_DATA.find(c => c.code === m.sub); return s ? (s.subCode || s.code) : m.sub; })()}</span>
+                <!-- Header row -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; width:100%; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="drag-handle" style="cursor:grab; color:#555; font-size:1.2rem; user-select:none;">☰</span>
+                        <span style="background:${accentColor}22; color:${accentColor}; font-weight:bold; font-size:1rem; padding:3px 10px; border-radius:6px; border:1px solid ${accentColor}44;">
+                            ${m.sub || '—'} &nbsp;·&nbsp; ${m.dateLabel || 'No date'} &nbsp;@&nbsp; ${m.time || '?'}
+                        </span>
+                    </div>
+                    <button class="btn btn-del" onclick="deleteMidterm(${i})" title="Delete this exam" style="flex-shrink:0;">🗑 Delete</button>
                 </div>
+
+                <!-- Row 1: Subject + ExamCode + Date + Time -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr 2fr 1fr; gap:10px; width:100%; margin-bottom:4px;">
+                    <div>
+                        <label>📖 Subject Code</label>
+                        <select oninput="window.MIDTERM_DATA[${i}].sub = this.value; renderMidtermsManager();" style="width:100%; padding:8px; background:#0a0012; border:1px solid #444; color:white; border-radius:4px; margin-bottom:10px; font-family:inherit;">
+                            <option value="">-- Select --</option>
+                            ${window.COURSE_DATA.map(s => `<option value="${escAttr(s.code)}" ${m.sub === s.code ? 'selected' : ''}>${escHtml(s.code)}</option>`).join('')}
+                            <option value="__custom__" ${!window.COURSE_DATA.find(s=>s.code===m.sub) && m.sub ? 'selected':''}>✏️ Custom...</option>
+                        </select>
+                        ${!window.COURSE_DATA.find(s=>s.code===m.sub) && m.sub ? `<input type="text" placeholder="Custom code" value="${escAttr(m.sub)}" oninput="window.MIDTERM_DATA[${i}].sub = this.value;" style="margin-top:-6px;">` : ''}
+                    </div>
+                    <div>
+                        <label>🔢 Exam Code</label>
+                        <input type="text" placeholder="e.g. CSE333s" value="${escAttr(m.examCode || '')}" oninput="window.MIDTERM_DATA[${i}].examCode = this.value;">
+                    </div>
+                    <div>
+                        <label>📅 Date Label</label>
+                        <input type="text" placeholder="e.g. Friday · 27 March" value="${escAttr(m.dateLabel || '')}" oninput="window.MIDTERM_DATA[${i}].dateLabel = this.value;">
+                    </div>
+                    <div>
+                        <label>🕐 Time</label>
+                        <input type="text" placeholder="e.g. 2:30 PM" value="${escAttr(m.time || '')}" oninput="window.MIDTERM_DATA[${i}].time = this.value;">
+                    </div>
+                </div>
+
+                <!-- Row 2: Where + Coverage -->
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; width:100%;">
                     <div>
-                        <label>📍 Where?</label>
-                        <input type="text" placeholder="e.g. Hall 3" value="${m.where || ''}" oninput="window.MIDTERM_DATA[${i}].where = this.value">
-                        <input type="text" placeholder="URL (Optional)" value="${m.whereLink || ''}" style="font-size:0.8rem; margin-top:-5px; background:rgba(0,0,0,0.5);" oninput="window.MIDTERM_DATA[${i}].whereLink = this.value">
-                        <input type="text" placeholder="Link note (e.g. Check your place here)" value="${m.whereNote || ''}" style="font-size:0.75rem; margin-bottom:4px; background:rgba(74,144,226,0.1); border-color:rgba(74,144,226,0.3); color:#4a90e2;" oninput="window.MIDTERM_DATA[${i}].whereNote = this.value">
+                        <label>📍 Location</label>
+                        <input type="text" placeholder="e.g. Hall C (150), Hall D (36)" value="${escAttr(m.where || '')}" oninput="window.MIDTERM_DATA[${i}].where = this.value;">
+                        <input type="text" placeholder="Location URL (Optional)" value="${escAttr(m.whereLink || '')}" style="font-size:0.8rem; margin-top:-5px; background:rgba(0,0,0,0.5);" oninput="window.MIDTERM_DATA[${i}].whereLink = this.value;">
+                        <input type="text" placeholder="Link label (e.g. Check your seat here)" value="${escAttr(m.whereNote || '')}" style="font-size:0.75rem; background:rgba(74,144,226,0.1); border-color:rgba(74,144,226,0.3); color:#4a90e2;" oninput="window.MIDTERM_DATA[${i}].whereNote = this.value;">
                     </div>
                     <div>
-                        <label>📚 Coverage?</label>
-                        <input type="text" placeholder="e.g. Weeks 1-4" value="${m.coverage || ''}" oninput="window.MIDTERM_DATA[${i}].coverage = this.value">
+                        <label>📚 Coverage</label>
+                        <input type="text" placeholder="e.g. Weeks 1–4" value="${escAttr(m.coverage || '')}" oninput="window.MIDTERM_DATA[${i}].coverage = this.value;">
+                        <label style="margin-top:4px;">📝 Extra Notes</label>
+                        <textarea rows="2" placeholder="e.g. Bring Student ID" oninput="window.MIDTERM_DATA[${i}].note = this.value;" style="margin-bottom:0;">${escHtml(m.note || '')}</textarea>
                     </div>
                 </div>
-                <label>📝 Extra Notes:</label>
-                <textarea rows="2" placeholder="e.g. Bring Student ID" oninput="window.MIDTERM_DATA[${i}].note = this.value">${m.note || ''}</textarea>
             `;
+
             list.appendChild(el);
         });
+
+        if (window.MIDTERM_DATA.length === 0) {
+            list.innerHTML = `<div style="text-align:center; color:#555; padding:40px;">No midterms yet. Click <strong style="color:#007aff;">+ Add Exam</strong> to get started.</div>`;
+        }
     }
 
     // --- CONFIG & HELPERS ---
