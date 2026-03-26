@@ -59,6 +59,8 @@
         .schedule-btn:hover { background: #ff9500; color: black; box-shadow: 0 0 20px #ff9500; }
         .midterm-btn { background: rgba(0, 122, 255, 0.2); border: 2px solid #007aff; color: #007aff; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
         .midterm-btn:hover { background: #007aff; color: white; box-shadow: 0 0 20px #007aff; }
+        .midterm-btn.finals-mode { background: rgba(204, 34, 0, 0.2); border-color: #cc2200; color: #cc2200; }
+        .midterm-btn.finals-mode:hover { background: #cc2200; color: white; box-shadow: 0 0 20px #cc2200; }
         .deadline-btn { background: rgba(0, 229, 255, 0.2); border: 2px solid #00E5FF; color: #00E5FF; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
         .deadline-btn:hover { background: #00E5FF; color: black; box-shadow: 0 0 20px #00E5FF; }
         .useful-btn { background: rgba(181, 25, 214, 0.2); border: 2px solid var(--accent-purple); color: var(--accent-purple); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
@@ -129,24 +131,25 @@
         /* Midterm hidden subjects indicator */
         .midterm-hidden-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(0,122,255,0.3); color: #007aff; background: rgba(0,122,255,0.08); transition: all 0.2s; margin-bottom: 16px; }
         .midterm-hidden-btn:hover { background: rgba(0,122,255,0.15); }
-        .finals-hidden-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(255,69,58,0.3); color: #ff453a; background: rgba(255,69,58,0.08); transition: all 0.2s; margin-bottom: 16px; }
-        .finals-hidden-btn:hover { background: rgba(255,69,58,0.15); }
+        .finals-hidden-btn { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(204,34,0,0.3); color: #cc2200; background: rgba(204,34,0,0.08); transition: all 0.2s; margin-bottom: 16px; }
+        .finals-hidden-btn:hover { background: rgba(204,34,0,0.15); }
 
         /* Exam view toggle (big cards) */
-        .exam-view-toggle { display: flex; gap: 14px; justify-content: center; margin-bottom: 36px; flex-wrap: wrap; }
-        .exam-view-card { flex: 1; min-width: 180px; max-width: 260px; border-radius: 18px; padding: 22px 20px 18px; cursor: pointer; border: 2px solid transparent; transition: all 0.25s; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; user-select: none; }
+        .exam-view-toggle { display: flex; gap: 12px; justify-content: center; margin-bottom: 28px; flex-wrap: wrap; }
+        .exam-view-card { flex: 1; min-width: 120px; max-width: 170px; border-radius: 14px; padding: 13px 16px 11px; cursor: pointer; border: 2px solid transparent; transition: all 0.25s; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; user-select: none; }
         .exam-view-card-midterms { background: rgba(0,122,255,0.08); border-color: rgba(0,122,255,0.25); }
-        .exam-view-card-midterms:hover { background: rgba(0,122,255,0.14); border-color: rgba(0,122,255,0.5); box-shadow: 0 0 20px rgba(0,122,255,0.2); }
-        .exam-view-card-midterms.active { background: rgba(0,122,255,0.18); border-color: #007aff; box-shadow: 0 0 28px rgba(0,122,255,0.35); }
-        .exam-view-card-finals { background: rgba(255,69,58,0.08); border-color: rgba(255,69,58,0.25); }
-        .exam-view-card-finals:hover { background: rgba(255,69,58,0.14); border-color: rgba(255,69,58,0.5); box-shadow: 0 0 20px rgba(255,69,58,0.2); }
-        .exam-view-card-finals.active { background: rgba(255,69,58,0.18); border-color: #ff453a; box-shadow: 0 0 28px rgba(255,69,58,0.35); }
-        .exam-view-card-icon { font-size: 2.2rem; line-height: 1; }
-        .exam-view-card-label { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+        .exam-view-card-midterms:hover { background: rgba(0,122,255,0.14); border-color: rgba(0,122,255,0.5); box-shadow: 0 0 16px rgba(0,122,255,0.2); }
+        .exam-view-card-midterms.active { background: rgba(0,122,255,0.18); border-color: #007aff; box-shadow: 0 0 22px rgba(0,122,255,0.35); }
+        .exam-view-card-finals { background: rgba(204,34,0,0.08); border-color: rgba(204,34,0,0.25); }
+        .exam-view-card-finals:hover { background: rgba(204,34,0,0.14); border-color: rgba(204,34,0,0.5); box-shadow: 0 0 16px rgba(204,34,0,0.2); }
+        .exam-view-card-finals.active { background: rgba(204,34,0,0.18); border-color: #cc2200; box-shadow: 0 0 22px rgba(204,34,0,0.35); }
+        .exam-view-card-label { font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
         .exam-view-card-midterms .exam-view-card-label { color: #007aff; }
-        .exam-view-card-finals .exam-view-card-label { color: #ff453a; }
-        .exam-view-card-count { font-size: 0.75rem; color: #888; margin-top: 2px; }
+        .exam-view-card-finals .exam-view-card-label { color: #cc2200; }
+        .exam-view-card-count { font-size: 0.7rem; color: #888; margin-top: 1px; }
         .exam-view-card.active .exam-view-card-count { color: #bbb; }
+        /* Nav bar turns red when finals mode is active */
+        .nav-link-midterms.finals-mode.active { background: rgba(204,34,0,0.15) !important; border-color: rgba(204,34,0,0.4) !important; color: #cc2200 !important; }
         
         .useful-select { background: rgba(181, 25, 214, 0.15); border: 1px solid rgba(181, 25, 214, 0.4); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; outline: none; font-weight: bold; font-family: 'Work Sans', sans-serif; transition: 0.3s; }
         .useful-select:hover { background: rgba(181, 25, 214, 0.3); }
@@ -804,7 +807,7 @@
     <div id="home-page" class="page active">
         <header>
             <h1>WEEK BY WEEK MATERIAL</h1>
-            <p class="subtitle">Select a subject to begin <span class="visit-badge"><span class="vb-dot"></span> 👁️ <span class="vb-num" id="visit-count">...</span> visits</span></p>
+            <p class="subtitle">Select a subject to begin <span class="visit-badge"><span class="vb-dot"></span> <span class="vb-num" id="visit-count">...</span> visits</span></p>
         </header>
         <div class="header-actions">
             <button class="recent-btn" onclick="showRecent()">📜 History</button>
@@ -886,12 +889,12 @@
         <!-- Finals view -->
         <div id="exam-finals-view" style="display:none;">
             <div id="finals-capture-wrap">
-                <h1 style="color:#ff453a; text-align:center;">FINAL EXAMS</h1>
+                <h1 style="color:#cc2200; text-align:center;">FINAL EXAMS</h1>
                 <p id="finals-view-subtitle" class="subtitle" style="margin-bottom: 30px;"></p>
                 <div id="finals-list" style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column;"></div>
             </div>
             <div id="finals-export-bar" style="display:flex; justify-content:center; margin-top:30px;">
-                <button class="midterm-export-btn" style="background:rgba(255,69,58,0.15); border-color:#ff453a; color:#ff453a;" onclick="exportFinalsImage()">📸 Save as Image</button>
+                <button class="midterm-export-btn" style="background:rgba(204,34,0,0.15); border-color:#cc2200; color:#cc2200;" onclick="exportFinalsImage()">📸 Save as Image</button>
             </div>
         </div>
     </div>
@@ -1086,8 +1089,8 @@
     <div class="hotkey-row"><span class="hotkey-key">Esc</span> Close modal / Go back</div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="course_data.js"></script>
 
 <script>
@@ -1319,49 +1322,86 @@
 
     function getSubjectUrgency(subCode) {
         const now = Date.now();
-        let score = Infinity; // lower = more urgent, Infinity = no upcoming tasks
-        const typeWeight = { 'quiz': 0.4, 'midterm': 0.3, 'final': 0.3, 'lab exam': 0.5 };
+        let score = Infinity;
+        // Heavier weight for midterm/final so they dominate ordering
+        const typeWeight = { 'quiz': 0.8, 'midterm': 0.15, 'final': 0.15, 'lab exam': 0.5 };
 
-        window.SCHEDULE_DATA.forEach(wk => {
-            if(!wk.tasks) return;
-            wk.tasks.forEach(t => {
-                if(t.sub !== subCode) return;
-                if(t.isCompleted) return;
-                const meta = getTaskEffectiveDeadlineMeta(t, wk.week);
-                if(meta.timestamp === 0) return;
-                const compareTs = meta.hasTime ? meta.timestamp : getEndOfDayTimestamp(meta.timestamp);
-                if(compareTs < now) return;
-
-                const daysLeft = (compareTs - now) / (1000 * 60 * 60 * 24);
-                const name = (t.name || '').toLowerCase();
-                const weight = typeWeight[name] || 1;
-                const taskScore = daysLeft * weight;
-                if(taskScore < score) score = taskScore;
+        // Check MIDTERM_DATA — treat upcoming midterms as ultra-urgent for that subject
+        if (window.MIDTERM_DATA) {
+            window.MIDTERM_DATA.forEach(exam => {
+                if (exam.sub !== subCode) return;
+                const ts = exam.date ? new Date(exam.date + 'T12:00:00').getTime() : 0;
+                if (!ts || ts < now) return;
+                const daysLeft = (ts - now) / (1000 * 60 * 60 * 24);
+                const s = daysLeft * 0.12; // very heavy weight → floats to top
+                if (s < score) score = s;
             });
-        });
+        }
+
+        // Check FINAL_DATA — same priority as midterms
+        if (window.FINAL_DATA) {
+            window.FINAL_DATA.forEach(exam => {
+                if (exam.sub !== subCode) return;
+                const ts = exam.date ? new Date(exam.date + 'T12:00:00').getTime() : 0;
+                if (!ts || ts < now) return;
+                const daysLeft = (ts - now) / (1000 * 60 * 60 * 24);
+                const s = daysLeft * 0.12;
+                if (s < score) score = s;
+            });
+        }
+
+        // Check SCHEDULE_DATA tasks
+        if (window.SCHEDULE_DATA) {
+            window.SCHEDULE_DATA.forEach(wk => {
+                if (!wk.tasks) return;
+                wk.tasks.forEach(t => {
+                    if (t.sub !== subCode || t.isCompleted) return;
+                    const meta = getTaskEffectiveDeadlineMeta(t, wk.week);
+                    if (meta.timestamp === 0) return;
+                    const compareTs = meta.hasTime ? meta.timestamp : getEndOfDayTimestamp(meta.timestamp);
+                    if (compareTs < now) return;
+                    const daysLeft = (compareTs - now) / (1000 * 60 * 60 * 24);
+                    const name = (t.name || '').toLowerCase();
+                    const weight = typeWeight[name] !== undefined ? typeWeight[name] : 1;
+                    const taskScore = daysLeft * weight;
+                    if (taskScore < score) score = taskScore;
+                });
+            });
+        }
+
         return score;
     }
 
     function getHomepageOrderedSubjects() {
-        return [...window.COURSE_DATA].sort((a, b) => getSubjectUrgency(a.code) - getSubjectUrgency(b.code));
+        // Pre-compute all urgency scores once (avoids repeated inner loops)
+        const scores = {};
+        window.COURSE_DATA.forEach(s => { scores[s.code] = getSubjectUrgency(s.code); });
+        return [...window.COURSE_DATA].sort((a, b) => scores[a.code] - scores[b.code]);
     }
 
     function init() {
         const grid = document.getElementById('subjects-grid');
-        if(grid) grid.innerHTML = '';
-        if(typeof window.COURSE_DATA === 'undefined') window.COURSE_DATA = [];
+        if (grid) grid.innerHTML = '';
+        if (typeof window.COURSE_DATA === 'undefined') window.COURSE_DATA = [];
 
         // Auto-expire "New" badges older than 7 days
         autoExpireNewBadges();
 
         const sorted = getHomepageOrderedSubjects();
 
+        // Build all cards into a DocumentFragment — single DOM write
+        const frag = document.createDocumentFragment();
         sorted.forEach(s => {
-            if(!s.weeks) s.weeks = [];
-            if(!s.events) s.events = [];
-            if(!s.playlists) s.playlists = [];
-            s.playlists.forEach(p => { if(!p.badges) { p.badges = p.badgeText ? [{text:p.badgeText, color:p.badgeColor||'#e91e8c'}] : []; delete p.badgeText; delete p.badgeColor; } });
-            
+            if (!s.weeks) s.weeks = [];
+            if (!s.events) s.events = [];
+            if (!s.playlists) s.playlists = [];
+            s.playlists.forEach(p => {
+                if (!p.badges) {
+                    p.badges = p.badgeText ? [{ text: p.badgeText, color: p.badgeColor || '#e91e8c' }] : [];
+                    delete p.badgeText; delete p.badgeColor;
+                }
+            });
+
             const el = document.createElement('div');
             el.className = 'card';
             el.innerHTML = `
@@ -1371,8 +1411,9 @@
                     <span>${s.credits}</span>${s.subCode ? `<span class="subject-code-label">${s.subCode}</span>` : ''}<span>${s.semester}</span>
                 </div>`;
             el.onclick = () => showWeeks(s);
-            if(grid) grid.appendChild(el);
+            frag.appendChild(el);
         });
+        if (grid) grid.appendChild(frag); // single reflow
         
         window.onpopstate = function(event) {
             closeModal(null, true);
@@ -1409,7 +1450,6 @@
         if (typeof window.NEWS_DATA === 'undefined') window.NEWS_DATA = [];
         renderNewsBtn();
         animateActivePageWaterfall();
-        // Show unread notification toast after a brief delay
         setTimeout(maybeShowNewsToast, 1800);
     }
 
@@ -3561,11 +3601,23 @@
         const midCount = window.MIDTERM_DATA ? window.MIDTERM_DATA.length : 0;
         const finCount = window.FINAL_DATA ? window.FINAL_DATA.length : 0;
 
+        // Update nav tab color to match active exam type
+        const navLink = document.querySelector('.nav-link-midterms');
+        if (navLink) {
+            if (examViewMode === 'finals') {
+                navLink.classList.add('finals-mode');
+                document.querySelectorAll('.midterm-btn').forEach(btn => btn.classList.add('finals-mode'));
+            } else {
+                navLink.classList.remove('finals-mode');
+                document.querySelectorAll('.midterm-btn').forEach(btn => btn.classList.remove('finals-mode'));
+            }
+        }
+
         wrap.innerHTML = '';
 
         const midCard = document.createElement('div');
         midCard.className = 'exam-view-card exam-view-card-midterms' + (examViewMode === 'midterms' ? ' active' : '');
-        midCard.innerHTML = '<div class="exam-view-card-icon">📝</div><div class="exam-view-card-label">Midterms</div><div class="exam-view-card-count">' + midCount + ' exam' + (midCount !== 1 ? 's' : '') + '</div>';
+        midCard.innerHTML = '<div class="exam-view-card-label">Midterms</div><div class="exam-view-card-count">' + midCount + ' exam' + (midCount !== 1 ? 's' : '') + '</div>';
         midCard.addEventListener('click', function() {
             examViewMode = 'midterms';
             saveExamViewMode();
@@ -3575,7 +3627,7 @@
 
         const finCard = document.createElement('div');
         finCard.className = 'exam-view-card exam-view-card-finals' + (examViewMode === 'finals' ? ' active' : '');
-        finCard.innerHTML = '<div class="exam-view-card-icon">🏁</div><div class="exam-view-card-label">Finals</div><div class="exam-view-card-count">' + (hasFinals ? finCount + ' exam' + (finCount !== 1 ? 's' : '') : 'Coming soon') + '</div>';
+        finCard.innerHTML = '<div class="exam-view-card-label">Finals</div><div class="exam-view-card-count">' + (hasFinals ? finCount + ' exam' + (finCount !== 1 ? 's' : '') : 'Coming soon') + '</div>';
         finCard.addEventListener('click', function() {
             examViewMode = 'finals';
             saveExamViewMode();
@@ -3626,7 +3678,7 @@
             container.innerHTML = `
                 <div style="text-align:center; padding:60px 20px; max-width:500px; margin:0 auto;">
                     <div style="font-size:3.5rem; margin-bottom:20px; opacity:0.4;">🏁</div>
-                    <div style="font-family:'Orbitron',sans-serif; font-size:1rem; letter-spacing:3px; color:#ff453a; opacity:0.5; text-transform:uppercase; margin-bottom:14px;">Finals Schedule</div>
+                    <div style="font-family:'Orbitron',sans-serif; font-size:1rem; letter-spacing:3px; color:#cc2200; opacity:0.5; text-transform:uppercase; margin-bottom:14px;">Finals Schedule</div>
                     <div style="color:#666; font-size:0.95rem; line-height:1.7;">Not published yet.<br>Check back here once finals details are announced.</div>
                 </div>`;
             return;
@@ -3635,7 +3687,7 @@
         renderExamList(
             container,
             sortExamData(window.FINAL_DATA),
-            '#ff453a',
+            '#cc2200',
             finalHiddenSet,
             saveFinalHidden,
             openFinalModal,
@@ -3656,7 +3708,7 @@
     }
 
     function openFinalHiddenPanel() {
-        buildHiddenPanel('final-hidden-panel-slot', 'final-hidden-panel', finalHiddenSet, window.FINAL_DATA, '#ff453a', saveFinalHidden, '255,69,58');
+        buildHiddenPanel('final-hidden-panel-slot', 'final-hidden-panel', finalHiddenSet, window.FINAL_DATA, '#cc2200', saveFinalHidden, '204,34,0');
     }
 
     function openModal(wIndex, tIndex) {
@@ -3842,7 +3894,7 @@
         fields.forEach(f => {
             if (f.val && f.val.trim() !== '') {
                 hasContent = true;
-                container.innerHTML += `<div class="modal-field"><div class="modal-label" style="color:#ff453a;">${f.label}</div><div class="modal-value" style="border-left-color:#ff453a;">${f.val}</div></div>`;
+                container.innerHTML += `<div class="modal-field"><div class="modal-label" style="color:#cc2200;">${f.label}</div><div class="modal-value" style="border-left-color:#cc2200;">${f.val}</div></div>`;
             }
         });
 
@@ -4710,9 +4762,17 @@
         const dd = document.getElementById('dd-schedule');
         if(!dd || !window.SCHEDULE_DATA) return;
         let targetWeek = null;
+        const todayDate = new Date();
         for(let i = 0; i < window.SCHEDULE_DATA.length; i++) {
             const wk = window.SCHEDULE_DATA[i];
-            if(wk.tasks && wk.tasks.some(t => !t.isCompleted)) { targetWeek = wk; break; }
+            const { start: wkStart, end: wkEnd } = getWeekDates(wk.week);
+            if (todayDate >= wkStart && todayDate <= wkEnd) { targetWeek = wk; break; }
+        }
+        if(!targetWeek) {
+            for(let i = 0; i < window.SCHEDULE_DATA.length; i++) {
+                const wk = window.SCHEDULE_DATA[i];
+                if(wk.tasks && wk.tasks.some(t => !t.isCompleted)) { targetWeek = wk; break; }
+            }
         }
         let html = '<div class="dd-header">This period</div>';
         if(!targetWeek || !targetWeek.tasks || targetWeek.tasks.length === 0) {
@@ -6486,7 +6546,7 @@
         if (gpa >= 2.85) return { letter: 'B', color: '#ff9f0a', bg: 'rgba(255,159,10,0.15)' };
         if (gpa >= 2.5)  return { letter: 'B-', color: '#ff9500', bg: 'rgba(255,149,0,0.15)' };
         if (gpa >= 2.15) return { letter: 'C+', color: '#ff6b35', bg: 'rgba(255,107,53,0.15)' };
-        if (gpa >= 1.85) return { letter: 'C', color: '#ff453a', bg: 'rgba(255,69,58,0.15)' };
+        if (gpa >= 1.85) return { letter: 'C', color: '#cc2200', bg: 'rgba(204,34,0,0.15)' };
         if (gpa >= 1.5)  return { letter: 'C-', color: '#ff3b30', bg: 'rgba(255,59,48,0.15)' };
         if (gpa >= 1.0)  return { letter: 'D', color: '#ff2d55', bg: 'rgba(255,45,85,0.15)' };
         return { letter: 'F', color: '#ff0000', bg: 'rgba(255,0,0,0.15)' };
@@ -7178,15 +7238,17 @@
     function exportMidtermImage() {
         const el = document.getElementById('midterm-capture-wrap');
         const bar = document.getElementById('midterm-export-bar');
+        const toggle = document.getElementById('exam-view-toggle');
         const backBtn = document.querySelector('#midterm-page > .back-btn');
-        capturePageImage(el, 'midterm-exams.png', [bar, backBtn]);
+        capturePageImage(el, 'midterm-exams.png', [bar, toggle, backBtn]);
     }
 
     function exportFinalsImage() {
         const el = document.getElementById('finals-capture-wrap');
         const bar = document.getElementById('finals-export-bar');
+        const toggle = document.getElementById('exam-view-toggle');
         const backBtn = document.querySelector('#midterm-page > .back-btn');
-        capturePageImage(el, 'final-exams.png', [bar, backBtn]);
+        capturePageImage(el, 'final-exams.png', [bar, toggle, backBtn]);
     }
 
     function exportGpaImage() {
@@ -7196,14 +7258,20 @@
         const toggles = document.getElementById('gpa-mode-toggles');
 
         if (!el) { showToast('Nothing to capture', 'locked'); return; }
-        showToast('📸 Generating image...', 'locked');
 
+        if (typeof window.html2canvas !== 'function') {
+            showToast('⏳ Loading screenshot library...', 'locked');
+            const poll = setInterval(() => {
+                if (typeof window.html2canvas === 'function') { clearInterval(poll); exportGpaImage(); }
+            }, 200);
+            return;
+        }
+
+        showToast('📸 Generating image...', 'locked');
         [exportBar, backBtn, toggles].forEach(item => { if (item) item.style.display = 'none'; });
 
-        // In card/grid mode, force a wide container so the grid renders at full columns
         const isGrid = gpaGroupMode && gpaCardMode;
-        const GRID_CAPTURE_WIDTH = 1400; // wide enough for 3 × 420px columns + gaps
-
+        const GRID_CAPTURE_WIDTH = 1400;
         const origMaxWidth = el.style.maxWidth;
         const origWidth = el.style.width;
         const origPadding = el.style.padding;
@@ -7216,11 +7284,9 @@
         el.style.padding = '40px 20px';
         el.style.background = '#0a0012';
 
-        // Let the browser reflow before measuring
         requestAnimationFrame(() => {
             const captureWidth = isGrid ? GRID_CAPTURE_WIDTH : el.scrollWidth;
-
-            html2canvas(el, {
+            window.html2canvas(el, {
                 backgroundColor: '#0a0012',
                 scale: 2,
                 useCORS: true,
@@ -7236,7 +7302,7 @@
             }).catch(() => {
                 showToast('⚠️ Could not generate image', 'locked');
             }).finally(() => {
-                [exportBar, backBtn, toggles].forEach(item => { if (item) item.style.display = (item && item.id && item.id.includes('bar')) ? 'flex' : ''; });
+                [exportBar, backBtn, toggles].forEach(item => { if (item) item.style.display = ''; });
                 el.style.maxWidth = origMaxWidth;
                 el.style.width = origWidth;
                 el.style.padding = origPadding;
@@ -7247,34 +7313,54 @@
 
     function capturePageImage(el, fileName, hideElements = []) {
         if (!el) { showToast('Nothing to capture', 'locked'); return; }
+
+        // html2canvas is deferred — wait for it if not yet loaded
+        if (typeof window.html2canvas !== 'function') {
+            showToast('⏳ Loading screenshot library...', 'locked');
+            const poll = setInterval(() => {
+                if (typeof window.html2canvas === 'function') {
+                    clearInterval(poll);
+                    capturePageImage(el, fileName, hideElements);
+                }
+            }, 200);
+            return;
+        }
+
         showToast('📸 Generating image...', 'locked');
 
+        // Save original display values before hiding
+        const origDisplays = hideElements.map(item => item ? item.style.display : null);
         hideElements.forEach(item => { if (item) item.style.display = 'none'; });
-        
+
         const origPadding = el.style.padding;
         const origBg = el.style.background;
         el.style.padding = '40px 20px';
         el.style.background = '#0a0012';
 
-        html2canvas(el, {
-            backgroundColor: '#0a0012',
-            scale: 2,
-            useCORS: true,
-            scrollY: -window.scrollY,
-            width: el.scrollWidth,
-            windowWidth: el.scrollWidth
-        }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = fileName;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            showToast('📸 Image saved!', 'locked');
-        }).catch(() => {
-            showToast('⚠️ Could not generate image', 'locked');
-        }).finally(() => {
-            hideElements.forEach(item => { if (item) item.style.display = (item.id && item.id.includes('bar')) ? 'flex' : ''; });
-            el.style.padding = origPadding;
-            el.style.background = origBg;
+        requestAnimationFrame(() => {
+            window.html2canvas(el, {
+                backgroundColor: '#0a0012',
+                scale: 2,
+                useCORS: true,
+                scrollY: -window.scrollY,
+                width: el.scrollWidth,
+                windowWidth: el.scrollWidth
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('📸 Image saved!', 'locked');
+            }).catch(() => {
+                showToast('⚠️ Could not generate image', 'locked');
+            }).finally(() => {
+                // Restore each element to its original display value
+                hideElements.forEach((item, i) => {
+                    if (item) item.style.display = origDisplays[i] || '';
+                });
+                el.style.padding = origPadding;
+                el.style.background = origBg;
+            });
         });
     }
 
