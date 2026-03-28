@@ -462,7 +462,9 @@
         .cal-tbd-tasks { display: flex; flex-wrap: wrap; gap: 6px; }
 
         @media (max-width: 600px) {
-            .calendar-container { padding: 0 2px; }
+            /* Fix: make calendar horizontally scrollable on mobile */
+            #deliverables-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .calendar-container { padding: 0 2px; min-width: 420px; width: 100%; }
             .cal-month-nav { gap: 8px; margin-bottom: 12px; }
             .cal-month-nav button { padding: 4px 10px; font-size: 0.78rem; }
             .cal-month-label { font-size: 0.95rem; min-width: 0; }
@@ -1320,6 +1322,20 @@
         });
     }
 
+    // Parse an exam's actual date+time into a ms timestamp (uses real time, not hardcoded noon)
+    function parseExamDateTime(exam) {
+        if (!exam.date) return 0;
+        const base = new Date(exam.date + 'T00:00:00').getTime();
+        if (!exam.time) return base + 12 * 60 * 60 * 1000; // fallback noon
+        const m = exam.time.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+        if (!m) return base + 12 * 60 * 60 * 1000;
+        let h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+        const ampm = (m[3] || '').toUpperCase();
+        if (ampm === 'PM' && h < 12) h += 12;
+        if (ampm === 'AM' && h === 12) h = 0;
+        return base + (h * 60 + min) * 60 * 1000;
+    }
+
     function getSubjectUrgency(subCode) {
         const now = Date.now();
         let score = Infinity;
@@ -1327,10 +1343,12 @@
         const typeWeight = { 'quiz': 0.8, 'midterm': 0.15, 'final': 0.15, 'lab exam': 0.5 };
 
         // Check MIDTERM_DATA — treat upcoming midterms as ultra-urgent for that subject
+        // Skip exams hidden by the user (midtermHiddenSet tracks by index)
         if (window.MIDTERM_DATA) {
-            window.MIDTERM_DATA.forEach(exam => {
+            window.MIDTERM_DATA.forEach((exam, idx) => {
                 if (exam.sub !== subCode) return;
-                const ts = exam.date ? new Date(exam.date + 'T12:00:00').getTime() : 0;
+                if (typeof midtermHiddenSet !== 'undefined' && midtermHiddenSet.has(idx)) return;
+                const ts = parseExamDateTime(exam); // uses actual exam time, not hardcoded noon
                 if (!ts || ts < now) return;
                 const daysLeft = (ts - now) / (1000 * 60 * 60 * 24);
                 const s = daysLeft * 0.12; // very heavy weight → floats to top
@@ -1340,9 +1358,10 @@
 
         // Check FINAL_DATA — same priority as midterms
         if (window.FINAL_DATA) {
-            window.FINAL_DATA.forEach(exam => {
+            window.FINAL_DATA.forEach((exam, idx) => {
                 if (exam.sub !== subCode) return;
-                const ts = exam.date ? new Date(exam.date + 'T12:00:00').getTime() : 0;
+                if (typeof finalHiddenSet !== 'undefined' && finalHiddenSet.has(idx)) return;
+                const ts = parseExamDateTime(exam); // uses actual exam time
                 if (!ts || ts < now) return;
                 const daysLeft = (ts - now) / (1000 * 60 * 60 * 24);
                 const s = daysLeft * 0.12;
@@ -1376,7 +1395,23 @@
         // Pre-compute all urgency scores once (avoids repeated inner loops)
         const scores = {};
         window.COURSE_DATA.forEach(s => { scores[s.code] = getSubjectUrgency(s.code); });
-        return [...window.COURSE_DATA].sort((a, b) => scores[a.code] - scores[b.code]);
+
+        // Returns true if every midterm for this subject is hidden by the user
+        function isSubjectFullyMidtermHidden(subCode) {
+            if (!window.MIDTERM_DATA || typeof midtermHiddenSet === 'undefined') return false;
+            const subExams = window.MIDTERM_DATA.map((e, i) => ({ e, i })).filter(({ e }) => e.sub === subCode);
+            if (subExams.length === 0) return false; // no midterm at all → not "hidden"
+            return subExams.every(({ i }) => midtermHiddenSet.has(i));
+        }
+
+        return [...window.COURSE_DATA].sort((a, b) => {
+            const aHidden = isSubjectFullyMidtermHidden(a.code);
+            const bHidden = isSubjectFullyMidtermHidden(b.code);
+            // Hidden subjects always sink to the bottom
+            if (aHidden && !bHidden) return 1;
+            if (!aHidden && bHidden) return -1;
+            return scores[a.code] - scores[b.code];
+        });
     }
 
     function init() {
@@ -4487,6 +4522,59 @@
         }
     });
 
+    // ── Touch swipe navigation ─────────────────────────────────────────────
+    (function() {
+        let swipeStartX = 0, swipeStartY = 0, swipeStartT = 0;
+        const MIN_SWIPE_X = 60;   // px horizontal to count as swipe
+        const MAX_SWIPE_Y = 80;   // px vertical before we decide it's a scroll
+        const MAX_DURATION = 400; // ms
+
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length !== 1) return;
+            swipeStartX = e.touches[0].clientX;
+            swipeStartY = e.touches[0].clientY;
+            swipeStartT = Date.now();
+        }, { passive: true });
+
+        document.addEventListener('touchend', function(e) {
+            if (e.changedTouches.length !== 1) return;
+            const dx = e.changedTouches[0].clientX - swipeStartX;
+            const dy = e.changedTouches[0].clientY - swipeStartY;
+            const dt = Date.now() - swipeStartT;
+
+            // Must be fast enough, wide enough, and not too vertical
+            if (dt > MAX_DURATION || Math.abs(dx) < MIN_SWIPE_X || Math.abs(dy) > MAX_SWIPE_Y) return;
+
+            // ── Content page: swipe between weeks ──────────────────────────
+            if (document.querySelector('#content-page.active') && !document.querySelector('.modal-overlay.active')) {
+                if (dx > 0 && weekNavPrev) {
+                    // swipe right → go to previous week
+                    showContentByObj(weekNavPrev, false, weekNavFrom);
+                } else if (dx < 0 && weekNavNext) {
+                    // swipe left → go to next week
+                    showContentByObj(weekNavNext, false, weekNavFrom);
+                }
+                return;
+            }
+
+            // ── Schedule page calendar view: swipe between months ──────────
+            if (document.querySelector('#schedule-page.active') && scheduleViewMode === 'calendar') {
+                if (typeof calendarAvailableMonths === 'undefined' || !calendarMonth) return;
+                const curIdx = calendarAvailableMonths.indexOf(calendarMonth);
+                if (dx > 0 && curIdx > 0) {
+                    // swipe right → previous month
+                    calendarMonth = calendarAvailableMonths[curIdx - 1];
+                    renderScheduleContent();
+                } else if (dx < 0 && curIdx < calendarAvailableMonths.length - 1) {
+                    // swipe left → next month
+                    calendarMonth = calendarAvailableMonths[curIdx + 1];
+                    renderScheduleContent();
+                }
+                return;
+            }
+        }, { passive: true });
+    })();
+
     // Global hotkeys (PC only)
     function toggleHotkeysPanel() {
         document.getElementById('hotkeys-panel').classList.toggle('visible');
@@ -6562,7 +6650,7 @@
     let gpaSemesters = [];
     let gpaGroupMode = false;
     let gpaCardMode = false;
-    let gpaCumulativeOn = false;
+    let gpaCumulativeOn = true;
     let gpaCumGpa = '';
     let gpaCumHours = '';
     let gpaInitialized = false;
@@ -7295,23 +7383,100 @@
         const el = document.getElementById('timetable-capture-wrap');
         const bar = document.getElementById('timetable-export-bar');
         const backBtn = document.querySelector('#timetable-page > .back-btn');
-        capturePageImage(el, 'timetable.png', [bar, backBtn]);
+        const title = el ? el.querySelector('h1') : null;
+        const subtitle = el ? el.querySelector('p.subtitle') : null;
+        capturePageImage(el, 'timetable.png', [bar, backBtn, title, subtitle]);
+    }
+
+    function _buildExamShell(isFinals) {
+        if (!window.html2canvas) return null;
+        const exams = isFinals ? (window.FINAL_DATA || []) : (window.MIDTERM_DATA || []);
+        const hiddenSet = isFinals ? (typeof finalHiddenSet !== 'undefined' ? finalHiddenSet : new Set())
+                                   : (typeof midtermHiddenSet !== 'undefined' ? midtermHiddenSet : new Set());
+        const accentColor = isFinals ? '#cc2200' : '#007aff';
+        const accentRgb   = isFinals ? '204,34,0' : '0,122,255';
+        const fileName    = isFinals ? 'final-exams.png' : 'midterm-exams.png';
+
+        const shell = document.createElement('div');
+        shell.style.cssText = 'position:absolute;left:-9999px;top:0;padding:28px 32px;background:#0a0012;width:820px;font-family:Work Sans,Arial,sans-serif;box-sizing:border-box;';
+
+        const sorted = exams.map((exam, i) => ({ exam, origIdx: i })).sort((a, b) => {
+            const da = a.exam.date || '', db = b.exam.date || '';
+            if (da && db && da !== db) return da < db ? -1 : 1;
+            return 0;
+        });
+
+        let lastDate = '';
+        let innerHtml = '';
+        let hasAny = false;
+
+        sorted.forEach(({ exam, origIdx }) => {
+            if (hiddenSet.has(origIdx)) return; // skip hidden
+            hasAny = true;
+            let subName = exam.sub;
+            const sObj = (window.COURSE_DATA || []).find(s => s.code === exam.sub);
+            if (sObj) subName = sObj.name;
+
+            if (exam.dateLabel !== lastDate) {
+                innerHtml += `<div style="font-family:Orbitron,Arial,sans-serif;font-size:11px;letter-spacing:2px;color:${accentColor};text-transform:uppercase;margin-bottom:10px;margin-top:22px;font-weight:700;">${eHtml(exam.dateLabel)}</div>`;
+                lastDate = exam.dateLabel;
+            }
+            innerHtml += `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(${accentRgb},0.1);border:1px solid rgba(${accentRgb},0.3);border-radius:10px;margin-bottom:8px;">
+                <div style="background:rgba(${accentRgb},0.2);color:${accentColor};font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;min-width:48px;text-align:center;">${eHtml(exam.sub)}</div>
+                <div style="flex:1;">
+                    <div style="color:#fff;font-weight:600;font-size:15px;">${eHtml(subName)}</div>
+                    <div style="color:#888;font-size:12px;margin-top:2px;">${eHtml(exam.examCode || '')}</div>
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                    <div style="color:${accentColor};font-weight:700;font-size:14px;font-family:Orbitron,sans-serif;">${eHtml(exam.time || '')}</div>
+                </div>
+            </div>`;
+        });
+
+        if (!hasAny) {
+            innerHtml = `<div style="text-align:center;color:#555;padding:40px 0;font-size:14px;">No exams to display.</div>`;
+        }
+
+        shell.innerHTML = innerHtml;
+        return { shell, fileName };
     }
 
     function exportMidtermImage() {
-        const el = document.getElementById('midterm-capture-wrap');
-        const bar = document.getElementById('midterm-export-bar');
-        const toggle = document.getElementById('exam-view-toggle');
-        const backBtn = document.querySelector('#midterm-page > .back-btn');
-        capturePageImage(el, 'midterm-exams.png', [bar, toggle, backBtn]);
+        if (typeof window.html2canvas !== 'function') {
+            showToast('⏳ Loading screenshot library...', 'locked');
+            const poll = setInterval(() => { if (typeof window.html2canvas === 'function') { clearInterval(poll); exportMidtermImage(); } }, 200);
+            return;
+        }
+        const built = _buildExamShell(false);
+        if (!built) return;
+        const { shell, fileName } = built;
+        document.body.appendChild(shell);
+        showToast('📸 Generating image...', 'locked');
+        requestAnimationFrame(() => {
+            window.html2canvas(shell, { backgroundColor: '#0a0012', scale: 2.5, useCORS: true, allowTaint: true, width: shell.scrollWidth, windowWidth: shell.scrollWidth, logging: false })
+                .then(canvas => { canvas.toBlob(blob => { if (!blob) return; downloadBlob(blob, fileName); showToast('📸 Image saved!', 'locked'); }); })
+                .catch(() => showToast('⚠️ Could not generate image', 'locked'))
+                .finally(() => shell.remove());
+        });
     }
 
     function exportFinalsImage() {
-        const el = document.getElementById('finals-capture-wrap');
-        const bar = document.getElementById('finals-export-bar');
-        const toggle = document.getElementById('exam-view-toggle');
-        const backBtn = document.querySelector('#midterm-page > .back-btn');
-        capturePageImage(el, 'final-exams.png', [bar, toggle, backBtn]);
+        if (typeof window.html2canvas !== 'function') {
+            showToast('⏳ Loading screenshot library...', 'locked');
+            const poll = setInterval(() => { if (typeof window.html2canvas === 'function') { clearInterval(poll); exportFinalsImage(); } }, 200);
+            return;
+        }
+        const built = _buildExamShell(true);
+        if (!built) return;
+        const { shell, fileName } = built;
+        document.body.appendChild(shell);
+        showToast('📸 Generating image...', 'locked');
+        requestAnimationFrame(() => {
+            window.html2canvas(shell, { backgroundColor: '#0a0012', scale: 2.5, useCORS: true, allowTaint: true, width: shell.scrollWidth, windowWidth: shell.scrollWidth, logging: false })
+                .then(canvas => { canvas.toBlob(blob => { if (!blob) return; downloadBlob(blob, fileName); showToast('📸 Image saved!', 'locked'); }); })
+                .catch(() => showToast('⚠️ Could not generate image', 'locked'))
+                .finally(() => shell.remove());
+        });
     }
 
     function exportGpaImage() {
