@@ -533,8 +533,8 @@
             .grid { gap: 10px; }
             /* Subject grid: 2 tight columns */
             .subjects-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
-            /* Week grid inside a subject: 1 column so cards have room to breathe */
-            .weeks-grid    { grid-template-columns: 1fr !important; gap: 10px; }
+            /* Week grid: 2-column rectangles, well spaced */
+            .weeks-grid    { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
             .resources-grid{ grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
             /* Generic card padding */
             .card { padding: 12px 10px; border-radius: 12px; }
@@ -543,11 +543,17 @@
             #subjects-grid .card > div:nth-child(2) { font-size: 0.75rem !important; margin-bottom: 8px !important; line-height: 1.3 !important; }
             #subjects-grid .card > div:last-child { font-size: 0.72rem !important; padding-top: 8px !important; flex-wrap: wrap; gap: 4px; }
             .subject-code-label { font-size: 0.62rem !important; padding: 1px 5px !important; }
-            /* Week cards: full-width, horizontal layout */
-            #weeks-grid .card { padding: 12px 14px; border-radius: 12px; flex-direction: row; align-items: center; gap: 12px; }
+            /* Week cards: 2-col rectangle, column layout, proportional internals */
+            #weeks-grid .card { padding: 14px 12px 12px; border-radius: 12px; flex-direction: column; align-items: flex-start; gap: 0; min-height: 85px; }
+            /* Title: reduced so it fits comfortably in half-width */
             #weeks-grid .card div[style*="1.5rem"],
-            #weeks-grid .card div[style*="font-family:'Orbitron'"] { font-size: 1.05rem !important; margin-bottom: 0 !important; padding-top: 0 !important; }
-            #weeks-grid .card .card { padding: 12px 14px; }
+            #weeks-grid .card div[style*="font-family:'Orbitron'"] { font-size: 1rem !important; margin-bottom: 5px !important; padding-top: 0 !important; line-height: 1.25 !important; word-break: break-word; }
+            /* Status + updated text */
+            #weeks-grid .card div[style*="color:#888"] { font-size: 0.66rem !important; }
+            #weeks-grid .card .week-updated-ago { font-size: 0.6rem !important; margin-top: 5px !important; }
+            /* NEW badge stays small inline */
+            #weeks-grid .card .badge-new { font-size: 0.46rem !important; padding: 1px 4px !important; }
+            #weeks-grid .card .card { padding: 14px 12px; }
             #playlists-grid .card { padding: 10px 9px; border-radius: 10px; }
             .resources-grid .card { padding: 10px 8px; border-radius: 10px; }
             .info-box { padding: 16px 12px; border-radius: 12px; margin-bottom: 18px; }
