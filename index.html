@@ -101,12 +101,13 @@
         @keyframes pulse { from { opacity: 1; transform: scale(1); } to { opacity: 0.8; transform: scale(1.05); } }
         .custom-badge { position: absolute; top: 0; right: 0; background: #333; color: white; font-size: 0.8rem; padding: 5px 15px; border-bottom-left-radius: 15px; font-weight: bold; box-shadow: -2px 2px 10px rgba(0,0,0,0.5); max-width: 80%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        .recent-card { background: rgba(74, 144, 226, 0.1); border: 1px solid var(--accent-blue); padding: 20px; border-radius: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: 0.3s; }
+        .recent-card { background: rgba(74, 144, 226, 0.1); border: 1px solid var(--accent-blue); padding: 20px; border-radius: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: 0.3s; overflow: hidden; }
         .recent-card:hover { transform: translateX(10px); background: rgba(74, 144, 226, 0.2); }
-        .recent-header { font-family: 'Orbitron'; font-size: 1.2rem; color: var(--accent-blue); display:flex; justify-content:space-between; align-items:center; }
+        .recent-header { font-family: 'Orbitron'; font-size: 1.2rem; color: var(--accent-blue); display:flex; justify-content:space-between; align-items:flex-start; gap: 8px; }
+        .recent-header > span:first-child { flex: 1; min-width: 0; word-break: break-word; line-height: 1.4; }
         .recent-sub { color: #ccc; font-size: 0.95rem; line-height: 1.5; }
         .recent-icons { font-size: 1.5rem; letter-spacing: 5px; margin-top: 5px; }
-        .recent-time { font-size: 0.8rem; color: var(--accent-pink); font-weight: bold; white-space: nowrap; margin-left: 10px; }
+        .recent-time { font-size: 0.8rem; color: var(--accent-pink); font-weight: bold; white-space: nowrap; margin-left: 10px; flex-shrink: 0; }
         
         .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; justify-content: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; align-items: center; }
         .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #ccc; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
@@ -287,6 +288,17 @@
         .toast-notification.toast-bottom-right.show { transform: translateY(0); }
         .toast-notification.toast-locked { background: rgba(233, 30, 140, 0.85); border: 1px solid rgba(233, 30, 140, 0.6); box-shadow: 0 0 30px rgba(233, 30, 140, 0.3), 0 8px 32px rgba(0,0,0,0.4); }
 
+        /* ── Swipe navigation overlay ── */
+        .swipe-flash { position: fixed; top: 50%; transform: translateY(-50%); z-index: 3000; pointer-events: none; display: flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 50px; background: rgba(181,25,214,0.35); border: 1.5px solid rgba(181,25,214,0.7); backdrop-filter: blur(14px); color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.82rem; font-weight: 700; letter-spacing: 1px; opacity: 0; transition: opacity 0.15s ease; box-shadow: 0 0 28px rgba(181,25,214,0.5); }
+        .swipe-flash.left  { left: 18px; }
+        .swipe-flash.right { right: 18px; }
+        .swipe-flash.show  { opacity: 1; }
+        .swipe-flash-arrow { font-size: 1.5rem; line-height: 1; }
+        @keyframes swipeArrowLeft  { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-5px); } }
+        @keyframes swipeArrowRight { 0%,100% { transform: translateX(0); } 50% { transform: translateX(5px);  } }
+        .swipe-flash.left  .swipe-flash-arrow { animation: swipeArrowLeft  0.4s ease infinite; }
+        .swipe-flash.right .swipe-flash-arrow { animation: swipeArrowRight 0.4s ease infinite; }
+
         .visit-celebration-card {
             position: fixed;
             top: 84px;
@@ -462,21 +474,22 @@
         .cal-tbd-tasks { display: flex; flex-wrap: wrap; gap: 6px; }
 
         @media (max-width: 600px) {
-            /* Fix: make calendar horizontally scrollable on mobile */
-            #deliverables-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            .calendar-container { padding: 0 2px; min-width: 420px; width: 100%; }
+            /* Scroll wrapper: calendar scrolls horizontally, keeps all 7 columns equal */
+            #deliverables-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+            .calendar-container { padding: 0; min-width: 490px; width: 100%; box-sizing: border-box; }
             .cal-month-nav { gap: 8px; margin-bottom: 12px; }
             .cal-month-nav button { padding: 4px 10px; font-size: 0.78rem; }
             .cal-month-label { font-size: 0.95rem; min-width: 0; }
-            .cal-grid { gap: 2px; }
+            /* Force 7 equal columns — grid-template-columns must not be overridden */
+            .cal-grid { gap: 2px; grid-template-columns: repeat(7, 1fr) !important; }
             .cal-day-header { font-size: 0.55rem; padding: 5px 0; letter-spacing: 0; }
-            .cal-day { min-height: 62px; padding: 3px 2px; border-radius: 6px; }
+            .cal-day { min-height: 64px; padding: 3px 2px; border-radius: 6px; width: auto; box-sizing: border-box; }
             .cal-day.today::after { display: none; }
             .cal-day-num { font-size: 0.58rem; margin-bottom: 2px; text-align: center; }
-            /* On mobile: compact chip showing just icon + subject code */
-            .cal-task { font-size: 0.48rem; padding: 2px 3px; height: auto; border-radius: 3px; margin-bottom: 2px; border-left: 2px solid !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+            /* On mobile: compact chip showing just subject code */
+            .cal-task { font-size: 0.46rem; padding: 2px 2px; height: auto; border-radius: 3px; margin-bottom: 2px; border-left: 2px solid !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; display: block; max-width: 100%; }
             .cal-task div { display: none; } /* hide time sub-lines */
-            .cal-tbd-section { padding: 10px 12px; }
+            .cal-tbd-section { padding: 10px 12px; min-width: 0; }
             .cal-tbd-title { font-size: 0.72rem; }
             .cal-tbd-week-label { font-size: 0.65rem; }
             .cal-tbd-tasks .cal-task { font-size: 0.6rem; height: auto; padding: 2px 6px; border-left: 2px solid !important; }
@@ -507,6 +520,40 @@
             .scroll-btn { right: 14px; width: 34px; height: 34px; font-size: 0.85rem; }
             .back-to-top { bottom: 14px; }
             .scroll-to-bottom { bottom: 56px; }
+
+            /* ── Compact mobile cards & grids ── */
+            .grid { gap: 14px; }
+            .subjects-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .weeks-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .resources-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+            .card { padding: 16px 14px; border-radius: 14px; }
+            /* Subject cards — tighter */
+            #subjects-grid .card > div:first-child { font-size: 1.6rem !important; margin-bottom: 6px !important; }
+            #subjects-grid .card > div:nth-child(2) { font-size: 0.88rem !important; margin-bottom: 12px !important; }
+            /* Week cards — tighter */
+            #weeks-grid .card, #playlists-grid .card { padding: 14px 12px; border-radius: 12px; }
+            /* Resource tiles — smaller */
+            .resources-grid .card { padding: 14px 10px; border-radius: 12px; }
+            /* info-box (week detail header) */
+            .info-box { padding: 20px 16px; border-radius: 14px; margin-bottom: 24px; }
+            .info-title { font-size: 1.5rem !important; margin-bottom: 14px !important; }
+            /* detail-row notes — normal text flow */
+            .detail-row { flex-direction: column; gap: 12px; padding-bottom: 14px; margin-bottom: 14px; }
+            .detail-icon { width: 38px; height: 38px; font-size: 18px; border-radius: 10px; flex-shrink: 0; }
+            .detail-content p { font-size: 0.88rem; }
+            /* week-nav prev/next */
+            .week-nav { margin-top: 18px; gap: 10px; }
+            .week-nav-btn { padding: 8px 14px; font-size: 0.8rem; max-width: 48%; }
+            /* History cards — compact, no overflow */
+            .recent-card { padding: 14px 12px; border-radius: 12px; margin-bottom: 10px; gap: 7px; }
+            .recent-header { font-size: 0.92rem; flex-wrap: wrap; }
+            .recent-header > span:first-child { font-size: 0.88rem; }
+            .recent-time { font-size: 0.72rem; }
+            .recent-sub { font-size: 0.82rem; }
+            .recent-icons { font-size: 1.1rem; letter-spacing: 3px; }
+            /* Deadlines page — allow long screenshot by removing any clipping */
+            #deadlines-page { overflow: visible !important; height: auto !important; min-height: 0 !important; }
+            #deadlines-page * { max-height: none !important; }
         }
 
         /* Hotkeys Panel - PC only */
@@ -1043,6 +1090,9 @@
 
 <!-- Toast Notifications -->
 <div id="toast-container"></div>
+<!-- Swipe navigation flash overlays -->
+<div class="swipe-flash left"  id="swipe-flash-left"><span class="swipe-flash-arrow">←</span><span id="swipe-flash-left-label">PREV WEEK</span></div>
+<div class="swipe-flash right" id="swipe-flash-right"><span id="swipe-flash-right-label">NEXT WEEK</span><span class="swipe-flash-arrow">→</span></div>
 
 <!-- Scroll Buttons -->
 <button class="scroll-btn scroll-to-bottom" id="scroll-to-bottom" onclick="window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'})" title="Scroll to bottom">↓</button>
@@ -1326,7 +1376,7 @@
     function parseExamDateTime(exam) {
         if (!exam.date) return 0;
         const base = new Date(exam.date + 'T00:00:00').getTime();
-        if (!exam.time) return base + 12 * 60 * 60 * 1000; // fallback noon
+        if (!exam.time) return base + 12 * 60 * 60 * 1000;
         const m = exam.time.match(/(\d+):(\d+)\s*(AM|PM)?/i);
         if (!m) return base + 12 * 60 * 60 * 1000;
         let h = parseInt(m[1], 10), min = parseInt(m[2], 10);
@@ -1343,15 +1393,14 @@
         const typeWeight = { 'quiz': 0.8, 'midterm': 0.15, 'final': 0.15, 'lab exam': 0.5 };
 
         // Check MIDTERM_DATA — treat upcoming midterms as ultra-urgent for that subject
-        // Skip exams hidden by the user (midtermHiddenSet tracks by index)
         if (window.MIDTERM_DATA) {
             window.MIDTERM_DATA.forEach((exam, idx) => {
                 if (exam.sub !== subCode) return;
                 if (typeof midtermHiddenSet !== 'undefined' && midtermHiddenSet.has(idx)) return;
-                const ts = parseExamDateTime(exam); // uses actual exam time, not hardcoded noon
+                const ts = parseExamDateTime(exam);
                 if (!ts || ts < now) return;
                 const daysLeft = (ts - now) / (1000 * 60 * 60 * 24);
-                const s = daysLeft * 0.12; // very heavy weight → floats to top
+                const s = daysLeft * 0.12;
                 if (s < score) score = s;
             });
         }
@@ -1361,7 +1410,7 @@
             window.FINAL_DATA.forEach((exam, idx) => {
                 if (exam.sub !== subCode) return;
                 if (typeof finalHiddenSet !== 'undefined' && finalHiddenSet.has(idx)) return;
-                const ts = parseExamDateTime(exam); // uses actual exam time
+                const ts = parseExamDateTime(exam);
                 if (!ts || ts < now) return;
                 const daysLeft = (ts - now) / (1000 * 60 * 60 * 24);
                 const s = daysLeft * 0.12;
@@ -1392,22 +1441,17 @@
     }
 
     function getHomepageOrderedSubjects() {
-        // Pre-compute all urgency scores once (avoids repeated inner loops)
         const scores = {};
         window.COURSE_DATA.forEach(s => { scores[s.code] = getSubjectUrgency(s.code); });
-
-        // Returns true if every midterm for this subject is hidden by the user
         function isSubjectFullyMidtermHidden(subCode) {
             if (!window.MIDTERM_DATA || typeof midtermHiddenSet === 'undefined') return false;
             const subExams = window.MIDTERM_DATA.map((e, i) => ({ e, i })).filter(({ e }) => e.sub === subCode);
-            if (subExams.length === 0) return false; // no midterm at all → not "hidden"
+            if (subExams.length === 0) return false;
             return subExams.every(({ i }) => midtermHiddenSet.has(i));
         }
-
         return [...window.COURSE_DATA].sort((a, b) => {
             const aHidden = isSubjectFullyMidtermHidden(a.code);
             const bHidden = isSubjectFullyMidtermHidden(b.code);
-            // Hidden subjects always sink to the bottom
             if (aHidden && !bHidden) return 1;
             if (!aHidden && bHidden) return -1;
             return scores[a.code] - scores[b.code];
@@ -2936,6 +2980,13 @@
     // Semester week 1 starts Saturday Feb 7, 2026. Weeks run Sat-Fri.
     const SEMESTER_START = new Date(2026, 1, 7); // Feb 7, 2026 (Saturday)
     function getWeekDates(weekNum) {
+        // Check if SCHEDULE_DATA has a date override for this week
+        if (window.SCHEDULE_DATA) {
+            const wk = window.SCHEDULE_DATA.find(w => w.week === weekNum);
+            if (wk && wk.dateStart && wk.dateEnd) {
+                return { start: new Date(wk.dateStart + 'T00:00:00'), end: new Date(wk.dateEnd + 'T00:00:00') };
+            }
+        }
         // Week 8 (midterms) exception: starts Friday Mar 27, ends Friday Apr 3
         if (weekNum === 8) return { start: new Date(2026, 2, 27), end: new Date(2026, 3, 3) };
         const start = new Date(SEMESTER_START);
@@ -3185,6 +3236,8 @@
         window.SCHEDULE_DATA.forEach((data, wIndex) => {
             const card = document.createElement('div');
             const isMidtermWk = data.isMidterm || false;
+            const isFinalsWk  = data.isFinals  || false;
+            const isSpecialWk = isMidtermWk || isFinalsWk;
 
             // Check if today falls within this week's date range
             const { start: wkStart, end: wkEnd } = getWeekDates(data.week);
@@ -3210,34 +3263,52 @@
             const isEmpty = displayTasks.length === 0;
             const isHighLoad = !isEmpty && displayTasks.length >= 4;
             
-            card.className = "card" + (isEmpty && !isMidtermWk ? " locked" : "");
-            
-            if (isCurrentWeek && !isMidtermWk) {
-                card.style.borderColor = '#ff3b30';
-                card.style.background = 'linear-gradient(135deg, rgba(255, 59, 48, 0.08), var(--card-bg))';
-                card.style.boxShadow = '0 0 20px rgba(255, 59, 48, 0.15)';
+            card.className = "card" + (isEmpty && !isSpecialWk ? " locked" : "");
+
+            // ── Card colors — custom > finals > midterms > current > default ──
+            if (data.cardColor) {
+                // Custom color from admin
+                const hex = data.cardColor;
+                const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+                card.style.borderColor = hex;
+                card.style.background = `linear-gradient(135deg, rgba(${r},${g},${b},0.35), rgba(${r},${g},${b},0.12))`;
+                card.style.boxShadow  = `0 10px 30px rgba(${r},${g},${b},0.25)`;
+                if (isSpecialWk) card.style.cursor = 'pointer';
+            } else if (isFinalsWk) {
+                card.style.borderColor = '#cc2200';
+                card.style.background = 'linear-gradient(135deg, rgba(204, 34, 0, 0.4), rgba(120, 20, 0, 0.6))';
+                card.style.boxShadow = '0 10px 30px rgba(204, 34, 0, 0.3)';
+                card.style.cursor = 'pointer';
+                card.onclick = () => showMidterms(true, 'schedule');
             } else if (isMidtermWk) {
                 card.style.borderColor = '#007aff';
                 card.style.background = 'linear-gradient(135deg, rgba(0, 122, 255, 0.4), rgba(0, 60, 150, 0.6))';
                 card.style.boxShadow = '0 10px 30px rgba(0, 122, 255, 0.3)';
                 card.style.cursor = 'pointer';
-                card.onclick = () => showMidterms(true, 'schedule'); 
+                card.onclick = () => showMidterms(true, 'schedule');
+            } else if (isCurrentWeek) {
+                card.style.borderColor = '#ff3b30';
+                card.style.background = 'linear-gradient(135deg, rgba(255, 59, 48, 0.08), var(--card-bg))';
+                card.style.boxShadow = '0 0 20px rgba(255, 59, 48, 0.15)';
             } else {
                 card.style.borderColor = 'rgba(233, 30, 140, 0.2)';
                 card.style.background = 'var(--card-bg)';
             }
+
+            // Text color for special weeks
+            const isWhiteText = isSpecialWk || !!data.cardColor;
             
             let tasksHtml = '';
             if (isEmpty) {
-                tasksHtml = `<div class="empty-state" style="color: ${isMidtermWk ? '#fff' : '#666'}">${isMidtermWk ? 'Click here to view exams' : 'No deliverables scheduled'}</div>`;
+                tasksHtml = `<div class="empty-state" style="color: ${isWhiteText ? '#fff' : '#666'}">${isFinalsWk ? 'Click here to view finals' : (isMidtermWk ? 'Click here to view exams' : 'No deliverables scheduled')}</div>`;
             } else {
                 displayTasks.forEach(entry => {
                     const task = entry.task;
                     tasksHtml += `
-                        <div class="task-item" style="border-left-color: ${getSubjectColor(task.sub)}; ${isMidtermWk ? 'background:rgba(0,0,0,0.4);' : ''}" onclick="event.stopPropagation(); openModal(${wIndex}, ${entry.origIdx})">
+                        <div class="task-item" style="border-left-color: ${getSubjectColor(task.sub)}; ${isWhiteText ? 'background:rgba(0,0,0,0.4);' : ''}" onclick="event.stopPropagation(); openModal(${wIndex}, ${entry.origIdx})">
                             <span class="sub-badge" style="background: ${getSubjectBg(task.sub)}; color: ${getSubjectColor(task.sub)}">${task.sub}</span>
                             <span class="task-icon">${task.icon}</span>
-                            <span class="task-name" style="${isMidtermWk ? 'color:#fff;' : ''}">${task.name}</span>
+                            <span class="task-name" style="${isWhiteText ? 'color:#fff;' : ''}">${task.name}</span>
                         </div>
                     `;
                 });
@@ -3247,24 +3318,29 @@
             if (!isEmpty) {
                 const badgeClass = isHighLoad ? 'total-badge high-load' : 'total-badge';
                 const plural = displayTasks.length > 1 ? 'Tasks' : 'Task';
-                badgeHtml = `<div class="${badgeClass}" style="${isMidtermWk ? 'border-color:#fff; color:#fff; background:rgba(0,0,0,0.3); box-shadow:none;' : ''}">${displayTasks.length} ${plural}</div>`;
+                badgeHtml = `<div class="${badgeClass}" style="${isWhiteText ? 'border-color:#fff; color:#fff; background:rgba(0,0,0,0.3); box-shadow:none;' : ''}">${displayTasks.length} ${plural}</div>`;
             } else {
-                badgeHtml = `<div class="total-badge" style="border-color:${isMidtermWk?'#fff':'#555'}; color:${isMidtermWk?'#fff':'#888'}; ${isMidtermWk ? 'background:rgba(0,0,0,0.3);' : ''}">0 Tasks</div>`;
+                badgeHtml = `<div class="total-badge" style="border-color:${isWhiteText?'#fff':'#555'}; color:${isWhiteText?'#fff':'#888'}; ${isWhiteText ? 'background:rgba(0,0,0,0.3);' : ''}">0 Tasks</div>`;
             }
             
             let noteHtml = '';
             if (data.note && data.note.trim() !== '') {
-                noteHtml = `<div style="font-size: 0.9rem; color: ${isMidtermWk ? '#fff' : 'var(--accent-pink)'}; font-weight: bold; margin-top: 5px;">${data.note}</div>`;
+                noteHtml = `<div style="font-size: 0.9rem; color: ${isWhiteText ? '#fff' : 'var(--accent-pink)'}; font-weight: bold; margin-top: 5px;">${data.note}</div>`;
             }
 
-            const dateRangeHtml = `<div style="font-size: 0.75rem; color: ${isMidtermWk ? 'rgba(255,255,255,0.7)' : '#888'}; margin-top: 4px; letter-spacing: 0.5px;">${getWeekDateRange(data.week)}</div>`;
+            const dateRangeHtml = `<div style="font-size: 0.75rem; color: ${isWhiteText ? 'rgba(255,255,255,0.7)' : '#888'}; margin-top: 4px; letter-spacing: 0.5px;">${getWeekDateRange(data.week)}</div>`;
 
-            const currentWeekBadge = isCurrentWeek ? `<div style="font-size:0.65rem; font-weight:800; color:#ff3b30; background:rgba(255,59,48,0.15); border:1px solid rgba(255,59,48,0.3); padding:3px 10px; border-radius:8px; letter-spacing:1.5px; margin-top:6px; display:inline-block;">📍 CURRENT WEEK</div>` : '';
+            // Custom "current period" label support
+            const periodLabel = data.currentLabel && data.currentLabel.trim() ? data.currentLabel.trim().toUpperCase() : 'CURRENT WEEK';
+            const currentWeekBadge = isCurrentWeek ? `<div style="font-size:0.65rem; font-weight:800; color:#ff3b30; background:rgba(255,59,48,0.15); border:1px solid rgba(255,59,48,0.3); padding:3px 10px; border-radius:8px; letter-spacing:1.5px; margin-top:6px; display:inline-block;">📍 ${periodLabel}</div>` : '';
+
+            // H2 color
+            const h2Color = isCurrentWeek && !isSpecialWk ? '#ff3b30' : (isWhiteText ? '#fff' : 'var(--accent-purple)');
 
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
                     <div>
-                        <h2 style="font-family:'Orbitron'; color: ${isCurrentWeek && !isMidtermWk ? '#ff3b30' : (isMidtermWk ? '#fff' : 'var(--accent-purple)')}; font-size:1.5rem; margin:0;">WEEK ${data.week}</h2>
+                        <h2 style="font-family:'Orbitron'; color: ${h2Color}; font-size:1.5rem; margin:0;">WEEK ${data.week}</h2>
                         ${dateRangeHtml}
                         ${noteHtml}
                         ${currentWeekBadge}
@@ -4522,55 +4598,87 @@
         }
     });
 
-    // ── Touch swipe navigation ─────────────────────────────────────────────
+    // ── Touch swipe navigation with flash animation ────────────────────────
     (function() {
         let swipeStartX = 0, swipeStartY = 0, swipeStartT = 0;
-        const MIN_SWIPE_X = 60;   // px horizontal to count as swipe
-        const MAX_SWIPE_Y = 80;   // px vertical before we decide it's a scroll
-        const MAX_DURATION = 400; // ms
+        let swipeTracking = false;
+        const MIN_SWIPE_X = 55;
+        const MAX_SWIPE_Y = 80;
+        const MAX_DURATION = 420;
+        let flashTimer = null;
+
+        function showSwipeFlash(dir, label) {
+            // dir: 'left' (going left = next) or 'right' (going right = prev)
+            const elL = document.getElementById('swipe-flash-left');
+            const elR = document.getElementById('swipe-flash-right');
+            const labelEl = dir === 'left'
+                ? document.getElementById('swipe-flash-right-label')
+                : document.getElementById('swipe-flash-left-label');
+            if (labelEl) labelEl.textContent = label;
+            if (elL) elL.classList.toggle('show', dir === 'right');
+            if (elR) elR.classList.toggle('show', dir === 'left');
+            if (flashTimer) clearTimeout(flashTimer);
+            flashTimer = setTimeout(() => {
+                if (elL) elL.classList.remove('show');
+                if (elR) elR.classList.remove('show');
+            }, 600);
+        }
 
         document.addEventListener('touchstart', function(e) {
             if (e.touches.length !== 1) return;
             swipeStartX = e.touches[0].clientX;
             swipeStartY = e.touches[0].clientY;
             swipeStartT = Date.now();
+            swipeTracking = true;
+        }, { passive: true });
+
+        document.addEventListener('touchmove', function(e) {
+            if (!swipeTracking || e.touches.length !== 1) return;
+            const dx = e.touches[0].clientX - swipeStartX;
+            const dy = e.touches[0].clientY - swipeStartY;
+            // Show directional hint while dragging past threshold
+            if (Math.abs(dx) > 30 && Math.abs(dy) < MAX_SWIPE_Y) {
+                const isContent = document.querySelector('#content-page.active') && !document.querySelector('.modal-overlay.active');
+                const isCalendar = document.querySelector('#schedule-page.active') && scheduleViewMode === 'calendar';
+                if (isContent || isCalendar) {
+                    let canGo = false;
+                    let label = '';
+                    if (isContent) {
+                        canGo = dx > 0 ? !!weekNavPrev : !!weekNavNext;
+                        label = dx > 0 ? (weekNavPrev ? weekNavPrev.title : '') : (weekNavNext ? weekNavNext.title : '');
+                    } else if (isCalendar && calendarAvailableMonths && calendarMonth) {
+                        const idx = calendarAvailableMonths.indexOf(calendarMonth);
+                        canGo = dx > 0 ? idx > 0 : idx < calendarAvailableMonths.length - 1;
+                        if (canGo) {
+                            const [yr, mo] = (dx > 0 ? calendarAvailableMonths[idx-1] : calendarAvailableMonths[idx+1]).split('-').map(Number);
+                            label = new Date(yr, mo-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+                        }
+                    }
+                    if (canGo) showSwipeFlash(dx > 0 ? 'right' : 'left', label || (dx > 0 ? 'PREV' : 'NEXT'));
+                }
+            }
         }, { passive: true });
 
         document.addEventListener('touchend', function(e) {
-            if (e.changedTouches.length !== 1) return;
+            if (!swipeTracking || e.changedTouches.length !== 1) return;
+            swipeTracking = false;
             const dx = e.changedTouches[0].clientX - swipeStartX;
             const dy = e.changedTouches[0].clientY - swipeStartY;
             const dt = Date.now() - swipeStartT;
-
-            // Must be fast enough, wide enough, and not too vertical
             if (dt > MAX_DURATION || Math.abs(dx) < MIN_SWIPE_X || Math.abs(dy) > MAX_SWIPE_Y) return;
 
             // ── Content page: swipe between weeks ──────────────────────────
             if (document.querySelector('#content-page.active') && !document.querySelector('.modal-overlay.active')) {
-                if (dx > 0 && weekNavPrev) {
-                    // swipe right → go to previous week
-                    showContentByObj(weekNavPrev, false, weekNavFrom);
-                } else if (dx < 0 && weekNavNext) {
-                    // swipe left → go to next week
-                    showContentByObj(weekNavNext, false, weekNavFrom);
-                }
+                if (dx > 0 && weekNavPrev) { showContentByObj(weekNavPrev, false, weekNavFrom); }
+                else if (dx < 0 && weekNavNext) { showContentByObj(weekNavNext, false, weekNavFrom); }
                 return;
             }
-
-            // ── Schedule page calendar view: swipe between months ──────────
+            // ── Schedule calendar view: swipe between months ───────────────
             if (document.querySelector('#schedule-page.active') && scheduleViewMode === 'calendar') {
                 if (typeof calendarAvailableMonths === 'undefined' || !calendarMonth) return;
                 const curIdx = calendarAvailableMonths.indexOf(calendarMonth);
-                if (dx > 0 && curIdx > 0) {
-                    // swipe right → previous month
-                    calendarMonth = calendarAvailableMonths[curIdx - 1];
-                    renderScheduleContent();
-                } else if (dx < 0 && curIdx < calendarAvailableMonths.length - 1) {
-                    // swipe left → next month
-                    calendarMonth = calendarAvailableMonths[curIdx + 1];
-                    renderScheduleContent();
-                }
-                return;
+                if (dx > 0 && curIdx > 0) { calendarMonth = calendarAvailableMonths[curIdx-1]; renderScheduleContent(); }
+                else if (dx < 0 && curIdx < calendarAvailableMonths.length-1) { calendarMonth = calendarAvailableMonths[curIdx+1]; renderScheduleContent(); }
             }
         }, { passive: true });
     })();
@@ -4788,6 +4896,34 @@
         btn.classList.toggle('expanded');
     }
 
+    function toggleNavMenu() {
+        const links = document.getElementById('nav-links');
+        const btn = document.getElementById('nav-hamburger');
+        const overlay = document.getElementById('nav-overlay');
+        links.classList.toggle('open');
+        const isOpen = links.classList.contains('open');
+        btn.innerHTML = isOpen ? '✕' : '☰';
+        if (overlay) overlay.classList.toggle('active', isOpen);
+        if (!isOpen) closeAllDropdowns();
+        // Hide/show utility buttons when burger is open/closed (mobile only)
+        _setMobileUtilsVisibility(!isOpen);
+    }
+
+    function _setMobileUtilsVisibility(visible) {
+        // Only applies on mobile (hamburger visible)
+        if (window.innerWidth > 768) return;
+        const qa = document.getElementById('quick-actions');
+        const newsFab = document.getElementById('news-fab');
+        const hotkeysFab = document.getElementById('hotkeys-fab');
+        [qa, newsFab, hotkeysFab].forEach(el => {
+            if (!el) return;
+            el.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
+            el.style.opacity = visible ? '' : '0';
+            el.style.pointerEvents = visible ? '' : 'none';
+            el.style.transform = visible ? '' : 'scale(0.7)';
+        });
+    }
+
     function closeMobileMenu() {
         const links = document.getElementById('nav-links');
         if (links) links.classList.remove('open');
@@ -4795,6 +4931,7 @@
         if (btn) btn.innerHTML = '☰';
         const overlay = document.getElementById('nav-overlay');
         if (overlay) overlay.classList.remove('active');
+        _setMobileUtilsVisibility(true);
     }
 
     function closeNavOverlay() {
@@ -7389,54 +7526,37 @@
     }
 
     function _buildExamShell(isFinals) {
-        if (!window.html2canvas) return null;
         const exams = isFinals ? (window.FINAL_DATA || []) : (window.MIDTERM_DATA || []);
         const hiddenSet = isFinals ? (typeof finalHiddenSet !== 'undefined' ? finalHiddenSet : new Set())
                                    : (typeof midtermHiddenSet !== 'undefined' ? midtermHiddenSet : new Set());
         const accentColor = isFinals ? '#cc2200' : '#007aff';
         const accentRgb   = isFinals ? '204,34,0' : '0,122,255';
         const fileName    = isFinals ? 'final-exams.png' : 'midterm-exams.png';
-
         const shell = document.createElement('div');
         shell.style.cssText = 'position:absolute;left:-9999px;top:0;padding:28px 32px;background:#0a0012;width:820px;font-family:Work Sans,Arial,sans-serif;box-sizing:border-box;';
-
         const sorted = exams.map((exam, i) => ({ exam, origIdx: i })).sort((a, b) => {
             const da = a.exam.date || '', db = b.exam.date || '';
             if (da && db && da !== db) return da < db ? -1 : 1;
             return 0;
         });
-
-        let lastDate = '';
-        let innerHtml = '';
-        let hasAny = false;
-
+        let lastDate = '', innerHtml = '', hasAny = false;
         sorted.forEach(({ exam, origIdx }) => {
-            if (hiddenSet.has(origIdx)) return; // skip hidden
+            if (hiddenSet.has(origIdx)) return;
             hasAny = true;
             let subName = exam.sub;
             const sObj = (window.COURSE_DATA || []).find(s => s.code === exam.sub);
             if (sObj) subName = sObj.name;
-
             if (exam.dateLabel !== lastDate) {
                 innerHtml += `<div style="font-family:Orbitron,Arial,sans-serif;font-size:11px;letter-spacing:2px;color:${accentColor};text-transform:uppercase;margin-bottom:10px;margin-top:22px;font-weight:700;">${eHtml(exam.dateLabel)}</div>`;
                 lastDate = exam.dateLabel;
             }
             innerHtml += `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(${accentRgb},0.1);border:1px solid rgba(${accentRgb},0.3);border-radius:10px;margin-bottom:8px;">
                 <div style="background:rgba(${accentRgb},0.2);color:${accentColor};font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;min-width:48px;text-align:center;">${eHtml(exam.sub)}</div>
-                <div style="flex:1;">
-                    <div style="color:#fff;font-weight:600;font-size:15px;">${eHtml(subName)}</div>
-                    <div style="color:#888;font-size:12px;margin-top:2px;">${eHtml(exam.examCode || '')}</div>
-                </div>
-                <div style="text-align:right;flex-shrink:0;">
-                    <div style="color:${accentColor};font-weight:700;font-size:14px;font-family:Orbitron,sans-serif;">${eHtml(exam.time || '')}</div>
-                </div>
+                <div style="flex:1;"><div style="color:#fff;font-weight:600;font-size:15px;">${eHtml(subName)}</div><div style="color:#888;font-size:12px;margin-top:2px;">${eHtml(exam.examCode || '')}</div></div>
+                <div style="text-align:right;flex-shrink:0;"><div style="color:${accentColor};font-weight:700;font-size:14px;font-family:Orbitron,sans-serif;">${eHtml(exam.time || '')}</div></div>
             </div>`;
         });
-
-        if (!hasAny) {
-            innerHtml = `<div style="text-align:center;color:#555;padding:40px 0;font-size:14px;">No exams to display.</div>`;
-        }
-
+        if (!hasAny) innerHtml = `<div style="text-align:center;color:#555;padding:40px 0;font-size:14px;">No exams to display.</div>`;
         shell.innerHTML = innerHtml;
         return { shell, fileName };
     }
@@ -7447,14 +7567,12 @@
             const poll = setInterval(() => { if (typeof window.html2canvas === 'function') { clearInterval(poll); exportMidtermImage(); } }, 200);
             return;
         }
-        const built = _buildExamShell(false);
-        if (!built) return;
-        const { shell, fileName } = built;
+        const { shell, fileName } = _buildExamShell(false);
         document.body.appendChild(shell);
         showToast('📸 Generating image...', 'locked');
         requestAnimationFrame(() => {
             window.html2canvas(shell, { backgroundColor: '#0a0012', scale: 2.5, useCORS: true, allowTaint: true, width: shell.scrollWidth, windowWidth: shell.scrollWidth, logging: false })
-                .then(canvas => { canvas.toBlob(blob => { if (!blob) return; downloadBlob(blob, fileName); showToast('📸 Image saved!', 'locked'); }); })
+                .then(canvas => { canvas.toBlob(blob => { if (blob) { downloadBlob(blob, fileName); showToast('📸 Image saved!', 'locked'); } }); })
                 .catch(() => showToast('⚠️ Could not generate image', 'locked'))
                 .finally(() => shell.remove());
         });
@@ -7466,14 +7584,12 @@
             const poll = setInterval(() => { if (typeof window.html2canvas === 'function') { clearInterval(poll); exportFinalsImage(); } }, 200);
             return;
         }
-        const built = _buildExamShell(true);
-        if (!built) return;
-        const { shell, fileName } = built;
+        const { shell, fileName } = _buildExamShell(true);
         document.body.appendChild(shell);
         showToast('📸 Generating image...', 'locked');
         requestAnimationFrame(() => {
             window.html2canvas(shell, { backgroundColor: '#0a0012', scale: 2.5, useCORS: true, allowTaint: true, width: shell.scrollWidth, windowWidth: shell.scrollWidth, logging: false })
-                .then(canvas => { canvas.toBlob(blob => { if (!blob) return; downloadBlob(blob, fileName); showToast('📸 Image saved!', 'locked'); }); })
+                .then(canvas => { canvas.toBlob(blob => { if (blob) { downloadBlob(blob, fileName); showToast('📸 Image saved!', 'locked'); } }); })
                 .catch(() => showToast('⚠️ Could not generate image', 'locked'))
                 .finally(() => shell.remove());
         });

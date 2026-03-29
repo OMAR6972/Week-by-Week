@@ -784,10 +784,40 @@
                     <div><label>Week Number:</label><input type="number" style="width:100%;" value="${wk.week}" oninput="window.SCHEDULE_DATA[schWIdx].week = parseInt(this.value); renderScheduleWeeks();"></div>
                     <div><label>Week Note (Optional):</label><input type="text" style="width:100%;" placeholder="e.g. Midterms Week" value="${wk.note || ''}" oninput="window.SCHEDULE_DATA[schWIdx].note = this.value;"></div>
                 </div>
-                <label class="checkbox-label" style="margin-bottom:20px; background:rgba(0, 122, 255, 0.2); border:1px solid #007aff; padding:10px;">
-                    <input type="checkbox" ${wk.isMidterm ? 'checked' : ''} onchange="window.SCHEDULE_DATA[schWIdx].isMidterm = this.checked; renderScheduleWeeks();">
-                    <span style="color:#007aff; font-weight:bold;">Highlight as Midterm Week (Blue)</span>
-                </label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <div>
+                        <label>Date Range Override (optional):</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input type="date" style="flex:1;" value="${wk.dateStart || ''}" oninput="window.SCHEDULE_DATA[schWIdx].dateStart=this.value;" title="Start date override">
+                            <span style="color:#888;">→</span>
+                            <input type="date" style="flex:1;" value="${wk.dateEnd || ''}" oninput="window.SCHEDULE_DATA[schWIdx].dateEnd=this.value;" title="End date override">
+                        </div>
+                        <div style="font-size:0.75rem;color:#888;margin-top:3px;">Leave blank to use auto-calculated dates</div>
+                    </div>
+                    <div>
+                        <label>"Current Period" Badge Label (optional):</label>
+                        <input type="text" style="width:100%;" placeholder="e.g. FINALS WEEK" value="${wk.currentLabel || ''}" oninput="window.SCHEDULE_DATA[schWIdx].currentLabel=this.value;" title="Overrides '📍 CURRENT WEEK' badge text">
+                        <div style="font-size:0.75rem;color:#888;margin-top:3px;">Leave blank to use default "CURRENT WEEK"</div>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+                    <label class="checkbox-label" style="background:rgba(0, 122, 255, 0.2); border:1px solid #007aff; padding:10px; margin:0;">
+                        <input type="checkbox" ${wk.isMidterm ? 'checked' : ''} onchange="window.SCHEDULE_DATA[schWIdx].isMidterm = this.checked; if(this.checked){window.SCHEDULE_DATA[schWIdx].isFinals=false;} renderScheduleWeeks();">
+                        <span style="color:#007aff; font-weight:bold;">Midterm Week (Blue)</span>
+                    </label>
+                    <label class="checkbox-label" style="background:rgba(204, 34, 0, 0.2); border:1px solid #cc2200; padding:10px; margin:0;">
+                        <input type="checkbox" ${wk.isFinals ? 'checked' : ''} onchange="window.SCHEDULE_DATA[schWIdx].isFinals = this.checked; if(this.checked){window.SCHEDULE_DATA[schWIdx].isMidterm=false;} renderScheduleWeeks();">
+                        <span style="color:#cc2200; font-weight:bold;">Finals Week (Red)</span>
+                    </label>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label>Custom Week Card Color (optional):</label>
+                    <div style="display:flex; align-items:center; gap:10px; margin-top:6px;">
+                        <input type="color" value="${wk.cardColor || '#b519d6'}" oninput="window.SCHEDULE_DATA[schWIdx].cardColor=this.value;" style="width:48px;height:34px;border-radius:6px;border:1px solid #555;cursor:pointer;" title="Pick a card accent color">
+                        <button onclick="window.SCHEDULE_DATA[schWIdx].cardColor=''; renderScheduleWeeks(); renderScheduleEditor();" style="padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid #555;color:#aaa;border-radius:6px;cursor:pointer;font-size:0.8rem;">↺ Reset to Default</button>
+                        <span style="color:#888;font-size:0.78rem;">Overrides midterm/finals/current colors</span>
+                    </div>
+                </div>
                 <div id="sch-task-list"></div>
                 <button class="btn btn-add" style="background:#ff9500; color:black; border-radius:4px; margin-top:20px;" onclick="addScheduleTask()">+ Add Deliverable to Week ${wk.week}</button>
             </div>
