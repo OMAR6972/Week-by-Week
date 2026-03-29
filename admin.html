@@ -706,7 +706,8 @@
             const el = document.createElement('div');
             el.className = `list-item ${i === schWIdx ? 'active' : ''}`;
             if(i === schWIdx) el.style.borderLeftColor = "#ff9500";
-            el.innerHTML = `<div style="flex:1">WEEK ${wk.week} <span style="font-size:0.7rem; background:#333; padding:2px 5px; border-radius:4px;">${wk.tasks ? wk.tasks.length : 0} tasks</span></div><button class="btn btn-del" onclick="delScheduleWeek(event, ${i})">✕</button>`;
+            const displayName = (wk.weekName && wk.weekName.trim()) ? wk.weekName.trim().toUpperCase() : `WEEK ${wk.week}`;
+            el.innerHTML = `<div style="flex:1">${displayName} <span style="font-size:0.7rem; background:#333; padding:2px 5px; border-radius:4px;">${wk.tasks ? wk.tasks.length : 0} tasks</span></div><button class="btn btn-del" onclick="delScheduleWeek(event, ${i})">✕</button>`;
             el.onclick = (e) => { if(e.target.tagName !== 'BUTTON') { schWIdx = i; renderScheduleWeeks(); renderScheduleEditor(); } };
             list.appendChild(el);
         });
@@ -779,47 +780,63 @@
 
         let html = `
             <div class="form-section" style="border-color:#ff9500;">
-                <h3 style="color:#ff9500;">WEEK ${wk.week} Deliverables</h3>
-                <div style="display:grid; grid-template-columns: 1fr 3fr; gap:10px; margin-bottom:10px;">
-                    <div><label>Week Number:</label><input type="number" style="width:100%;" value="${wk.week}" oninput="window.SCHEDULE_DATA[schWIdx].week = parseInt(this.value); renderScheduleWeeks();"></div>
-                    <div><label>Week Note (Optional):</label><input type="text" style="width:100%;" placeholder="e.g. Midterms Week" value="${wk.note || ''}" oninput="window.SCHEDULE_DATA[schWIdx].note = this.value;"></div>
-                </div>
+                <h3 style="color:#ff9500;">${(wk.weekName && wk.weekName.trim()) ? wk.weekName.trim().toUpperCase() : 'WEEK ' + wk.week} — Settings</h3>
+
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
                     <div>
-                        <label>Date Range Override (optional):</label>
-                        <div style="display:flex; gap:6px; align-items:center;">
-                            <input type="date" style="flex:1;" value="${wk.dateStart || ''}" oninput="window.SCHEDULE_DATA[schWIdx].dateStart=this.value;" title="Start date override">
-                            <span style="color:#888;">→</span>
-                            <input type="date" style="flex:1;" value="${wk.dateEnd || ''}" oninput="window.SCHEDULE_DATA[schWIdx].dateEnd=this.value;" title="End date override">
-                        </div>
-                        <div style="font-size:0.75rem;color:#888;margin-top:3px;">Leave blank to use auto-calculated dates</div>
+                        <label>Week Number:</label>
+                        <input type="number" style="width:100%;" value="${wk.week}" oninput="window.SCHEDULE_DATA[schWIdx].week = parseInt(this.value); renderScheduleWeeks();">
                     </div>
                     <div>
-                        <label>"Current Period" Badge Label (optional):</label>
-                        <input type="text" style="width:100%;" placeholder="e.g. FINALS WEEK" value="${wk.currentLabel || ''}" oninput="window.SCHEDULE_DATA[schWIdx].currentLabel=this.value;" title="Overrides '📍 CURRENT WEEK' badge text">
-                        <div style="font-size:0.75rem;color:#888;margin-top:3px;">Leave blank to use default "CURRENT WEEK"</div>
+                        <label>Week Display Name <span style="color:#888;font-weight:normal;">(shown instead of "WEEK N")</span>:</label>
+                        <input type="text" style="width:100%;" placeholder='e.g. Finals or "Reading Week"' value="${wk.weekName || ''}" oninput="window.SCHEDULE_DATA[schWIdx].weekName = this.value; renderScheduleWeeks();">
                     </div>
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
-                    <label class="checkbox-label" style="background:rgba(0, 122, 255, 0.2); border:1px solid #007aff; padding:10px; margin:0;">
-                        <input type="checkbox" ${wk.isMidterm ? 'checked' : ''} onchange="window.SCHEDULE_DATA[schWIdx].isMidterm = this.checked; if(this.checked){window.SCHEDULE_DATA[schWIdx].isFinals=false;} renderScheduleWeeks();">
-                        <span style="color:#007aff; font-weight:bold;">Midterm Week (Blue)</span>
-                    </label>
-                    <label class="checkbox-label" style="background:rgba(204, 34, 0, 0.2); border:1px solid #cc2200; padding:10px; margin:0;">
-                        <input type="checkbox" ${wk.isFinals ? 'checked' : ''} onchange="window.SCHEDULE_DATA[schWIdx].isFinals = this.checked; if(this.checked){window.SCHEDULE_DATA[schWIdx].isMidterm=false;} renderScheduleWeeks();">
-                        <span style="color:#cc2200; font-weight:bold;">Finals Week (Red)</span>
-                    </label>
+
+                <div style="margin-bottom:10px;">
+                    <label>Week Note <span style="color:#888;font-weight:normal;">(small line under title)</span>:</label>
+                    <input type="text" style="width:100%;" placeholder="e.g. No classes — study days" value="${wk.note || ''}" oninput="window.SCHEDULE_DATA[schWIdx].note = this.value;">
                 </div>
-                <div style="margin-bottom:16px;">
-                    <label>Custom Week Card Color (optional):</label>
-                    <div style="display:flex; align-items:center; gap:10px; margin-top:6px;">
-                        <input type="color" value="${wk.cardColor || '#b519d6'}" oninput="window.SCHEDULE_DATA[schWIdx].cardColor=this.value;" style="width:48px;height:34px;border-radius:6px;border:1px solid #555;cursor:pointer;" title="Pick a card accent color">
-                        <button onclick="window.SCHEDULE_DATA[schWIdx].cardColor=''; renderScheduleWeeks(); renderScheduleEditor();" style="padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid #555;color:#aaa;border-radius:6px;cursor:pointer;font-size:0.8rem;">↺ Reset to Default</button>
-                        <span style="color:#888;font-size:0.78rem;">Overrides midterm/finals/current colors</span>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <div>
+                        <label>Date Range Override:</label>
+                        <div style="display:flex; gap:5px; align-items:center;">
+                            <input type="date" style="flex:1;" value="${wk.dateStart || ''}" oninput="window.SCHEDULE_DATA[schWIdx].dateStart = this.value;" title="Start date (leave blank for auto)">
+                            <span style="color:#888; font-size:0.8rem;">→</span>
+                            <input type="date" style="flex:1;" value="${wk.dateEnd || ''}" oninput="window.SCHEDULE_DATA[schWIdx].dateEnd = this.value;" title="End date (leave blank for auto)">
+                        </div>
+                        <div style="font-size:0.72rem; color:#888; margin-top:3px;">Leave blank to use auto-calculated dates</div>
+                    </div>
+                    <div>
+                        <label>"Current Period" Badge Label:</label>
+                        <input type="text" style="width:100%;" placeholder="e.g. FINALS PERIOD" value="${wk.currentLabel || ''}" oninput="window.SCHEDULE_DATA[schWIdx].currentLabel = this.value;" title="Replaces '📍 CURRENT WEEK' badge text">
+                        <div style="font-size:0.72rem; color:#888; margin-top:3px;">Leave blank for default "CURRENT WEEK"</div>
                     </div>
                 </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                    <label class="checkbox-label" style="background:rgba(0,122,255,0.15); border:1px solid #007aff; padding:10px; margin:0; border-radius:8px;">
+                        <input type="checkbox" ${wk.isMidterm ? 'checked' : ''} onchange="window.SCHEDULE_DATA[schWIdx].isMidterm=this.checked; if(this.checked) window.SCHEDULE_DATA[schWIdx].isFinals=false; renderScheduleWeeks();">
+                        <span style="color:#007aff; font-weight:bold;">📝 Midterm Week (Blue)</span>
+                    </label>
+                    <label class="checkbox-label" style="background:rgba(204,34,0,0.15); border:1px solid #cc2200; padding:10px; margin:0; border-radius:8px;">
+                        <input type="checkbox" ${wk.isFinals ? 'checked' : ''} onchange="window.SCHEDULE_DATA[schWIdx].isFinals=this.checked; if(this.checked) window.SCHEDULE_DATA[schWIdx].isMidterm=false; renderScheduleWeeks();">
+                        <span style="color:#cc2200; font-weight:bold;">🏁 Finals Week (Red)</span>
+                    </label>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <label>Custom Card Accent Color:</label>
+                    <div style="display:flex; align-items:center; gap:10px; margin-top:5px; flex-wrap:wrap;">
+                        <input type="color" value="${wk.cardColor || '#b519d6'}" oninput="window.SCHEDULE_DATA[schWIdx].cardColor = this.value;" style="width:44px;height:32px;border-radius:6px;border:1px solid #555;cursor:pointer;">
+                        <button onclick="window.SCHEDULE_DATA[schWIdx].cardColor=''; this.closest('.form-section').querySelector('input[type=color]').value='#b519d6'; renderScheduleWeeks(); renderScheduleEditor();" style="padding:5px 12px;background:rgba(255,255,255,0.05);border:1px solid #555;color:#aaa;border-radius:6px;cursor:pointer;font-size:0.78rem;">↺ Reset to Default</button>
+                        <span style="color:#888; font-size:0.75rem;">Overrides midterm / finals / current-week colors</span>
+                    </div>
+                </div>
+
                 <div id="sch-task-list"></div>
-                <button class="btn btn-add" style="background:#ff9500; color:black; border-radius:4px; margin-top:20px;" onclick="addScheduleTask()">+ Add Deliverable to Week ${wk.week}</button>
+                <button class="btn btn-add" style="background:#ff9500; color:black; border-radius:4px; margin-top:20px;" onclick="addScheduleTask()">+ Add Deliverable to ${(wk.weekName && wk.weekName.trim()) ? wk.weekName.trim() : 'Week ' + wk.week}</button>
             </div>
         `;
         container.innerHTML = html;
