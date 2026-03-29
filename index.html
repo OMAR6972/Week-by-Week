@@ -475,28 +475,28 @@
         .cal-tbd-tasks { display: flex; flex-wrap: wrap; gap: 6px; }
 
         @media (max-width: 600px) {
-            /* Horizontal scroll wrapper so 7 columns never squash */
-            #deliverables-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
-            .calendar-container { padding: 0; min-width: 490px; width: 100%; box-sizing: border-box; }
-            .cal-month-nav { gap: 8px; margin-bottom: 12px; }
-            .cal-month-nav button { padding: 4px 10px; font-size: 0.78rem; }
-            .cal-month-label { font-size: 0.95rem; min-width: 0; }
-            /* Force 7 perfectly equal columns */
-            .cal-grid { gap: 2px; grid-template-columns: repeat(7, 1fr) !important; }
-            .cal-day-header { font-size: 0.5rem; padding: 5px 0; letter-spacing: 0; text-align: center; }
-            /* Fixed height for ALL day boxes — tasks never stretch the box */
-            .cal-day { height: 72px; min-height: unset; padding: 2px 2px; border-radius: 5px; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column; }
-            .cal-day.empty { background: transparent; border-color: transparent; height: 72px; }
+            /* Calendar fits the screen width by scaling down — no horizontal scroll */
+            #deliverables-grid { overflow: visible; padding-bottom: 6px; }
+            .calendar-container { padding: 0; width: 100%; box-sizing: border-box; }
+            .cal-month-nav { gap: 6px; margin-bottom: 10px; }
+            .cal-month-nav button { padding: 3px 8px; font-size: 0.72rem; }
+            .cal-month-label { font-size: 0.82rem; min-width: 0; }
+            /* 7 equal columns, gap compressed */
+            .cal-grid { gap: 1px; grid-template-columns: repeat(7, 1fr) !important; }
+            .cal-day-header { font-size: 0.46rem; padding: 3px 0; letter-spacing: 0; text-align: center; }
+            /* Fixed height so all day boxes are identical */
+            .cal-day { height: 68px; min-height: unset; padding: 2px 1px; border-radius: 4px; overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column; }
+            .cal-day.empty { height: 68px; background: transparent; border-color: transparent; }
             .cal-day.today::after { display: none; }
-            .cal-day-num { font-size: 0.52rem; margin-bottom: 1px; text-align: center; flex-shrink: 0; }
-            .cal-day.today .cal-day-num { font-size: 0.55rem; }
-            /* Task chips: fixed one-line height, show only subject code */
-            .cal-task { font-size: 0.42rem; padding: 1px 2px; height: 13px; border-radius: 2px; margin-bottom: 1px; border-left: 2px solid !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 13px; flex-shrink: 0; display: block; }
-            .cal-task div { display: none; } /* hide time sub-lines */
-            .cal-tbd-section { padding: 10px 12px; min-width: 0; }
-            .cal-tbd-title { font-size: 0.72rem; }
-            .cal-tbd-week-label { font-size: 0.65rem; }
-            .cal-tbd-tasks .cal-task { font-size: 0.6rem; height: auto; padding: 2px 6px; border-left: 2px solid !important; line-height: 1.4; }
+            .cal-day-num { font-size: 0.5rem; margin-bottom: 1px; text-align: center; flex-shrink: 0; line-height: 1.2; }
+            .cal-day.today .cal-day-num { font-size: 0.52rem; }
+            /* Task chip: one fixed line, subject code only */
+            .cal-task { font-size: 0.4rem; padding: 1px 2px; height: 12px; border-radius: 2px; margin-bottom: 1px; border-left: 2px solid !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 12px; flex-shrink: 0; display: block; max-width: 100%; }
+            .cal-task div { display: none; }
+            .cal-tbd-section { padding: 8px 10px; min-width: 0; }
+            .cal-tbd-title { font-size: 0.68rem; }
+            .cal-tbd-week-label { font-size: 0.62rem; }
+            .cal-tbd-tasks .cal-task { font-size: 0.58rem; height: auto; padding: 2px 5px; border-left: 2px solid !important; line-height: 1.4; }
             .cal-tbd-tasks .cal-task span { display: inline; }
         }
 
@@ -526,30 +526,64 @@
             .scroll-to-bottom { bottom: 56px; }
 
             /* ── Compact mobile layout ── */
-            .grid { gap: 14px; }
-            .subjects-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-            .weeks-grid    { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-            .resources-grid{ grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-            .card { padding: 16px 14px; border-radius: 14px; }
-            #subjects-grid .card > div:first-child { font-size: 1.55rem !important; margin-bottom: 6px !important; }
-            #subjects-grid .card > div:nth-child(2) { font-size: 0.85rem !important; margin-bottom: 10px !important; }
-            #weeks-grid .card, #playlists-grid .card { padding: 14px 12px; border-radius: 12px; }
-            .resources-grid .card { padding: 14px 10px; border-radius: 12px; }
-            .info-box { padding: 20px 14px; border-radius: 14px; margin-bottom: 22px; }
-            .info-title { font-size: 1.45rem !important; margin-bottom: 12px !important; }
-            .detail-row { flex-direction: column; gap: 10px; padding-bottom: 12px; margin-bottom: 12px; }
-            .detail-icon { width: 36px; height: 36px; font-size: 17px; border-radius: 9px; flex-shrink: 0; }
-            .detail-content p { font-size: 0.86rem; }
-            .week-nav { margin-top: 16px; gap: 8px; }
-            .week-nav-btn { padding: 8px 12px; font-size: 0.78rem; max-width: 48%; }
+            .grid { gap: 10px; }
+            /* Subject grid: 2 tight columns */
+            .subjects-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
+            /* Week grid inside a subject: 2 columns */
+            .weeks-grid    { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
+            .resources-grid{ grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+            /* Generic card padding */
+            .card { padding: 12px 10px; border-radius: 12px; }
+            /* Subject card: smaller code letters + name */
+            #subjects-grid .card > div:first-child { font-size: 1.3rem !important; margin-bottom: 4px !important; }
+            #subjects-grid .card > div:nth-child(2) { font-size: 0.75rem !important; margin-bottom: 8px !important; line-height: 1.3 !important; }
+            #subjects-grid .card > div:last-child { font-size: 0.72rem !important; padding-top: 8px !important; flex-wrap: wrap; gap: 4px; }
+            .subject-code-label { font-size: 0.62rem !important; padding: 1px 5px !important; }
+            /* Week cards inside a subject — title is inline-styled 1.5rem, must override */
+            #weeks-grid .card div[style*="1.5rem"],
+            #weeks-grid .card div[style*="font-family:'Orbitron'"] { font-size: 1rem !important; margin-bottom: 3px !important; padding-top: 4px !important; }
+            #weeks-grid .card { padding: 10px 9px; border-radius: 10px; }
+            #weeks-grid .card .card { padding: 10px 9px; }
+            #playlists-grid .card { padding: 10px 9px; border-radius: 10px; }
+            .resources-grid .card { padding: 10px 8px; border-radius: 10px; }
+            .info-box { padding: 16px 12px; border-radius: 12px; margin-bottom: 18px; }
+            .info-title { font-size: 1.3rem !important; margin-bottom: 10px !important; }
+            .detail-row { flex-direction: column; gap: 8px; padding-bottom: 10px; margin-bottom: 10px; }
+            .detail-icon { width: 32px; height: 32px; font-size: 15px; border-radius: 8px; flex-shrink: 0; }
+            .detail-content p { font-size: 0.84rem; }
+            .week-nav { margin-top: 14px; gap: 8px; }
+            .week-nav-btn { padding: 7px 10px; font-size: 0.76rem; max-width: 48%; }
             /* History cards compact */
-            .recent-card { padding: 13px 12px; border-radius: 12px; margin-bottom: 9px; gap: 6px; }
-            .recent-header { font-size: 0.88rem; }
-            .recent-time { font-size: 0.7rem; }
-            .recent-sub { font-size: 0.8rem; }
-            .recent-icons { font-size: 1.05rem; letter-spacing: 3px; }
+            .recent-card { padding: 11px 10px; border-radius: 11px; margin-bottom: 8px; gap: 5px; }
+            .recent-header { font-size: 0.85rem; }
+            .recent-time { font-size: 0.68rem; }
+            .recent-sub { font-size: 0.78rem; }
+            .recent-icons { font-size: 1rem; letter-spacing: 2px; }
             /* Deadlines: no clipping for long screenshots */
             #deadlines-page { overflow: visible !important; height: auto !important; }
+            /* Badges compact on mobile */
+            .custom-badge { font-size: 0.62rem !important; padding: 3px 8px !important; border-bottom-left-radius: 10px !important; max-width: 70% !important; line-height: 1.2; }
+            .badge-new { font-size: 0.55rem !important; padding: 2px 5px !important; margin-left: 4px !important; border-radius: 6px !important; }
+            /* Click to view text smaller */
+            #weeks-grid .card div[style*="color:#888"] { font-size: 0.7rem !important; }
+            /* FIX 6: Semester map LIST view — full-width cards so task rows don't overflow */
+            #deliverables-grid.weeks-grid { grid-template-columns: 1fr !important; }
+            /* Compact task rows inside schedule cards */
+            .task-list { gap: 6px; margin-top: 10px; }
+            .task-item { padding: 7px 8px; border-radius: 8px; gap: 6px; font-size: 0.78rem; border-left-width: 3px; }
+            .sub-badge { font-size: 0.64rem !important; padding: 2px 5px !important; min-width: 32px !important; }
+            .task-icon { font-size: 0.9rem; flex-shrink: 0; }
+            .task-name { font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+            /* Semester map week card header */
+            #deliverables-grid .card h2 { font-size: 1.1rem !important; }
+            #deliverables-grid .total-badge { font-size: 0.65rem !important; padding: 3px 7px !important; }
+            /* FIX 7: Updates page — single column, compact cards */
+            #updates-list { grid-template-columns: 1fr !important; gap: 10px !important; }
+            .update-card { padding: 14px 12px; border-radius: 12px; }
+            .update-card-icon { font-size: 1.4rem; margin-bottom: 6px; }
+            .update-card-title { font-size: 0.78rem; margin-bottom: 5px; }
+            .update-card-desc { font-size: 0.78rem; line-height: 1.45; }
+            .update-card-date { font-size: 0.65rem; margin-top: 7px; }
         }
 
         /* Hotkeys Panel - PC only */
@@ -621,6 +655,8 @@
         /* News FAB */
         .news-fab { position: fixed; bottom: 84px; left: 18px; z-index: 999; width: 44px; height: 44px; border-radius: 50%; background: rgba(39,18,68,0.9); backdrop-filter: blur(12px); border: 1px solid rgba(233,30,140,0.3); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); flex-shrink: 0; }
         .news-fab:hover { border-color: var(--accent-pink); box-shadow: 0 4px 20px rgba(233,30,140,0.3); }
+        /* On content page (inside a week), centre the news FAB so it doesn't clash with week-nav */
+        body.page-content .news-fab { left: 50% !important; transform: translateX(-50%); bottom: 18px !important; }
         .news-fab-badge { position: absolute; top: -5px; right: -5px; background: #e91e8c; color: white; font-size: 0.6rem; font-weight: 800; min-width: 17px; height: 17px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 3px; box-shadow: 0 0 8px rgba(233,30,140,0.7); pointer-events: none; line-height: 1; }
         /* News Panel */
         .news-panel.active { display: flex; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); }
@@ -4600,7 +4636,6 @@
 
         function getSwipeContext() {
             if (document.querySelector('#content-page.active') && !document.querySelector('.modal-overlay.active')) return 'content';
-            if (document.querySelector('#schedule-page.active') && typeof scheduleViewMode !== 'undefined' && scheduleViewMode === 'calendar') return 'calendar';
             return null;
         }
 
@@ -4617,21 +4652,9 @@
             const dx = e.touches[0].clientX - swipeStartX;
             const dy = e.touches[0].clientY - swipeStartY;
             if (Math.abs(dx) < 28 || Math.abs(dy) > MAX_Y) return;
-            const ctx = getSwipeContext();
-            if (!ctx) return;
-            let label = '';
-            if (ctx === 'content') {
-                const target = dx > 0 ? weekNavPrev : weekNavNext;
-                if (target) label = target.title || '';
-            } else if (ctx === 'calendar' && typeof calendarAvailableMonths !== 'undefined' && calendarMonth) {
-                const idx = calendarAvailableMonths.indexOf(calendarMonth);
-                const targetIdx = dx > 0 ? idx - 1 : idx + 1;
-                if (targetIdx >= 0 && targetIdx < calendarAvailableMonths.length) {
-                    const [yr, mo] = calendarAvailableMonths[targetIdx].split('-').map(Number);
-                    label = new Date(yr, mo-1, 1).toLocaleString('default', { month: 'short', year: '2-digit' });
-                }
-            }
-            if (label !== undefined) showSwipeFlash(dx > 0 ? 'right' : 'left', label);
+            if (getSwipeContext() !== 'content') return;
+            const target = dx > 0 ? weekNavPrev : weekNavNext;
+            if (target) showSwipeFlash(dx > 0 ? 'right' : 'left', target.title || '');
         }, { passive: true });
 
         document.addEventListener('touchend', function(e) {
@@ -4640,15 +4663,9 @@
             const dx = e.changedTouches[0].clientX - swipeStartX;
             const dy = e.changedTouches[0].clientY - swipeStartY;
             if (Date.now() - swipeStartT > MAX_MS || Math.abs(dx) < MIN_X || Math.abs(dy) > MAX_Y) return;
-            const ctx = getSwipeContext();
-            if (ctx === 'content') {
-                if (dx > 0 && weekNavPrev) showContentByObj(weekNavPrev, false, weekNavFrom);
-                else if (dx < 0 && weekNavNext) showContentByObj(weekNavNext, false, weekNavFrom);
-            } else if (ctx === 'calendar' && typeof calendarAvailableMonths !== 'undefined' && calendarMonth) {
-                const idx = calendarAvailableMonths.indexOf(calendarMonth);
-                if (dx > 0 && idx > 0) { calendarMonth = calendarAvailableMonths[idx-1]; renderScheduleContent(); }
-                else if (dx < 0 && idx < calendarAvailableMonths.length-1) { calendarMonth = calendarAvailableMonths[idx+1]; renderScheduleContent(); }
-            }
+            if (getSwipeContext() !== 'content') return;
+            if (dx > 0 && weekNavPrev) showContentByObj(weekNavPrev, false, weekNavFrom);
+            else if (dx < 0 && weekNavNext) showContentByObj(weekNavNext, false, weekNavFrom);
         }, { passive: true });
     })();
     function toggleHotkeysPanel() {
@@ -4794,8 +4811,9 @@
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
         document.getElementById(id+'-page').classList.add('active'); 
         window.scrollTo(0,0);
-        // If already on this page, replace instead of push so the back button
-        // doesn't accumulate duplicate history entries from repeated nav clicks
+        // Toggle body class so CSS can react to which page is active
+        document.body.className = document.body.className.replace(/\bpage-\S+/g, '').trim();
+        document.body.classList.add('page-' + id);
         if(push) {
             if (alreadyHere) history.replaceState({page: id, ...stateData}, null, "#" + id);
             else history.pushState({page: id, ...stateData}, null, "#" + id);
@@ -4886,6 +4904,14 @@
 
     function closeAllDropdowns() {
         document.querySelectorAll('.nav-item.dd-open').forEach(el => el.classList.remove('dd-open'));
+    }
+
+    function toggleHomeOthers() {
+        const area = document.getElementById('home-others-expand');
+        const btn = document.querySelector('.others-toggle-btn');
+        if (!area) return;
+        area.classList.toggle('show');
+        if (btn) btn.classList.toggle('expanded');
     }
 
     function isMobile() { return window.innerWidth <= 768; }
@@ -6817,7 +6843,8 @@
             if (saved) {
                 gpaGroupMode = !!saved.groupMode;
                 gpaCardMode = !!saved.cardMode;
-                gpaCumulativeOn = !!saved.cumulativeOn;
+                // Only override default (true) if user explicitly turned it off
+                if (typeof saved.cumulativeOn !== 'undefined') gpaCumulativeOn = !!saved.cumulativeOn;
                 gpaCumGpa = saved.cumGpa || '';
                 gpaCumHours = saved.cumHours || '';
                 gpaSubjects = saved.subjects || getGpaDefaultSubjects();
