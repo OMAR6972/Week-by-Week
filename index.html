@@ -498,6 +498,48 @@
         .todo-item-actions { display:flex; gap:6px; flex-direction:column; flex-shrink:0; }
         .todo-action-btn { border-radius:8px; padding:5px 9px; font-size:0.72rem; cursor:pointer; }
         .todo-item-open:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0,0,0,0.28); }
+        .tasks-carousel {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+        }
+        .tasks-carousel::-webkit-scrollbar { display: none; }
+        .task-card-compact {
+            flex: 0 0 auto;
+            width: 240px;
+            scroll-snap-align: start;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 6px;
+            margin-bottom: 0;
+            padding: 8px;
+        }
+        .task-card-compact .todo-item-open {
+            width: 100%;
+            min-height: 72px;
+            padding: 8px;
+        }
+        .task-card-compact .todo-item-title {
+            -webkit-line-clamp: 2;
+            font-size: 0.82rem;
+        }
+        .task-card-compact .todo-item-meta {
+            font-size: 0.69rem;
+            margin-top: 4px;
+        }
+        .task-card-compact .todo-item-actions {
+            width: 100%;
+            flex-direction: row;
+            justify-content: flex-end;
+        }
+        .task-card-compact .todo-action-btn {
+            font-size: 0.66rem;
+            padding: 4px 7px;
+            line-height: 1.2;
+        }
 
         /* Calendar View */
         .calendar-toggle { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
@@ -1705,10 +1747,8 @@
 
     function syncTodoWithDeadlineState(signature, status) {
         if (!signature) return;
+        // Hide is only a deadlines-view preference, not a To-Do status operation.
         if (status === 'hidden') {
-            const before = todoItems.length;
-            todoItems = todoItems.filter(t => t.deadlineSignature !== signature);
-            if (todoItems.length !== before) saveTodoItems();
             return;
         }
         if (status === 'completed') {
@@ -2047,7 +2087,8 @@
             deadlineNewsIndex: Number.isInteger(item.deadlineNewsIndex) ? item.deadlineNewsIndex : -1,
             dateAdded: item.dateAdded || Date.now(),
             status: 'active',
-            dateCompleted: null
+            dateCompleted: null,
+            completedByUser: !!item.completedByUser
         };
 
         const duplicate = normalized.deadlineSignature
@@ -2079,7 +2120,7 @@
             return false;
         }
         const meta = getScheduleDeadlineTodoMeta(wk, task);
-        if (!meta.compareTs || !isDeadlineWithinTodoWindow(meta.compareTs)) {
+        if (options.suppressToast && (!meta.compareTs || !isDeadlineWithinTodoWindow(meta.compareTs))) {
             if (!options.suppressToast) showToast('Only deadlines due within 7 days can be added to To-Do.', 'locked');
             return false;
         }
@@ -2114,7 +2155,7 @@
         const ts = parseNewsDeadlineTs(n.deadlineDate, n.deadlineTime);
         const hasExplicitTime = !!(n.deadlineTime && String(n.deadlineTime).trim() !== '');
         const compareTs = hasExplicitTime ? ts : getEndOfDayTimestamp(ts);
-        if (!ts || !isDeadlineWithinTodoWindow(compareTs)) {
+        if (options.suppressToast && (!ts || !isDeadlineWithinTodoWindow(compareTs))) {
             if (!options.suppressToast) showToast('Only deadlines due within 7 days can be added to To-Do.', 'locked');
             return false;
         }
@@ -2178,21 +2219,130 @@
 
     function removeTodoItem(todoId) {
         const target = todoItems.find(t => t.id === todoId);
-        if (target && target.type === 'deadline' && target.deadlineSignature) {
-            setDeadlineTodoDismissed(target.deadlineSignature, true);
+        if (target && target.type === 'deadline') {
+            const sig = getTodoDeadlineSignature(target);
+            if (sig) setDeadlineTodoDismissed(sig, true);
         }
         todoItems = todoItems.filter(t => t.id !== todoId);
         saveTodoItems();
         renderTodoPage();
     }
 
+    function getTodoDeadlineSignature(item) {
+        if (!item || item.type !== 'deadline') return '';
+        if (item.deadlineSignature) return item.deadlineSignature;
+
+        if (item.deadlineSource === 'schedule' && Number.isInteger(item.deadlineWIndex) && Number.isInteger(item.deadlineTIndex) && item.deadlineWIndex >= 0 && item.deadlineTIndex >= 0) {
+            const wk = (window.SCHEDULE_DATA || [])[item.deadlineWIndex];
+            const task = wk && (wk.tasks || [])[item.deadlineTIndex];
+            if (wk && task) return buildScheduleDeadlineSignature(item.deadlineWIndex, item.deadlineTIndex, wk.week, task);
+        }
+
+        if (item.deadlineSource === 'news' && Number.isInteger(item.deadlineNewsIndex) && item.deadlineNewsIndex >= 0) {
+            const n = (window.NEWS_DATA || [])[item.deadlineNewsIndex];
+            if (n) return buildNewsDeadlineSignature(item.deadlineNewsIndex, n);
+        }
+
+        return '';
+    }
+
+    function reconcileDeadlineTodoStatuses() {
+        let changed = false;
+        const nextItems = [];
+
+        todoItems.forEach(item => {
+            if (item.type !== 'deadline') {
+                nextItems.push(item);
+                return;
+            }
+
+            const sig = getTodoDeadlineSignature(item);
+            if (!sig) {
+                nextItems.push(item);
+                return;
+            }
+
+            let nextItem = item;
+            if (item.deadlineSignature !== sig) {
+                changed = true;
+                nextItem = { ...item, deadlineSignature: sig };
+            }
+
+            const dlState = getDeadlineState(sig);
+
+            // Hidden deadlines are a deadlines-view preference; keep To-Do status unchanged.
+            if (dlState === 'hidden') {
+                nextItems.push(nextItem);
+                return;
+            }
+
+            if (dlState === 'completed') {
+                if (nextItem.status !== 'completed') {
+                    changed = true;
+                    nextItems.push({ ...nextItem, status: 'completed', dateCompleted: nextItem.dateCompleted || Date.now(), completedByUser: true });
+                } else {
+                    nextItems.push(nextItem);
+                }
+                return;
+            }
+
+            // If deadline is active, keep items the user explicitly completed.
+            if (nextItem.status === 'completed') {
+                if (nextItem.completedByUser) {
+                    nextItems.push(nextItem);
+                } else {
+                    changed = true;
+                    nextItems.push({ ...nextItem, status: 'active', dateCompleted: null, completedByUser: false });
+                }
+            } else {
+                nextItems.push(nextItem);
+            }
+        });
+
+        // Deduplicate deadline tasks by signature (keep the newest entry).
+        const deduped = [];
+        const sigIndex = new Map();
+        nextItems.forEach(item => {
+            if (item.type !== 'deadline') {
+                deduped.push(item);
+                return;
+            }
+            const sig = getTodoDeadlineSignature(item);
+            if (!sig) {
+                deduped.push(item);
+                return;
+            }
+            const existingIdx = sigIndex.get(sig);
+            if (existingIdx === undefined) {
+                sigIndex.set(sig, deduped.length);
+                deduped.push(item);
+                return;
+            }
+            const prev = deduped[existingIdx];
+            const prevScore = Number(prev && prev.dateAdded) || 0;
+            const nextScore = Number(item && item.dateAdded) || 0;
+            if (nextScore >= prevScore) deduped[existingIdx] = item;
+            changed = true;
+        });
+
+        if (changed) {
+            todoItems = deduped;
+            saveTodoItems();
+        }
+    }
+
     function markTodoDone(todoId) {
         todoItems = todoItems.map(t => {
             if (t.id !== todoId) return t;
-            if (t.deadlineSignature) {
-                setDeadlineState(t.deadlineSignature, 'completed');
+            if (t.type === 'deadline') {
+                const sig = getTodoDeadlineSignature(t);
+                if (sig) {
+                    setDeadlineTodoDismissed(sig, false);
+                    setDeadlineState(sig, 'completed');
+                    return { ...t, deadlineSignature: sig, status: 'completed', dateCompleted: Date.now(), completedByUser: true };
+                }
             }
-            return { ...t, status: 'completed', dateCompleted: Date.now() };
+            return { ...t, status: 'completed', dateCompleted: Date.now(), completedByUser: true };
         });
         saveTodoItems();
         populateDeadlinesDropdown();
@@ -3614,10 +3764,12 @@
                     ? `<div style="font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700; color: ${isComp ? '#888' : 'white'}; white-space: nowrap;">${timeStr}</div>${countdownHtml}`
                     : '';
 
-                const onClick = item.source === 'news' ? 'openNewsPanel()' : `goToScheduleTask(${item.wIndex}, ${item.tIndex})`;
+                const onClick = isComp
+                    ? 'event.stopPropagation();'
+                    : (item.source === 'news' ? 'openNewsPanel()' : `goToScheduleTask(${item.wIndex}, ${item.tIndex})`);
                 const cardAttrs = buildDeadlineCardAttrs(item, isComp);
                 html += `
-                    <div class="card deadline-action-card ${isComp ? 'completed' : ''}" ${cardAttrs} style="border-left: 4px solid ${accentColor}; flex-direction: row; cursor: pointer; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center;" onclick="${onClick}">
+                    <div class="card deadline-action-card ${isComp ? 'completed' : ''}" ${cardAttrs} style="border-left: 4px solid ${accentColor}; flex-direction: row; cursor: ${isComp ? 'default' : 'pointer'}; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center;" onclick="${onClick}">
                         <span class="sub-badge" style="background: ${bgColor}; color: ${badgeTextColor}; min-width: 52px; font-size: 0.72rem; padding: 5px 10px; border-radius:8px;">${item.task.sub}</span>
                         <div style="flex: 1; margin-left: 15px;">
                             <div class="dl-text" style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${item.task.icon} ${item.task.name}</div>
@@ -7898,12 +8050,63 @@
         return row;
     }
 
+    function buildTodoTaskCompactCard(item) {
+        const row = document.createElement('div');
+        row.className = 'todo-item-row task-card-compact';
+        const accent = getSubjectColor(item.subjectCode);
+        const bg = getSubjectBg(item.subjectCode);
+        const isCompleted = item.status === 'completed';
+        const priority = getTodoPriorityMeta(item);
+        const ageText = getRelativeTimeText(item.dateAdded, 'Added');
+        const doneText = isCompleted ? getRelativeTimeText(item.dateCompleted, 'Completed') : '';
+        const dueText = !isCompleted ? priority.dueText : '';
+
+        row.style.cssText = `border-left-color:${accent};`;
+
+        const openPart = document.createElement('div');
+        openPart.className = 'todo-item-open';
+        openPart.style.cssText = 'background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:9px;';
+        openPart.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span class="todo-sub-chip" style="background:${bg}; color:${accent};">${item.subjectCode}</span>
+                <div class="todo-item-title">⏳ ${item.resourceName}</div>
+            </div>
+            <div class="todo-item-meta">${ageText}${doneText ? ` • ${doneText}` : ''}${dueText ? ` • ${dueText}` : ''}</div>
+        `;
+        openPart.onclick = () => openTodoItem(item);
+        row.appendChild(openPart);
+
+        const actions = document.createElement('div');
+        actions.className = 'todo-item-actions';
+
+        if (!isCompleted) {
+            const doneBtn = document.createElement('button');
+            doneBtn.className = 'todo-action-btn';
+            doneBtn.textContent = '✅ Done';
+            doneBtn.style.cssText = 'border:1px solid rgba(52,199,89,0.55); background:rgba(52,199,89,0.12); color:#34c759;';
+            doneBtn.onclick = () => markTodoDone(item.id);
+            actions.appendChild(doneBtn);
+        }
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'todo-action-btn';
+        removeBtn.textContent = '🗑️ Remove';
+        removeBtn.style.cssText = 'border:1px solid rgba(255,59,48,0.5); background:rgba(255,59,48,0.12); color:#ff3b30;';
+        removeBtn.onclick = () => removeTodoItem(item.id);
+        actions.appendChild(removeBtn);
+
+        row.appendChild(actions);
+        return row;
+    }
+
     function getSubjectDisplayName(code) {
         const sub = (window.COURSE_DATA || []).find(s => s.code === code);
         return sub ? sub.name : code;
     }
 
     function renderTodoPage() {
+        reconcileDeadlineTodoStatuses();
+
         const toggle = document.getElementById('todo-view-toggle');
         const filterBar = document.getElementById('todo-filter-bar');
         const activeList = document.getElementById('todo-active-list');
@@ -8108,6 +8311,21 @@
         if (!studyingItems.length && !taskItems.length) {
             activeList.innerHTML = '<div class="empty-state">No pending To-Do items yet.</div>';
         } else {
+            activeList.appendChild(sectionTitle('TASKS', '#00E5FF'));
+            if (!taskItems.length) {
+                const emptyTasks = document.createElement('div');
+                emptyTasks.className = 'empty-state';
+                emptyTasks.textContent = 'No task deadlines pending.';
+                activeList.appendChild(emptyTasks);
+            } else {
+                const carousel = document.createElement('div');
+                carousel.className = 'tasks-carousel';
+                [...taskItems]
+                    .sort((a, b) => getTodoPriorityMeta(a).ts - getTodoPriorityMeta(b).ts)
+                    .forEach(item => carousel.appendChild(buildTodoTaskCompactCard(item)));
+                activeList.appendChild(carousel);
+            }
+
             activeList.appendChild(sectionTitle('STUDYING', '#2ecc71'));
             if (!studyingItems.length) {
                 const emptyStudy = document.createElement('div');
@@ -8116,17 +8334,6 @@
                 activeList.appendChild(emptyStudy);
             } else {
                 const block = todoViewMode === 'grouped' ? renderGroupedItems(studyingItems, false) : renderPriorityItems(studyingItems, true);
-                if (block) activeList.appendChild(block);
-            }
-
-            activeList.appendChild(sectionTitle('TASKS', '#00E5FF'));
-            if (!taskItems.length) {
-                const emptyTasks = document.createElement('div');
-                emptyTasks.className = 'empty-state';
-                emptyTasks.textContent = 'No task deadlines pending.';
-                activeList.appendChild(emptyTasks);
-            } else {
-                const block = todoViewMode === 'grouped' ? renderGroupedItems(taskItems, true) : renderPriorityItems(taskItems, true);
                 if (block) activeList.appendChild(block);
             }
         }

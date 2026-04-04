@@ -16933,6 +16933,18 @@ window.UPDATES_DATA = [
         "title": "Subject Details Tab",
         "desc": "A new \"Details\" tab inside each subject view gives you a quick, accessible overview of the course structure, including grade distribution, exam types, and instructor notes.",
         "date": "2026-04-04"
+    },
+    {
+        "icon": "🖱️",
+        "title": "Enhanced Links",
+        "desc": "You can now right/middle-click almost anything to open them in new tabs, or copy the link to share. ",
+        "date": "2026-04-04"
+    },
+    {
+        "icon": "⏰",
+        "title": "Integrated Deadlines & Tasks",
+        "desc": "You can now mark deadlines as \"Done\" to hide them and reduce clutter. General tasks will automatically sync to your To-Do list, and you can right-click any deadline to manually add it to your daily tasks.",
+        "date": "2026-04-04"
     }
 ];
 
