@@ -1271,6 +1271,154 @@ window.COURSE_DATA = [
                 "recentDate": "24/3/2026 11:31 PM",
                 "isRecent": true,
                 "isNew": true
+            },
+            {
+                "title": "WEEK 8",
+                "resources": {
+                    "Lecture": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Alternative": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Another Alt.": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Voice Recording": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Slides": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Section": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Section Slides": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Notes": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Lab": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Topic Related Questions ": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Another Notes": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Another Alt.2": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Guide (Explanation)": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Guide (Solving)": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Sheet": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Sheet Answer": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Lab Slides": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Pre-Requisite": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Another Pre-Requisite": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    },
+                    "Formative Assignment": {
+                        "vis": false,
+                        "link": "#",
+                        "desc": "",
+                        "isNew": false,
+                        "isRecent": false
+                    }
+                },
+                "isNew": true,
+                "isRecent": true,
+                "recentDate": "4/4/2026 4:26 PM"
             }
         ],
         "driveLink": "https://drive.google.com/drive/folders/13EVTnrmkFV2XtWVyerUkdcD8s-vkZ34C?usp=drive_link",
@@ -14537,9 +14685,9 @@ window.COURSE_DATA = [
                         "vis": true,
                         "link": "https://lms.eng.asu.edu.eg/pluginfile.php/679126/mod_resource/content/0/Lecture%204_%20Inverse%20Kinematics.pdf",
                         "desc": "",
-                        "isNew": true,
-                        "isRecent": true,
-                        "recentDate": "29/3/2026 4:11 PM"
+                        "isNew": false,
+                        "isRecent": false,
+                        "recentDate": ""
                     },
                     "Sheet": {
                         "vis": false,
@@ -14602,9 +14750,9 @@ window.COURSE_DATA = [
                         "vis": true,
                         "link": "https://engasuedu.sharepoint.com/sites/MCT344sUG2018-IndustrialRobotics40839/_layouts/15/stream.aspx?id=%2Fsites%2FMCT344sUG2018%2DIndustrialRobotics40839%2FShared%20Documents%2FGeneral%2FRecordings%2FMeeting%20in%20General%2D20260325%5F091558%2DMeeting%20Recording%2Emp4&ga=1&referrer=StreamWebApp%2EWeb&referrerScenario=AddressBarCopied%2Eview%2E09789697%2Dd2b3%2D4d9b%2Da075%2De0ac6367e539&isDarkMode=true",
                         "desc": "",
-                        "isNew": true,
-                        "isRecent": true,
-                        "recentDate": "29/3/2026 4:13 PM"
+                        "isNew": false,
+                        "isRecent": false,
+                        "recentDate": ""
                     },
                     "Section Slides": {
                         "vis": false,
@@ -14677,7 +14825,10 @@ window.COURSE_DATA = [
                         "isRecent": false,
                         "recentDate": ""
                     }
-                }
+                },
+                "isNew": true,
+                "recentDate": "29/3/2026 4:11 PM",
+                "isRecent": true
             }
         ],
         "driveLink": "https://drive.google.com/drive/folders/1_-XsOXQOgNauxPsRg0WPOtQDXBWsDq4X?usp=drive_link",
