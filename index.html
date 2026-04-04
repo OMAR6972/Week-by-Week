@@ -1328,6 +1328,48 @@
     let currentPageId = 'home';
     let previousPageId = 'home';
 
+    function clearElementHtml(id) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '';
+        return el;
+    }
+
+    function cleanupHeavyViewDom(pageId) {
+        if (pageId === 'schedule') {
+            clearElementHtml('schedule-view-toggle');
+            clearElementHtml('schedule-filter-container');
+            clearElementHtml('deliverables-grid');
+            return;
+        }
+
+        if (pageId === 'deadlines') {
+            clearElementHtml('deadlines-filter-bar');
+            clearElementHtml('ongoing-list');
+            clearElementHtml('upcoming-list');
+            clearElementHtml('completed-list');
+            clearElementHtml('unscheduled-list');
+            const ongoingContainer = document.getElementById('ongoing-container');
+            const unscheduledContainer = document.getElementById('unscheduled-container');
+            if (ongoingContainer) ongoingContainer.style.display = 'none';
+            if (unscheduledContainer) unscheduledContainer.style.display = 'none';
+            return;
+        }
+
+        if (pageId === 'weeks') {
+            clearElementHtml('filter-bar-wrap');
+            clearElementHtml('weeks-grid');
+            clearElementHtml('playlists-grid');
+            return;
+        }
+
+        if (pageId === 'content') {
+            clearElementHtml('content-badge-container');
+            clearElementHtml('week-details');
+            clearElementHtml('resources-grid');
+            clearElementHtml('week-nav');
+        }
+    }
+
     const NAV_TAB_ORDER = ['home', 'recent', 'schedule', 'deadlines', 'midterm', 'useful-links', 'timetable', 'directory', 'gpa', 'updates'];
 
     function getPageLabel(pageId) {
@@ -1572,9 +1614,7 @@
         };
         history.replaceState({page: 'home'}, null, "");
         
-        // Deadline badge: run after first paint so init doesn't block, then refresh every minute
-        requestAnimationFrame(() => setTimeout(populateDeadlinesDropdown, 0));
-        setInterval(populateDeadlinesDropdown, 60000);
+        // Keep first paint light: defer heavy deadline dropdown rendering until requested.
         renderQuickActions();
         if (typeof window.NEWS_DATA === 'undefined') window.NEWS_DATA = [];
         renderNewsBtn();
@@ -4836,6 +4876,8 @@
         closeAllDropdowns();
         if (currentPageId !== id) previousPageId = currentPageId;
         const alreadyHere = currentPageId === id;
+        const fromPageId = currentPageId;
+        if (!alreadyHere) cleanupHeavyViewDom(fromPageId);
         currentPageId = id;
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
         document.getElementById(id+'-page').classList.add('active'); 
