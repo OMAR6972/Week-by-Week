@@ -63,6 +63,8 @@
         .midterm-btn.finals-mode:hover { background: #cc2200; color: white; box-shadow: 0 0 20px #cc2200; }
         .deadline-btn { background: rgba(0, 229, 255, 0.2); border: 2px solid #00E5FF; color: #00E5FF; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
         .deadline-btn:hover { background: #00E5FF; color: black; box-shadow: 0 0 20px #00E5FF; }
+        .todo-btn { background: rgba(52, 199, 89, 0.2); border: 2px solid #34c759; color: #34c759; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 1.2px; transition: 0.3s; }
+        .todo-btn:hover { background: #34c759; color: #07110b; box-shadow: 0 0 20px #34c759; }
         .useful-btn { background: rgba(181, 25, 214, 0.2); border: 2px solid var(--accent-purple); color: var(--accent-purple); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
         .useful-btn:hover { background: var(--accent-purple); color: white; box-shadow: 0 0 20px var(--accent-purple); }
         
@@ -258,6 +260,7 @@
         .nav-link-schedule.active { background: rgba(255, 149, 0, 0.15); border-color: rgba(255, 149, 0, 0.4); color: #ff9500; }
         .nav-link-deadlines.active { background: rgba(0, 229, 255, 0.15); border-color: rgba(0, 229, 255, 0.4); color: #00E5FF; }
         .nav-link-midterms.active { background: rgba(0, 122, 255, 0.15); border-color: rgba(0, 122, 255, 0.4); color: #007aff; }
+        .nav-link-todo.active { background: rgba(46, 204, 113, 0.15); border-color: rgba(46, 204, 113, 0.4); color: #2ecc71; }
         .nav-link-useful.active { background: rgba(181, 25, 214, 0.15); border-color: rgba(181, 25, 214, 0.4); color: #b519d6; }
         .nav-link-timetable.active { background: rgba(255, 55, 95, 0.15); border-color: rgba(255, 55, 95, 0.4); color: #ff375f; }
         .nav-link-directory.active { background: rgba(52, 199, 89, 0.15); border-color: rgba(52, 199, 89, 0.4); color: #34c759; }
@@ -299,6 +302,7 @@
         .toast-notification.toast-bottom-right { bottom: 30px; right: 30px; transform: translateY(20px); }
         .toast-notification.toast-bottom-right.show { transform: translateY(0); }
         .toast-notification.toast-locked { background: rgba(233, 30, 140, 0.85); border: 1px solid rgba(233, 30, 140, 0.6); box-shadow: 0 0 30px rgba(233, 30, 140, 0.3), 0 8px 32px rgba(0,0,0,0.4); }
+        .toast-notification.toast-todo { background: rgba(52, 199, 89, 0.85); border: 1px solid rgba(52, 199, 89, 0.6); box-shadow: 0 0 30px rgba(52, 199, 89, 0.3), 0 8px 32px rgba(0,0,0,0.4); }
 
         .visit-celebration-card {
             position: fixed;
@@ -446,6 +450,54 @@
 
         /* Subject code on cards */
         .subject-code-label { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: rgba(180,180,180,0.7); letter-spacing: 1.5px; background: rgba(180,180,180,0.08); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(180,180,180,0.15); }
+        .subject-hide-btn { position: absolute; top: 10px; right: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.22); color: #d0d0d0; border-radius: 999px; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; padding: 0; line-height: 1; font-size: 0.95rem; }
+        .subject-hide-btn::after { content: ''; position: absolute; width: 17px; height: 1.8px; background: currentColor; border-radius: 3px; transform: rotate(-34deg); opacity: 0.95; }
+        .subject-hide-btn:hover { color: #fff; border-color: rgba(255,255,255,0.34); background: rgba(255,255,255,0.08); }
+        .subject-hide-btn .eye-icon { transform: translateY(0.5px); }
+
+        .hidden-subject-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+        .hidden-subject-row .meta { color: #aaa; font-size: 0.76rem; }
+        .unhide-one-btn { border: 1px solid rgba(52,199,89,0.5); background: rgba(52,199,89,0.12); color: #34c759; border-radius: 8px; padding: 5px 10px; font-size: 0.74rem; cursor: pointer; }
+        .unhide-one-btn:hover { background: rgba(52,199,89,0.2); }
+        .week-hide-btn { position: absolute; top: 8px; left: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.22); color: #d0d0d0; border-radius: 999px; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; padding: 0; line-height: 1; font-size: 0.82rem; z-index: 3; }
+        .week-hide-btn::after { content: ''; position: absolute; width: 14px; height: 1.6px; background: currentColor; border-radius: 3px; transform: rotate(-34deg); opacity: 0.95; }
+        .week-hide-btn:hover { color: #fff; border-color: rgba(255,255,255,0.34); background: rgba(255,255,255,0.08); }
+        .week-hide-btn .eye-icon { transform: translateY(0.4px); }
+        .todo-add-btn {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            top: auto !important;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--accent-pink);
+            background: var(--card-bg);
+            color: var(--accent-pink);
+            cursor: pointer;
+            font-weight: 900;
+            line-height: 1;
+            transition: all 0.2s ease;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(233, 30, 140, 0.25), inset 0 0 10px rgba(233, 30, 140, 0.08);
+        }
+        .todo-add-btn:hover {
+            background: rgba(233, 30, 140, 0.16);
+            box-shadow: 0 0 16px rgba(233, 30, 140, 0.45), inset 0 0 12px rgba(233, 30, 140, 0.18);
+            transform: translateY(-1px);
+        }
+        .todo-week-group { border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:12px; background:rgba(255,255,255,0.03); margin-bottom:12px; }
+        .todo-item-row { display:flex; align-items:stretch; gap:8px; padding:8px; border-radius:10px; margin-bottom:8px; background:rgba(0,0,0,0.22); border-left-width:3px; border-left-style:solid; }
+        .todo-item-open { cursor:pointer; transition:0.2s; }
+        .todo-item-title { color:#fff; font-size:0.9rem; font-weight:600; white-space:normal; overflow:hidden; text-overflow:unset; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.28; word-break:break-word; }
+        .todo-item-meta { font-size:0.75rem; color:#9aa2b3; margin-top:4px; }
+        .todo-sub-chip { font-size:0.68rem; font-weight:700; padding:3px 8px; border-radius:7px; min-width:54px; text-align:center; }
+        .todo-item-actions { display:flex; gap:6px; flex-direction:column; flex-shrink:0; }
+        .todo-action-btn { border-radius:8px; padding:5px 9px; font-size:0.72rem; cursor:pointer; }
+        .todo-item-open:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0,0,0,0.28); }
 
         /* Calendar View */
         .calendar-toggle { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; }
@@ -522,7 +574,12 @@
 
             h1 { font-size: 2rem; }
             .container { padding: 25px 12px; }
-            .custom-badge { white-space: normal; max-width: 85%; word-break: break-word; }
+            .todo-add-btn { width: 22px; height: 22px; font-size: 14px; right: 7px; bottom: 7px; }
+            .header-actions button { padding: 8px 10px; font-size: 0.72rem; letter-spacing: 0.8px; }
+            .header-actions button .nav-icon, .header-actions button span { font-size: 0.85rem; }
+            .card div[style*="font-size:2.5rem"], .card div[style*="font-size:2rem"] { font-size: 1.15rem !important; }
+            .nav-link .nav-icon { font-size: 0.9rem; }
+            .custom-badge { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%; font-size: 0.66rem; }
             .scroll-btn { right: 14px; width: 34px; height: 34px; font-size: 0.85rem; }
             .back-to-top { bottom: 14px; }
             .scroll-to-bottom { bottom: 56px; }
@@ -534,12 +591,16 @@
             /* Week grid: 2-column rectangles, well spaced */
             .weeks-grid    { grid-template-columns: repeat(2, 1fr) !important; gap: 10px; }
             .resources-grid{ grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+            .week-card, .subject-card, #weeks-grid .card, #subjects-grid .card { height: max-content !important; align-self: start !important; }
+            #weeks-grid .card.locked, .week-card.locked { min-height: 0 !important; height: max-content !important; }
+            .subjects-grid .card, .weeks-grid .card, .resources-grid .card { height: max-content; align-self: start; }
             /* Generic card padding */
             .card { padding: 12px 10px; border-radius: 12px; }
-            /* Subject card: smaller code letters + name */
-            #subjects-grid .card > div:first-child { font-size: 1.3rem !important; margin-bottom: 4px !important; }
-            #subjects-grid .card > div:nth-child(2) { font-size: 0.75rem !important; margin-bottom: 8px !important; line-height: 1.3 !important; }
-            #subjects-grid .card > div:last-child { font-size: 0.72rem !important; padding-top: 8px !important; flex-wrap: wrap; gap: 4px; }
+            /* Subject card: restore older compact mobile proportions */
+            #subjects-grid .card { padding: 11px 10px 10px !important; border-radius: 10px !important; min-height: 122px !important; }
+            #subjects-grid .card > div:first-child { font-size: 1.45rem !important; margin-bottom: 3px !important; }
+            #subjects-grid .card > div:nth-child(2) { font-size: 0.7rem !important; margin-bottom: 7px !important; line-height: 1.25 !important; }
+            #subjects-grid .card > div:last-child { font-size: 0.66rem !important; padding-top: 7px !important; flex-wrap: wrap; gap: 4px; }
             .subject-code-label { font-size: 0.62rem !important; padding: 1px 5px !important; }
             /* Week cards: 2-col rectangle, column layout, proportional internals */
             #weeks-grid .card { padding: 14px 12px 12px; border-radius: 12px; flex-direction: column; align-items: flex-start; gap: 0; min-height: 85px; }
@@ -554,6 +615,17 @@
             #weeks-grid .card .card { padding: 14px 12px; }
             #playlists-grid .card { padding: 10px 9px; border-radius: 10px; }
             .resources-grid .card { padding: 10px 8px; border-radius: 10px; }
+            #todo-filter-bar { text-align: center !important; }
+            #todo-filter-bar > .fp-toggle { margin: 0 auto !important; }
+            #todo-active-list, #todo-completed-wrap { max-width: 100% !important; }
+            .todo-week-group { padding: 9px !important; border-radius: 10px !important; }
+            .todo-item-row { gap: 6px !important; padding: 6px !important; border-radius: 9px !important; }
+            .todo-item-open { padding: 8px 9px !important; }
+            .todo-item-title { font-size: 0.78rem !important; -webkit-line-clamp: 3 !important; line-height: 1.24 !important; }
+            .todo-item-meta { font-size: 0.66rem !important; margin-top: 3px !important; }
+            .todo-sub-chip { font-size: 0.6rem !important; min-width: 44px !important; padding: 2px 6px !important; }
+            .todo-item-actions { gap: 5px !important; }
+            .todo-action-btn { padding: 4px 7px !important; font-size: 0.66rem !important; line-height: 1.2 !important; }
             .info-box { padding: 16px 12px; border-radius: 12px; margin-bottom: 18px; }
             .info-title { font-size: 1.3rem !important; margin-bottom: 10px !important; }
             .detail-row { flex-direction: column; gap: 8px; padding-bottom: 10px; margin-bottom: 10px; }
@@ -570,7 +642,7 @@
             /* Deadlines: no clipping for long screenshots */
             #deadlines-page { overflow: visible !important; height: auto !important; }
             /* Mobile only: badges compact — smaller but full text wraps freely */
-            .custom-badge { font-size: 0.56rem !important; padding: 2px 6px !important; border-bottom-left-radius: 8px !important; max-width: 60% !important; line-height: 1.3; white-space: normal !important; overflow: visible !important; text-overflow: unset !important; word-break: break-word; }
+            .custom-badge { font-size: 0.52rem !important; padding: 2px 6px !important; border-bottom-left-radius: 8px !important; max-width: 68% !important; line-height: 1.2; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
             /* NEW badge: small, sits below custom-badge so they don't overlap */
             .badge-new { font-size: 0.5rem !important; padding: 2px 4px !important; margin-left: 3px !important; border-radius: 5px !important; letter-spacing: 0.5px !important; }
             .card:has(.custom-badge) .badge-new { display: block; position: absolute; top: 26px; right: 6px; margin-left: 0; font-size: 0.48rem !important; padding: 1px 4px !important; }
@@ -852,6 +924,11 @@
             </div>
             <div class="nav-dropdown" id="dd-subjects"></div>
         </div>
+        <div class="nav-item" id="nav-item-todo">
+            <div class="nav-link nav-link-todo" data-nav="todo" onclick="navFromBar('todo')">
+                <span class="nav-icon">✅</span> To-Do
+            </div>
+        </div>
         <div class="nav-item">
             <div class="nav-link nav-link-history" data-nav="recent" onclick="navFromBar('recent')">
                 <span class="nav-icon">📜</span> History
@@ -919,6 +996,7 @@
             <button class="deadline-btn" onclick="showDeadlines()">⏳ Deadlines</button>
             <button class="others-toggle-btn" onclick="toggleHomeOthers()">📂 Others <span class="others-arrow">▼</span></button>
             <div class="others-expand-area" id="home-others-expand">
+                <button class="todo-btn" onclick="showTodo()">✅ My To-Do List</button>
                 <button class="midterm-btn" onclick="showMidterms()">📝 Midterms / Finals</button>
                 <button class="useful-btn" onclick="showUsefulLinks()">🔗 Useful Links</button>
                 <button class="timetable-btn" onclick="showTimetable()">🗓️ Timetable</button>
@@ -928,6 +1006,7 @@
             </div>
         </div>
         <div class="grid subjects-grid" id="subjects-grid"></div>
+        <div id="hidden-subject-controls" style="text-align:center; margin-top:14px;"></div>
     </div>
 
     <div id="recent-page" class="page">
@@ -1003,6 +1082,16 @@
         </div>
     </div>
 
+    <div id="todo-page" class="page">
+        <button class="back-btn" onclick="smartBack()">← Back</button>
+        <h1 style="color:#2ecc71; text-align:center;">TO-DO LIST</h1>
+        <p class="subtitle" style="margin-bottom: 14px;">Track pending study items and mark them done</p>
+        <div id="todo-view-toggle" style="display:flex; justify-content:center; gap:8px; margin-bottom:10px;"></div>
+        <div id="todo-filter-bar" style="max-width:920px; margin:0 auto 10px;"></div>
+        <div id="todo-active-list" style="max-width: 920px; margin: 0 auto;"></div>
+        <div id="todo-completed-wrap" style="max-width: 920px; margin: 24px auto 0;"></div>
+    </div>
+
     <div id="useful-links-page" class="page">
         <button class="back-btn" onclick="smartBack()">← Back</button>
         <h1 style="color:var(--accent-purple)">USEFUL LINKS</h1>
@@ -1070,10 +1159,12 @@
             <button id="tab-weeks" class="sub-tab active" onclick="renderSubjectView('weeks')">📚 Weeks</button>
             <button id="tab-events" class="sub-tab" onclick="renderSubjectView('events')">🎯 Exam Materials</button>
             <button id="tab-playlists" class="sub-tab" onclick="renderSubjectView('playlists')">🔗 Useful Links</button>
+            <button id="tab-details" class="sub-tab" onclick="renderSubjectView('details')">📋 Details</button>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px; min-height:36px;">
             <div id="filter-bar-wrap" style="display:none;"></div>
+            <div id="hidden-weeks-controls"></div>
             <span id="drive-container"></span>
         </div>
         <div id="filter-bar" class="filter-bar" style="display:none;"></div>
@@ -1174,6 +1265,24 @@
             <button class="news-panel-close" onclick="closeNewsPanel(null,true)">✕</button>
         </div>
         <div id="news-items-list" class="news-items-list"></div>
+    </div>
+</div>
+
+<div id="hidden-subjects-modal" class="modal-overlay" onclick="closeHiddenSubjectsModal(event)">
+    <div class="modal-content" style="max-width:430px; padding:22px 20px;" onclick="event.stopPropagation()">
+        <div class="modal-close" onclick="closeHiddenSubjectsModal(null,true)">✕</div>
+        <div class="modal-title" style="color:#bbb;">Hidden Subjects</div>
+        <div class="modal-subtitle" style="margin-bottom:12px;">Select which subjects to restore</div>
+        <div id="hidden-subjects-list"></div>
+    </div>
+</div>
+
+<div id="hidden-weeks-modal" class="modal-overlay" onclick="closeHiddenWeeksModal(event)">
+    <div class="modal-content" style="max-width:430px; padding:22px 20px;" onclick="event.stopPropagation()">
+        <div class="modal-close" onclick="closeHiddenWeeksModal(null,true)">✕</div>
+        <div class="modal-title" style="color:#bbb;">Hidden Weeks</div>
+        <div class="modal-subtitle" style="margin-bottom:12px;">Select which weeks to restore</div>
+        <div id="hidden-weeks-list"></div>
     </div>
 </div>
 
@@ -1282,13 +1391,14 @@
     if(typeof window.FINAL_DATA === 'undefined') window.FINAL_DATA = [];
     if(typeof window.SCHEDULE_DATA === 'undefined') window.SCHEDULE_DATA = [];
     if(typeof window.STAFF_DATA === 'undefined') window.STAFF_DATA = [];
+    if(typeof window.SUBJECT_DETAILS_DATA === 'undefined') window.SUBJECT_DETAILS_DATA = {};
     
     let currSub = null;
     let currentSubjectView = 'weeks';
     let playlistBadgeFilters = new Set();
     let historySubFilter = new Set();
     // Filter panel open states — survive re-renders
-    let fpOpenState = { schedule: false, deadlines: false, usefulBadges: false, playlist: false, history: false, directory: false };
+    let fpOpenState = { schedule: false, deadlines: false, usefulBadges: false, playlist: false, history: false, directory: false, todo: false };
     let deadlineSubFilter = new Set();
     let deadlineTypeFilter = new Set();
     let midtermHiddenSet = (() => {
@@ -1325,8 +1435,511 @@
     let currentContentObj = null;
     let currentContentSourceArr = null;
     let sharePayload = { title: '', text: '', fileBase: 'week-by-week' };
+
+    function getSubjectDetailsDefaults() {
+        return { gradeDistribution: '', examTypes: '', generalNotes: '' };
+    }
+
+    function ensureSubjectDetailsEntry(subCode) {
+        if (!subCode) return getSubjectDetailsDefaults();
+        if (typeof window.SUBJECT_DETAILS_DATA === 'undefined' || !window.SUBJECT_DETAILS_DATA) {
+            window.SUBJECT_DETAILS_DATA = {};
+        }
+        if (!window.SUBJECT_DETAILS_DATA[subCode] || typeof window.SUBJECT_DETAILS_DATA[subCode] !== 'object') {
+            window.SUBJECT_DETAILS_DATA[subCode] = getSubjectDetailsDefaults();
+        }
+        const entry = window.SUBJECT_DETAILS_DATA[subCode];
+        if (typeof entry.gradeDistribution !== 'string') entry.gradeDistribution = '';
+        if (typeof entry.examTypes !== 'string') entry.examTypes = '';
+        if (typeof entry.generalNotes !== 'string') entry.generalNotes = '';
+        return entry;
+    }
+
+    function getSubjectByCode(subCode) {
+        return (window.COURSE_DATA || []).find(s => (s.code || '').toUpperCase() === String(subCode || '').toUpperCase()) || null;
+    }
+
+    function getSubjectHashSegment() {
+        if (!currSub || !currSub.code) return '';
+        if (currentPageId === 'content' && currentContentObj) {
+            const inEvents = (currSub.events || []).includes(currentContentObj);
+            const num = extractWeekNumber(currentContentObj.title);
+            if (inEvents && num !== null) return `${currSub.code}/event${num}`;
+            if (num !== null) return `${currSub.code}/week${num}`;
+            if (inEvents) return `${currSub.code}/event`;
+        }
+        if (currentPageId === 'weeks') {
+            if (currentSubjectView === 'events') return `${currSub.code}/events`;
+            if (currentSubjectView === 'playlists') return `${currSub.code}/links`;
+            if (currentSubjectView === 'details') return `${currSub.code}/details`;
+            return `${currSub.code}`;
+        }
+        return '';
+    }
+
+    function applySubjectHash() {
+        const seg = getSubjectHashSegment();
+        if (!seg) return;
+        const hash = `#${seg}`;
+        if (location.hash === hash) return;
+        const state = history.state || { page: currentPageId || 'home' };
+        history.replaceState(state, null, hash);
+    }
+
+    function applyHashRoute() {
+        const raw = decodeURIComponent(String(location.hash || '').replace(/^#/, '').trim());
+        if (!raw) {
+            nav('home', false);
+            return;
+        }
+
+        const lower = raw.toLowerCase();
+        const pageMap = new Set(['home', 'recent', 'schedule', 'deadlines', 'midterm', 'todo', 'useful-links', 'timetable', 'directory', 'gpa', 'updates']);
+        if (pageMap.has(lower)) {
+            if (lower === 'home') nav('home', false);
+            else if (lower === 'recent') showRecent();
+            else if (lower === 'schedule') showSchedule(false, 'home');
+            else if (lower === 'deadlines') showDeadlines(false);
+            else if (lower === 'midterm') showMidterms(false, 'home');
+            else if (lower === 'todo') showTodo(false, todoViewMode);
+            else if (lower === 'useful-links') showUsefulLinks(false, currentUsefulFilter, currentUsefulSubject);
+            else if (lower === 'timetable') showTimetable(false);
+            else if (lower === 'directory') showDirectory(false);
+            else if (lower === 'gpa') showGpa(false);
+            else if (lower === 'updates') showUpdates(false);
+            return;
+        }
+
+        const parts = raw.split('/').filter(Boolean);
+        if (!parts.length) {
+            nav('home', false);
+            return;
+        }
+
+        const sub = getSubjectByCode(parts[0]);
+        if (!sub) {
+            nav('home', false);
+            return;
+        }
+
+        const routePart = (parts[1] || '').toLowerCase();
+        if (!routePart) {
+            currentSubjectView = 'weeks';
+            showWeeks(sub, false);
+            return;
+        }
+
+        if (routePart === 'events') {
+            currentSubjectView = 'events';
+            showWeeks(sub, false);
+            return;
+        }
+        if (routePart === 'event') {
+            currentSubjectView = 'events';
+            showWeeks(sub, false);
+            return;
+        }
+        if (routePart === 'links' || routePart === 'playlists') {
+            currentSubjectView = 'playlists';
+            showWeeks(sub, false);
+            return;
+        }
+        if (routePart === 'details') {
+            currentSubjectView = 'details';
+            showWeeks(sub, false);
+            return;
+        }
+
+        const weekMatch = routePart.match(/^week(\d+)$/i);
+        if (weekMatch) {
+            currentSubjectView = 'weeks';
+            showWeeks(sub, false);
+            const targetNum = parseInt(weekMatch[1], 10);
+            const wk = (sub.weeks || []).find(w => extractWeekNumber(w.title) === targetNum);
+            if (wk) showContentByObj(wk, false, 'weeks');
+            return;
+        }
+
+        const eventMatch = routePart.match(/^event(\d+)$/i);
+        if (eventMatch) {
+            currentSubjectView = 'events';
+            showWeeks(sub, false);
+            const targetNum = parseInt(eventMatch[1], 10);
+            const ev = (sub.events || []).find(w => extractWeekNumber(w.title) === targetNum);
+            if (ev) showContentByObj(ev, false, 'events');
+            return;
+        }
+
+        nav('home', false);
+    }
     let currentPageId = 'home';
     let previousPageId = 'home';
+    const HIDDEN_SUBJECTS_KEY = 'hiddenSubjectCodes';
+    const HIDDEN_WEEKS_KEY = 'hiddenWeekKeys';
+    const TODO_ITEMS_KEY = 'todoItems';
+    const TODO_VIEW_KEY = 'todoViewMode';
+    let hiddenSubjectSet = (() => {
+        try { return new Set(JSON.parse(localStorage.getItem(HIDDEN_SUBJECTS_KEY) || '[]')); }
+        catch(e) { return new Set(); }
+    })();
+    let hiddenWeekSet = (() => {
+        try { return new Set(JSON.parse(localStorage.getItem(HIDDEN_WEEKS_KEY) || '[]')); }
+        catch(e) { return new Set(); }
+    })();
+    let todoItems = (() => {
+        try {
+            const parsed = JSON.parse(localStorage.getItem(TODO_ITEMS_KEY) || '[]');
+            return Array.isArray(parsed) ? parsed : [];
+        } catch(e) {
+            return [];
+        }
+    })();
+    let todoViewMode = (() => {
+        try {
+            const saved = localStorage.getItem(TODO_VIEW_KEY);
+            return saved === 'priority' ? 'priority' : 'grouped';
+        } catch(e) {
+            return 'grouped';
+        }
+    })();
+    let todoCompletedCollapsed = true;
+    let todoSubjectFilters = new Set();
+    let todoResourceFilters = new Set();
+
+    function saveHiddenSubjects() {
+        try { localStorage.setItem(HIDDEN_SUBJECTS_KEY, JSON.stringify([...hiddenSubjectSet])); } catch(e) {}
+    }
+
+    function saveHiddenWeeks() {
+        try { localStorage.setItem(HIDDEN_WEEKS_KEY, JSON.stringify([...hiddenWeekSet])); } catch(e) {}
+    }
+
+    function makeWeekHideKey(subCode, section, weekTitle) {
+        return `${subCode || ''}::${section || 'weeks'}::${weekTitle || ''}`;
+    }
+
+    function parseWeekHideKey(key) {
+        const parts = String(key || '').split('::');
+        return { subCode: parts[0] || '', section: parts[1] || 'weeks', weekTitle: parts.slice(2).join('::') || '' };
+    }
+
+    function getWeekSection(weekObj) {
+        if (!currSub || !weekObj) return 'weeks';
+        return (currSub.events || []).includes(weekObj) ? 'events' : 'weeks';
+    }
+
+    function isWeekHidden(subCode, weekObj, sectionHint = null) {
+        if (!subCode || !weekObj) return false;
+        const section = sectionHint || getWeekSection(weekObj);
+        return hiddenWeekSet.has(makeWeekHideKey(subCode, section, weekObj.title));
+    }
+
+    function hideWeek(subCode, weekObj, sectionHint = null) {
+        if (!subCode || !weekObj) return;
+        const section = sectionHint || getWeekSection(weekObj);
+        const key = makeWeekHideKey(subCode, section, weekObj.title);
+        if (hiddenWeekSet.has(key)) return;
+        hiddenWeekSet.add(key);
+        saveHiddenWeeks();
+        showToast('Week hidden from view', 'todo');
+        if (currentPageId === 'weeks') renderSubjectView(currentSubjectView, false);
+        renderHiddenWeeksControls();
+        renderHiddenWeeksModalList();
+    }
+
+    function unhideWeekByKey(key, opts = {}) {
+        if (!hiddenWeekSet.has(key)) return;
+        hiddenWeekSet.delete(key);
+        saveHiddenWeeks();
+        if (!opts.silent) showToast('Week restored', 'todo');
+        if (!opts.skipRefresh && currentPageId === 'weeks') renderSubjectView(currentSubjectView, false);
+        renderHiddenWeeksControls();
+        renderHiddenWeeksModalList();
+    }
+
+    function openHiddenWeeksModal() {
+        renderHiddenWeeksModalList();
+        const modal = document.getElementById('hidden-weeks-modal');
+        if (modal) modal.classList.add('active');
+    }
+
+    function closeHiddenWeeksModal(event, force = false) {
+        if (!force && event && event.target && event.target.id !== 'hidden-weeks-modal') return;
+        const modal = document.getElementById('hidden-weeks-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    function renderHiddenWeeksControls() {
+        const host = document.getElementById('hidden-weeks-controls');
+        if (!host || !currSub || currentPageId !== 'weeks') return;
+        if (currentSubjectView === 'playlists' || currentSubjectView === 'details') {
+            host.innerHTML = '';
+            host.style.display = 'none';
+            return;
+        }
+        const section = currentSubjectView === 'events' ? 'events' : 'weeks';
+        const hiddenKeys = [...hiddenWeekSet].filter(k => {
+            const p = parseWeekHideKey(k);
+            return p.subCode === currSub.code && p.section === section;
+        });
+        if (hiddenKeys.length === 0) {
+            host.innerHTML = '';
+            host.style.display = 'none';
+            return;
+        }
+        host.style.display = 'block';
+        host.innerHTML = `<button onclick="openHiddenWeeksModal()" style="padding:8px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.04); color:#bbb; font-size:0.8rem; cursor:pointer;">View Hidden Weeks (${hiddenKeys.length})</button>`;
+    }
+
+    function renderHiddenWeeksModalList() {
+        const list = document.getElementById('hidden-weeks-list');
+        if (!list) return;
+        if (!currSub) {
+            list.innerHTML = '<div style="text-align:center; color:#777; padding:12px 0; font-style:italic;">Open a subject first.</div>';
+            return;
+        }
+        const section = currentSubjectView === 'events' ? 'events' : 'weeks';
+        const hiddenKeys = [...hiddenWeekSet].filter(k => {
+            const p = parseWeekHideKey(k);
+            return p.subCode === currSub.code && p.section === section;
+        });
+        if (!hiddenKeys.length) {
+            list.innerHTML = '<div style="text-align:center; color:#777; padding:12px 0; font-style:italic;">No hidden weeks for this view.</div>';
+            return;
+        }
+        list.innerHTML = hiddenKeys.map(k => {
+            const p = parseWeekHideKey(k);
+            const escaped = String(k).replace(/'/g, "\\'");
+            return `<div class="hidden-subject-row"><div><div style="font-weight:700; color:#eee;">${p.weekTitle}</div><div class="meta">${currSub.code} • ${p.section === 'events' ? 'Exam Materials' : 'Weeks'}</div></div><button class="unhide-one-btn" onclick="unhideWeekByKey('${escaped}')">Unhide</button></div>`;
+        }).join('');
+    }
+
+    function saveTodoItems() {
+        try { localStorage.setItem(TODO_ITEMS_KEY, JSON.stringify(todoItems)); } catch(e) {}
+    }
+
+    function saveTodoViewMode() {
+        try { localStorage.setItem(TODO_VIEW_KEY, todoViewMode); } catch(e) {}
+    }
+
+    function isSubjectHidden(code) {
+        return hiddenSubjectSet.has(code);
+    }
+
+    function getVisibleCourseSubjects() {
+        return (window.COURSE_DATA || []).filter(s => !isSubjectHidden(s.code));
+    }
+
+    function getVisibleScheduleTasks(tasks) {
+        return (tasks || []).filter(t => !isSubjectHidden(t.sub));
+    }
+
+    function getVisibleStaffData(staff) {
+        return (staff || []).map(p => {
+            const subjects = (p.subjects || []).filter(sub => !isSubjectHidden(sub));
+            return { ...p, subjects };
+        }).filter(p => p.subjects.length > 0);
+    }
+
+    function refreshCurrentFilteredPage() {
+        if (currentPageId === 'home') init();
+        else if (currentPageId === 'schedule') renderScheduleContent();
+        else if (currentPageId === 'deadlines') showDeadlines(false);
+        else if (currentPageId === 'useful-links') {
+            currentUsefulSubject = new Set([...currentUsefulSubject].filter(code => !isSubjectHidden(code)));
+            showUsefulLinks(false, currentUsefulFilter, currentUsefulSubject, Array.from(currentUsefulBadgeFilters));
+        }
+        else if (currentPageId === 'directory') renderDirectory();
+        populateAllDropdowns();
+    }
+
+    function hideSubject(code) {
+        if (!code || hiddenSubjectSet.has(code)) return;
+        hiddenSubjectSet.add(code);
+        saveHiddenSubjects();
+        showToast('Subject hidden globally', 'todo');
+        refreshCurrentFilteredPage();
+        renderHiddenSubjectsModalList();
+    }
+
+    function unhideSubject(code) {
+        if (!code || !hiddenSubjectSet.has(code)) return;
+        hiddenSubjectSet.delete(code);
+        saveHiddenSubjects();
+        showToast('Subject restored', 'todo');
+        refreshCurrentFilteredPage();
+        renderHiddenSubjectsModalList();
+    }
+
+    function openHiddenSubjectsModal() {
+        renderHiddenSubjectsModalList();
+        const modal = document.getElementById('hidden-subjects-modal');
+        if (modal) modal.classList.add('active');
+    }
+
+    function closeHiddenSubjectsModal(event, force = false) {
+        if (!force && event && event.target && event.target.id !== 'hidden-subjects-modal') return;
+        const modal = document.getElementById('hidden-subjects-modal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    function renderHiddenSubjectsModalList() {
+        const list = document.getElementById('hidden-subjects-list');
+        if (!list) return;
+        const hiddenCodes = [...hiddenSubjectSet];
+        if (!hiddenCodes.length) {
+            list.innerHTML = '<div style="text-align:center; color:#777; padding:12px 0; font-style:italic;">No hidden subjects.</div>';
+            return;
+        }
+
+        const byCode = new Map((window.COURSE_DATA || []).map(s => [s.code, s]));
+        list.innerHTML = hiddenCodes.map(code => {
+            const sub = byCode.get(code);
+            const name = sub ? sub.name : code;
+            return `<div class="hidden-subject-row"><div><div style="font-weight:700; color:#eee;">${name}</div><div class="meta">${code}</div></div><button class="unhide-one-btn" onclick="unhideSubject('${code}')">Unhide</button></div>`;
+        }).join('');
+    }
+
+    function createTodoId() {
+        return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function getRelativeTimeText(ts, prefix) {
+        const base = Number(ts) || Date.now();
+        let delta = Math.max(0, Date.now() - base);
+        const mins = Math.floor(delta / (1000 * 60));
+        if (mins < 60) return `${prefix} ${Math.max(mins, 1)} min${mins === 1 ? '' : 's'} ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${prefix} ${hrs} hour${hrs === 1 ? '' : 's'} ago`;
+        const days = Math.floor(hrs / 24);
+        return `${prefix} ${days} day${days === 1 ? '' : 's'} ago`;
+    }
+
+    function extractWeekNumber(weekName) {
+        const m = String(weekName || '').match(/week\s*(\d+)/i) || String(weekName || '').match(/(\d+)/);
+        return m ? parseInt(m[1], 10) : null;
+    }
+
+    function getTodoPriorityMeta(item) {
+        const now = Date.now();
+        const targetWeek = extractWeekNumber(item.weekName);
+        let bestTs = 0;
+        function isQuizTask(taskObj) {
+            const hay = `${taskObj && taskObj.name || ''} ${taskObj && taskObj.type || ''}`.toLowerCase();
+            return /\bquiz\b/.test(hay);
+        }
+        function scan(weekScoped) {
+            (window.SCHEDULE_DATA || []).forEach(wk => {
+                if (weekScoped && targetWeek !== null && wk.week !== targetWeek) return;
+                (wk.tasks || []).forEach(t => {
+                    if (t.isCompleted || t.sub !== item.subjectCode) return;
+                    if (!isQuizTask(t)) return;
+                    const meta = getTaskEffectiveDeadlineMeta(t, wk.week);
+                    if (!meta.timestamp) return;
+                    const compareTs = meta.hasTime ? meta.timestamp : getEndOfDayTimestamp(meta.timestamp);
+                    if (compareTs < now) return;
+                    if (!bestTs || compareTs < bestTs) bestTs = compareTs;
+                });
+            });
+        }
+        scan(true);
+        if (!bestTs) scan(false);
+        let dueText = 'No upcoming quiz';
+        if (bestTs) {
+            const diffDays = Math.floor((bestTs - now) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 0) dueText = 'Quiz due today';
+            else if (diffDays === 1) dueText = 'Quiz due tomorrow';
+            else dueText = `Quiz in ${diffDays} days`;
+        }
+        return { ts: bestTs || Number.MAX_SAFE_INTEGER, dueText };
+    }
+
+    function addTodoItem(item, options = {}) {
+        const suppressToast = !!options.suppressToast;
+        const normalized = {
+            id: createTodoId(),
+            type: item.type || 'resource',
+            subjectCode: item.subjectCode || '',
+            subjectName: item.subjectName || item.subjectCode || '',
+            weekName: item.weekName || '',
+            resourceName: item.resourceName || '',
+            link: item.link || '',
+            section: item.section === 'events' ? 'events' : 'weeks',
+            dateAdded: item.dateAdded || Date.now(),
+            status: 'active',
+            dateCompleted: null
+        };
+
+        const duplicate = todoItems.some(t =>
+            t.status === 'active' &&
+            t.subjectCode === normalized.subjectCode &&
+            t.weekName === normalized.weekName &&
+            t.resourceName === normalized.resourceName
+        );
+        if (duplicate) {
+            if (!suppressToast) showToast('Already in To-Do list', 'todo');
+            return false;
+        }
+
+        todoItems.unshift(normalized);
+        saveTodoItems();
+        if (!suppressToast) showToast('✅ Added to To-Do', 'todo');
+        if (currentPageId === 'todo') renderTodoPage();
+        return true;
+    }
+
+    function addWeekTodo(sub, weekObj) {
+        const section = (sub.events || []).includes(weekObj) ? 'events' : 'weeks';
+        const conf = (window.CONFIG && window.CONFIG.resources) ? window.CONFIG.resources : [];
+        let added = 0;
+        conf.forEach(c => {
+            const key = c.name;
+            const res = weekObj && weekObj.resources ? weekObj.resources[key] : null;
+            if (!res || !res.vis) return;
+            const didAdd = addTodoItem({
+                type: 'resource',
+                subjectCode: sub.code,
+                subjectName: sub.name,
+                weekName: weekObj.title || '',
+                resourceName: key,
+                link: res.link || '',
+                section
+            }, { suppressToast: true });
+            if (didAdd) added++;
+        });
+        if (added > 0) showToast(`✅ Added ${added} resource${added === 1 ? '' : 's'} to To-Do`, 'todo');
+        else showToast('All resources from this week are already in To-Do', 'todo');
+        if (currentPageId === 'todo') renderTodoPage();
+    }
+
+    function addResourceTodo(sub, weekObj, resourceName) {
+        const section = (sub.events || []).includes(weekObj) ? 'events' : 'weeks';
+        const res = weekObj && weekObj.resources ? weekObj.resources[resourceName] : null;
+        addTodoItem({
+            type: 'resource',
+            subjectCode: sub.code,
+            subjectName: sub.name,
+            weekName: weekObj.title || '',
+            resourceName: resourceName || '',
+            link: res && res.link ? res.link : '',
+            section
+        });
+    }
+
+    function removeTodoItem(todoId) {
+        todoItems = todoItems.filter(t => t.id !== todoId);
+        saveTodoItems();
+        renderTodoPage();
+    }
+
+    function markTodoDone(todoId) {
+        todoItems = todoItems.map(t => {
+            if (t.id !== todoId) return t;
+            return { ...t, status: 'completed', dateCompleted: Date.now() };
+        });
+        saveTodoItems();
+        renderTodoPage();
+    }
 
     function clearElementHtml(id) {
         const el = document.getElementById(id);
@@ -1367,10 +1980,17 @@
             clearElementHtml('week-details');
             clearElementHtml('resources-grid');
             clearElementHtml('week-nav');
+            return;
+        }
+
+        if (pageId === 'todo') {
+            clearElementHtml('todo-view-toggle');
+            clearElementHtml('todo-active-list');
+            clearElementHtml('todo-completed-wrap');
         }
     }
 
-    const NAV_TAB_ORDER = ['home', 'recent', 'schedule', 'deadlines', 'midterm', 'useful-links', 'timetable', 'directory', 'gpa', 'updates'];
+    const NAV_TAB_ORDER = ['home', 'todo', 'recent', 'schedule', 'deadlines', 'midterm', 'useful-links', 'timetable', 'directory', 'gpa', 'updates'];
 
     function getPageLabel(pageId) {
         const labels = {
@@ -1379,6 +1999,7 @@
             'schedule': 'Semester Map',
             'deadlines': 'Deadlines',
             'midterm': 'Midterms / Finals',
+            'todo': 'To-Do',
             'useful-links': 'Useful Links',
             'timetable': 'Timetable',
             'directory': 'Staff Contacts',
@@ -1440,6 +2061,7 @@
         else if(tabId === 'schedule') showSchedule();
         else if(tabId === 'deadlines') showDeadlines();
         else if(tabId === 'midterm') showMidterms(true, 'home');
+        else if(tabId === 'todo') showTodo();
         else if(tabId === 'useful-links') showUsefulLinks(true, currentUsefulFilter, currentUsefulSubject);
         else if(tabId === 'timetable') showTimetable();
         else if(tabId === 'directory') showDirectory();
@@ -1451,6 +2073,7 @@
     function autoExpireNewBadges() {
         const DAYS_LIMIT = 7;
         const now = new Date();
+        const nowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
         function applyNewWindow(item) {
             if (!item || !item.recentDate) return;
@@ -1462,8 +2085,14 @@
                 publishDate = new Date(ts);
             }
 
+            const publishStart = new Date(
+                publishDate.getFullYear(),
+                publishDate.getMonth(),
+                publishDate.getDate()
+            );
+
             // Calculate difference in milliseconds
-            const diffTime = Math.abs(now - publishDate);
+            const diffTime = Math.abs(nowStart - publishStart);
             const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
             // If the difference is LESS THAN OR EQUAL TO 7 days, keep NEW badge
@@ -1551,19 +2180,31 @@
 
     function getHomepageOrderedSubjects() {
         const scores = {};
-        window.COURSE_DATA.forEach(s => { scores[s.code] = getSubjectUrgency(s.code); });
+        const visible = getVisibleCourseSubjects();
+        visible.forEach(s => { scores[s.code] = getSubjectUrgency(s.code); });
         function isSubjectFullyMidtermHidden(subCode) {
             if (!window.MIDTERM_DATA || typeof midtermHiddenSet === 'undefined') return false;
             const subExams = window.MIDTERM_DATA.map((e, i) => ({ e, i })).filter(({ e }) => e.sub === subCode);
             if (subExams.length === 0) return false;
             return subExams.every(({ i }) => midtermHiddenSet.has(i));
         }
-        return [...window.COURSE_DATA].sort((a, b) => {
+        return [...visible].sort((a, b) => {
             const aH = isSubjectFullyMidtermHidden(a.code), bH = isSubjectFullyMidtermHidden(b.code);
             if (aH && !bH) return 1;
             if (!aH && bH) return -1;
             return scores[a.code] - scores[b.code];
         });
+    }
+
+    function renderHiddenSubjectsControls() {
+        const host = document.getElementById('hidden-subject-controls');
+        if (!host) return;
+        const hiddenCodes = [...hiddenSubjectSet];
+        if (hiddenCodes.length === 0) {
+            host.innerHTML = '';
+            return;
+        }
+        host.innerHTML = `<button onclick="openHiddenSubjectsModal()" style="padding:8px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.04); color:#bbb; font-size:0.8rem; cursor:pointer;">View Hidden Subjects (${hiddenCodes.length})</button>`;
     }
 
     function init() {
@@ -1591,16 +2232,27 @@
 
             const el = document.createElement('div');
             el.className = 'card';
+            el.style.position = 'relative';
             el.innerHTML = `
                 <div style="font-family:'Orbitron'; font-size:2.5rem; color:var(--accent-pink); margin-bottom:10px">${s.code}</div>
                 <div style="color:#eee; font-size:1.1rem; margin-bottom:20px">${s.name}</div>
                 <div style="display:flex; justify-content:space-between; align-items:center; color:#bbb; font-size:0.9rem; border-top:1px solid rgba(233,30,140,0.3); padding-top:15px">
                     <span>${s.credits}</span>${s.subCode ? `<span class="subject-code-label">${s.subCode}</span>` : ''}<span>${s.semester}</span>
                 </div>`;
+            const hideBtn = document.createElement('button');
+            hideBtn.className = 'subject-hide-btn';
+            hideBtn.innerHTML = '<span class="eye-icon">👁</span>';
+            hideBtn.title = 'Hide subject';
+            hideBtn.onclick = (ev) => {
+                ev.stopPropagation();
+                hideSubject(s.code);
+            };
+            el.appendChild(hideBtn);
             el.onclick = () => showWeeks(s);
             frag.appendChild(el);
         });
         if (grid) grid.appendChild(frag); // single reflow
+        renderHiddenSubjectsControls();
         
         window.onpopstate = function(event) {
             closeModal(null, true);
@@ -1615,6 +2267,7 @@
                 else if(event.state.page === 'schedule') showSchedule(false, event.state.from || 'home');
                 else if(event.state.page === 'deadlines') showDeadlines(false);
                 else if(event.state.page === 'midterm') showMidterms(false, event.state.from || 'home');
+                else if(event.state.page === 'todo') showTodo(false, event.state.view || todoViewMode);
                 else if(event.state.page === 'useful-links') showUsefulLinks(false, event.state.filter || currentUsefulFilter, event.state.subject || null);
                 else if(event.state.page === 'directory') showDirectory(false);
                 else if(event.state.page === 'timetable') showTimetable(false);
@@ -1629,7 +2282,11 @@
                 nav('home', false);
             }
         };
-        history.replaceState({page: 'home'}, null, "");
+        if (!history.state) {
+            history.replaceState({page: 'home'}, null, location.hash || '#home');
+        }
+        window.addEventListener('hashchange', applyHashRoute);
+        applyHashRoute();
         
         // Keep summary/background stats active on startup (urgency, badges, notifications).
         populateAllDropdowns();
@@ -2224,8 +2881,10 @@
         const now = Date.now();
 
         window.SCHEDULE_DATA.forEach((wk, wIndex) => {
-            if(wk.tasks) {
-                wk.tasks.forEach((t, tIndex) => {
+            const tasks = wk.tasks || [];
+            if(tasks.length) {
+                tasks.forEach((t, tIndex) => {
+                    if (isSubjectHidden(t.sub)) return;
                     if(t.isCompleted) {
                         const parsedCompleted = getTaskEffectiveDeadlineMeta(t, wk.week);
                         const ts = parsedCompleted.timestamp;
@@ -2263,6 +2922,7 @@
 
         (window.NEWS_DATA || []).forEach((n, newsIndex) => {
             if (!n || !n.hasDeadline) return;
+            if (n.sub && isSubjectHidden(n.sub)) return;
             const ts = parseNewsDeadlineTs(n.deadlineDate, n.deadlineTime);
             if (ts === 0) {
                 unscheduled.push({
@@ -2724,6 +3384,7 @@
             else currentUsefulSubject = new Set([subjectFilter]);
         }
         if (badgeFilters !== null) currentUsefulBadgeFilters = new Set(badgeFilters);
+        currentUsefulSubject = new Set([...currentUsefulSubject].filter(code => !isSubjectHidden(code)));
 
         const filterBar = document.getElementById('useful-links-filter-bar');
         const list = document.getElementById('all-links-list');
@@ -2735,7 +3396,7 @@
         // Collect all unique badge texts across all playlists for current subject filter
         const allBadgeSet = new Map(); // badge text -> badge color
 
-        window.COURSE_DATA.forEach(sub => {
+        getVisibleCourseSubjects().forEach(sub => {
             if (sub.playlists && sub.playlists.length > 0) {
                 hasLinksAnywhere = true;
                 activeSubjects.push(sub);
@@ -3150,7 +3811,7 @@
         });
 
         const subCodes = new Set();
-        window.SCHEDULE_DATA.forEach(wk => { (wk.tasks||[]).forEach(t => { if(t.sub) subCodes.add(t.sub); }); });
+        window.SCHEDULE_DATA.forEach(wk => { getVisibleScheduleTasks(wk.tasks).forEach(t => { if(t.sub) subCodes.add(t.sub); }); });
         const hasMultipleSubs = subCodes.size > 1;
 
         filterContainer.innerHTML = '';
@@ -3361,7 +4022,7 @@
             const isCurrentWeek = todayDate >= wkStart && todayDate <= wkEnd;
             
             // Filter and sort tasks
-            let filteredTasks = (data.tasks || []).map((t, i) => ({task: t, origIdx: i}));
+            let filteredTasks = (data.tasks || []).map((t, i) => ({task: t, origIdx: i})).filter(x => !isSubjectHidden(x.task.sub));
             if(scheduleTaskFilter.size > 0) {
                 filteredTasks = filteredTasks.filter(x => scheduleTaskFilter.has(getTaskTypeCategory(x.task.name)));
             }
@@ -3471,6 +4132,7 @@
         window.SCHEDULE_DATA.forEach((wk, wIndex) => {
             if(!wk.tasks) return;
             wk.tasks.forEach((t, tIndex) => {
+                if (isSubjectHidden(t.sub)) return;
                 if(scheduleTaskFilter.size > 0 && !scheduleTaskFilter.has(getTaskTypeCategory(t.name))) return;
                 if(scheduleSubFilter.size > 0 && !scheduleSubFilter.has(t.sub)) return;
                 const ts = getTaskEffectiveDeadlineMeta(t, wk.week).timestamp;
@@ -3492,6 +4154,7 @@
         window.SCHEDULE_DATA.forEach(wk => {
             if (!wk.tasks) return;
             wk.tasks.forEach(t => {
+                if (isSubjectHidden(t.sub)) return;
                 const ts = getTaskEffectiveDeadlineMeta(t, wk.week).timestamp;
                 if (ts !== 0) {
                     const d = new Date(ts);
@@ -4141,6 +4804,10 @@
     }
 
     function showWeeks(sub, push = true) {
+        if (!sub || isSubjectHidden(sub.code)) {
+            nav('home', push);
+            return;
+        }
         currSub = sub;
         document.getElementById('subject-title').innerText = `${sub.code} — ${sub.name}`;
         
@@ -4157,6 +4824,8 @@
 
         renderSubjectView(currentSubjectView, false); 
         nav('weeks', push, { subCode: sub.code, subView: currentSubjectView });
+        applySubjectHash();
+        renderHiddenWeeksControls();
     }
 
     function renderSubjectView(viewType, pushState = true) {
@@ -4165,6 +4834,7 @@
         
         document.getElementById('tab-weeks').classList.remove('active');
         document.getElementById('tab-events').classList.remove('active');
+        document.getElementById('tab-details').classList.remove('active');
         document.getElementById('tab-playlists').classList.remove('active');
         document.getElementById(`tab-${viewType}`).classList.add('active');
 
@@ -4182,18 +4852,53 @@
             if (fwrap) fwrap.style.display = 'none';
             if (fsep) fsep.style.display = 'none';
             renderPlaylistGrid(false);
+        } else if (viewType === 'details') {
+            filterBar.style.display = 'none';
+            gridPlaylists.style.display = 'none';
+            gridWeeks.style.display = 'grid';
+            const fwrap = document.getElementById('filter-bar-wrap');
+            const fsep = document.getElementById('filter-sep');
+            if (fwrap) fwrap.style.display = 'none';
+            if (fsep) fsep.style.display = 'none';
+            renderSubjectDetailsView();
         } else {
             filterBar.style.display = 'flex';
             gridPlaylists.style.display = 'none';
             gridWeeks.style.display = 'grid';
             renderFilterBar(viewType);
         }
+        renderHiddenWeeksControls();
         if(pushState) {
             const nextState = {page: 'weeks', subCode: currSub.code, subView: viewType};
             if (history.state && history.state.page === 'weeks') history.replaceState(nextState, null, "#weeks");
             else history.pushState(nextState, null, "#weeks");
         }
+        applySubjectHash();
         renderQuickActions();
+    }
+
+    function renderSubjectDetailsView() {
+        const grid = document.getElementById('weeks-grid');
+        if (!grid) return;
+        if (!currSub) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666; margin-top:30px; font-style:italic;">No subject selected.</div>';
+            return;
+        }
+
+        const details = ensureSubjectDetailsEntry(currSub.code);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.gridColumn = '1 / -1';
+        card.style.textAlign = 'left';
+        card.innerHTML = `
+            <div style="font-family:'Orbitron'; font-size:1.25rem; color:var(--accent-purple); margin-bottom:14px;">${currSub.code} Subject Details</div>
+            <div class="detail-row" style="margin-bottom:12px;"><div class="detail-icon">📊</div><div class="detail-content"><h3>Grade Distribution</h3><p>${details.gradeDistribution ? details.gradeDistribution.replace(/\n/g, '<br>') : 'No grade distribution added yet.'}</p></div></div>
+            <div class="detail-row" style="margin-bottom:12px;"><div class="detail-icon">📝</div><div class="detail-content"><h3>Exam Types</h3><p>${details.examTypes ? details.examTypes.replace(/\n/g, '<br>') : 'No exam type notes added yet.'}</p></div></div>
+            <div class="detail-row"><div class="detail-icon"><span style="display:inline-flex; align-items:center; justify-content:center; font-size:1.35rem; line-height:1;">💡</span></div><div class="detail-content"><h3>General Notes</h3><p>${details.generalNotes ? details.generalNotes.replace(/\n/g, '<br>') : 'No general notes added yet.'}</p></div></div>
+        `;
+        grid.innerHTML = '';
+        grid.appendChild(card);
+        applyWaterfallToContainer(grid, '.card');
     }
 
     function renderPlaylistGrid(resetFilters = false) {
@@ -4556,7 +5261,10 @@
         }
 
         if(filterType === 'ALL') {
+            let visibleCount = 0;
             sourceArr.forEach((w, i) => {
+                if (isWeekHidden(currSub.code, w, isEvent ? 'events' : 'weeks')) return;
+                visibleCount++;
                 const el = document.createElement('div');
                 el.className = 'card' + (w.locked ? ' locked' : '');
                 el.setAttribute('data-week-index', i);
@@ -4570,14 +5278,31 @@
                 if(w.showBadge && w.badgeText) {
                     customBadge = `<div class="custom-badge" style="background:${w.badgeColor || '#e91e8c'}">${w.badgeText}</div>`;
                 }
+                el.style.position = 'relative';
                 el.innerHTML = `${customBadge}${lockIcon}<div style="font-family:'Orbitron'; font-size:1.5rem; color:${isEvent?'var(--accent-blue)':'var(--accent-purple)'}; margin-bottom:5px; padding-top:10px;">${w.title}${badge}</div><div style="color:#888; font-size:0.8rem">${status}</div>${getUpdatedAgoHtml(w)}`;
+                const hideBtn = document.createElement('button');
+                hideBtn.className = 'week-hide-btn';
+                hideBtn.innerHTML = '<span class="eye-icon">👁</span>';
+                hideBtn.title = 'Hide this week from this view';
+                hideBtn.onclick = (ev) => { ev.stopPropagation(); hideWeek(currSub.code, w, isEvent ? 'events' : 'weeks'); };
+                el.appendChild(hideBtn);
+                const addBtn = document.createElement('button');
+                addBtn.className = 'todo-add-btn';
+                addBtn.textContent = '+';
+                addBtn.title = 'Add this week to To-Do';
+                addBtn.onclick = (ev) => { ev.stopPropagation(); addWeekTodo(currSub, w); };
+                el.appendChild(addBtn);
                 if(!w.locked) el.onclick = () => showContentByObj(w);
                 else el.onclick = () => showToast('🔒 This week is currently locked', 'locked');
                 grid.appendChild(el);
             });
+            if (visibleCount === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:#777; margin-top:30px; font-style:italic;">All weeks are hidden in this view. Use <strong>View Hidden Weeks</strong> to restore them.</div>`;
+            }
         } else {
             let found = false;
             sourceArr.forEach((w, i) => {
+                if (isWeekHidden(currSub.code, w, isEvent ? 'events' : 'weeks')) return;
                 if(w.resources && w.resources[filterType]) {
                     const res = w.resources[filterType];
                     if(res.vis) {
@@ -4595,6 +5320,7 @@
                         const resBadgeCard = res.isNew ? '<div style="margin-top:5px;"><span class="badge-new" style="margin-left:0;">NEW!</span></div>' : '';
                         const notesHtml = (res.desc && res.desc.trim()) ? `<div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1); color:var(--text-sub); font-size:0.9rem; line-height:1.4; white-space:pre-wrap;">${res.desc}</div>` : '';
                         
+                        el.style.position = 'relative';
                         el.innerHTML = `
                             ${customBadge}
                             <div style="font-size:2.5rem; margin-bottom:10px">${iconMap[filterType] || '📂'}</div>
@@ -4603,6 +5329,18 @@
                             <div style="color:#aaa; font-size:0.9rem; margin-top:5px;">${w.title}</div>
                             ${notesHtml}
                         `;
+                        const hideBtn = document.createElement('button');
+                        hideBtn.className = 'week-hide-btn';
+                        hideBtn.innerHTML = '<span class="eye-icon">👁</span>';
+                        hideBtn.title = 'Hide this week from this view';
+                        hideBtn.onclick = (ev) => { ev.stopPropagation(); hideWeek(currSub.code, w, isEvent ? 'events' : 'weeks'); };
+                        el.appendChild(hideBtn);
+                        const addBtn = document.createElement('button');
+                        addBtn.className = 'todo-add-btn';
+                        addBtn.textContent = '+';
+                        addBtn.title = 'Add this resource to To-Do';
+                        addBtn.onclick = (ev) => { ev.stopPropagation(); addResourceTodo(currSub, w, filterType); };
+                        el.appendChild(addBtn);
                         el.onclick = () => {
                             if(isLocked) return alert("Locked");
                             if(res.link && res.link !== "#") window.open(res.link, "_blank");
@@ -4619,9 +5357,16 @@
         }
 
         applyWaterfallToContainer(grid, '.card');
+        renderHiddenWeeksControls();
     }
 
     function showContentByObj(weekOrEvent, push = true, from = 'weeks') {
+        const section = getWeekSection(weekOrEvent);
+        if (currSub && isWeekHidden(currSub.code, weekOrEvent, section)) {
+            const key = makeWeekHideKey(currSub.code, section, weekOrEvent.title);
+            unhideWeekByKey(key, { silent: true, skipRefresh: true });
+            showToast('Hidden week restored', 'todo');
+        }
         currentContentObj = weekOrEvent;
         currentContentSourceArr = (currSub && (currSub.events || []).includes(weekOrEvent)) ? currSub.events : (currSub ? currSub.weeks : null);
         const badgeTitle = weekOrEvent.isNew ? '<span class="badge-new">NEW!</span>' : '';
@@ -4655,7 +5400,14 @@
                     const resBadgeCard = val.isNew ? '<div style="margin-top:5px;"><span class="badge-new" style="margin-left:0;">NEW!</span></div>' : '';
                     const el = document.createElement('div');
                     el.className = 'card';
+                    el.style.position = 'relative';
                     el.innerHTML = `<div style=\"font-size:2.5rem; margin-bottom:10px\">${icon}</div><div style=\"font-weight:bold; text-transform:uppercase\">${key}</div>${resBadgeCard}`;
+                    const addBtn = document.createElement('button');
+                    addBtn.className = 'todo-add-btn';
+                    addBtn.textContent = '+';
+                    addBtn.title = 'Add this resource to To-Do';
+                    addBtn.onclick = (ev) => { ev.stopPropagation(); addResourceTodo(currSub, weekOrEvent, key); };
+                    el.appendChild(addBtn);
                     el.onclick = () => {
                         if(val.link && val.link !== "#") window.open(val.link, "_blank");
                         else alert("No link set.");
@@ -4666,6 +5418,7 @@
             });
         }
         nav('content', push, { subCode: currSub.code, wkObj: weekOrEvent, from: from });
+        applySubjectHash();
 
         // Prev/Next navigation
         const weekNav = document.getElementById('week-nav');
@@ -4815,9 +5568,9 @@
         if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return false;
         const activePageId = getActivePageId();
 
-        // Inside a subject page, arrows switch between Weeks/Exam Materials/Useful Links.
+        // Inside a subject page, arrows switch between Weeks/Exam Materials/Details/Useful Links.
         if (activePageId === 'weeks' && currSub) {
-            const subjectTabs = ['weeks', 'events', 'playlists'];
+            const subjectTabs = ['weeks', 'events', 'playlists', 'details'];
             const currentIdx = subjectTabs.indexOf(currentSubjectView);
             if (currentIdx >= 0) {
                 const delta = (e.key === 'ArrowRight') ? 1 : -1;
@@ -4891,6 +5644,7 @@
         else if (key === 't') { e.preventDefault(); showSchedule(); }
         else if (key === 'd') { e.preventDefault(); showDeadlines(); }
         else if (key === 'm') { e.preventDefault(); showMidterms(true, 'home'); }
+        else if (key === 'o') { e.preventDefault(); showTodo(); }
         else if (key === 'l') { e.preventDefault(); showUsefulLinks(true, currentUsefulFilter, currentUsefulSubject); }
         else if (key === 'h') { e.preventDefault(); showRecent(); }
         else if (key === 'g') { e.preventDefault(); showGpa(); }
@@ -4952,6 +5706,7 @@
         else if(id === 'schedule') showSchedule();
         else if(id === 'deadlines') showDeadlines();
         else if(id === 'midterm') showMidterms(true, 'home');
+        else if(id === 'todo') showTodo();
         else if(id === 'useful-links') showUsefulLinks(true, currentUsefulFilter, currentUsefulSubject);
         else if(id === 'timetable') showTimetable();
         else if(id === 'directory') showDirectory();
@@ -5103,23 +5858,24 @@
         if(!targetWeek) {
             for(let i = 0; i < window.SCHEDULE_DATA.length; i++) {
                 const wk = window.SCHEDULE_DATA[i];
-                if(wk.tasks && wk.tasks.some(t => !t.isCompleted)) { targetWeek = wk; break; }
+                if(getVisibleScheduleTasks(wk.tasks).some(t => !t.isCompleted)) { targetWeek = wk; break; }
             }
         }
         let html = '<div class="dd-header">This period</div>';
         if(!targetWeek || !targetWeek.tasks || targetWeek.tasks.length === 0) {
             html += '<div class="dd-empty">No tasks right now</div>';
         } else {
-            targetWeek.tasks.slice(0, 5).forEach((t, ti) => {
+            getVisibleScheduleTasks(targetWeek.tasks).slice(0, 5).forEach((t, ti) => {
                 const color = getSubjectColor(t.sub);
-                html += `<div class="dd-item" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showSchedule(); setTimeout(()=>openModal(${window.SCHEDULE_DATA.indexOf(targetWeek)},${ti}),150);">`;
+                const realIdx = (targetWeek.tasks || []).indexOf(t);
+                html += `<div class="dd-item" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showSchedule(); setTimeout(()=>openModal(${window.SCHEDULE_DATA.indexOf(targetWeek)},${realIdx}),150);">`;
                 html += `<span class="dd-icon">${t.icon}</span>`;
                 html += `<span class="dd-dot" style="background:${color}; width:6px; height:6px;"></span>`;
                 html += `<span class="dd-label">${t.name}</span>`;
                 html += `<span class="dd-meta">${t.sub}</span>`;
                 html += `</div>`;
             });
-            if(targetWeek.tasks.length > 5) {
+            if(getVisibleScheduleTasks(targetWeek.tasks).length > 5) {
                 html += `<div class="dd-footer"><div class="dd-item" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showSchedule();">View all (Week ${targetWeek.week}) →</div></div>`;
             }
         }
@@ -5135,7 +5891,8 @@
         let upcoming = [];
         const now = Date.now();
         window.SCHEDULE_DATA.forEach((wk, wIndex) => {
-            if(wk.tasks) wk.tasks.forEach((t, tIndex) => {
+            getVisibleScheduleTasks(wk.tasks).forEach((t) => {
+                const tIndex = (wk.tasks || []).indexOf(t);
                 if(t.isCompleted) return;
                 const parsedStart = getTaskEffectiveDeadlineMeta(t, wk.week);
                 const ts = parsedStart.timestamp;
@@ -5155,6 +5912,7 @@
         });
         (window.NEWS_DATA || []).forEach((n, newsIndex) => {
             if (!n || !n.hasDeadline) return;
+            if (n.sub && isSubjectHidden(n.sub)) return;
             const ts = parseNewsDeadlineTs(n.deadlineDate, n.deadlineTime);
             const hasExplicitTime = !!(n.deadlineTime && String(n.deadlineTime).trim() !== '');
             const compareTs = hasExplicitTime ? ts : getEndOfDayTimestamp(ts);
@@ -5271,7 +6029,7 @@
         if(!dd || !window.COURSE_DATA) return;
         let html = '<div class="dd-header">Filter by Subject</div>';
 
-        const usefulSubjects = (window.COURSE_DATA || []).filter(s => s.playlists && s.playlists.length > 0);
+        const usefulSubjects = getVisibleCourseSubjects().filter(s => s.playlists && s.playlists.length > 0);
         usefulSubjects.slice(0, 5).forEach(s => {
                 const color = getSubjectColor(s.code);
                 html += `<div class="dd-item" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showUsefulLinks(true, 'All Links', '${s.code}');">`;
@@ -5295,8 +6053,9 @@
         let html = '<div class="dd-header">Staff by Subject</div>';
         let count = 0;
         const staffSubjects = [];
-        window.COURSE_DATA.forEach(s => {
-            const staff = (window.STAFF_DATA || []).filter(p => (p.subjects || []).includes(s.code));
+        const visibleStaff = getVisibleStaffData(window.STAFF_DATA || []);
+        getVisibleCourseSubjects().forEach(s => {
+            const staff = visibleStaff.filter(p => (p.subjects || []).includes(s.code));
             if (staff.length > 0) {
                 staffSubjects.push({ s, staff });
             }
@@ -5408,7 +6167,7 @@
 
     function collectUsefulLinksSelection(subjectFilter, filterType) {
         const groups = [];
-        (window.COURSE_DATA || []).forEach(sub => {
+        getVisibleCourseSubjects().forEach(sub => {
             const subSet = subjectFilter instanceof Set ? subjectFilter : new Set();
             if (subSet.size > 0 && !subSet.has(sub.code)) return;
             const links = (sub.playlists || []).filter(p => matchUsefulFilter(p, filterType));
@@ -5421,7 +6180,8 @@
         const now = Date.now();
         const out = [];
         (window.SCHEDULE_DATA || []).forEach((wk, wIndex) => {
-            (wk.tasks || []).forEach((t, tIndex) => {
+            getVisibleScheduleTasks(wk.tasks).forEach(t => {
+                const tIndex = (wk.tasks || []).indexOf(t);
                 if (t.isCompleted) return;
                 const parsedStart = getTaskEffectiveDeadlineMeta(t, wk.week);
                 const tsStart = parsedStart.timestamp;
@@ -5441,6 +6201,7 @@
         });
         (window.NEWS_DATA || []).forEach((n, newsIndex) => {
             if (!n || !n.hasDeadline) return;
+            if (n.sub && isSubjectHidden(n.sub)) return;
             const ts = parseNewsDeadlineTs(n.deadlineDate, n.deadlineTime);
             const hasExplicitTime = !!(n.deadlineTime && String(n.deadlineTime).trim() !== '');
             const compareTs = hasExplicitTime ? ts : getEndOfDayTimestamp(ts);
@@ -5510,7 +6271,7 @@
             // Collect TBD (no date) tasks
             const tbdItems = [];
             (window.SCHEDULE_DATA || []).forEach(wk => {
-                (wk.tasks || []).forEach(t => {
+                getVisibleScheduleTasks(wk.tasks).forEach(t => {
                     if (t.isCompleted) return;
                     if (getTaskEffectiveDeadlineMeta(t, wk.week).timestamp === 0) {
                         tbdItems.push({ week: wk.week, task: t });
@@ -6079,7 +6840,7 @@
 
     // ======================== NEWS SYSTEM ========================
     const NEWS_SEEN_KEY = 'newsSeenKeys';
-    const NEWS_MAX_VISIBLE_DAYS = 10;
+    const NEWS_MAX_VISIBLE_DAYS = 6;
 
     function getNewsItemKey(item) {
         return [
@@ -6111,6 +6872,7 @@
 
     function isNewsVisibleToViewer(item) {
         if (!item) return false;
+        if (item.sub && isSubjectHidden(item.sub)) return false;
         if (item.hasEvent && item.eventDate) {
             const timeStr = item.eventTime ? item.eventTime : '00:00'; 
             const eventDateTime = new Date(`${item.eventDate}T${timeStr}`);
@@ -6121,8 +6883,11 @@
         if (item.hasDeadline && item.deadlineDate) {
             const deadlineTs = parseNewsDeadlineTs(item.deadlineDate, item.deadlineTime);
             if (deadlineTs > 0 && Date.now() > deadlineTs) return false;
+            // Items with deadlines should stay visible until that exact deadline passes.
+            return true;
         }
-        if (!item.hasEvent) {
+        // Apply publishedAt grace only to standard announcements with no event and no deadline.
+        if (!item.hasEvent && !item.hasDeadline) {
             if (!item.publishedAt) return true;
             const ts = new Date(item.publishedAt).getTime();
             if (!ts || isNaN(ts)) return true;
@@ -6527,6 +7292,328 @@
         nav('directory', push);
     }
 
+    function showTodo(push = true, view = null) {
+        if (view === 'grouped' || view === 'priority') {
+            todoViewMode = view;
+            saveTodoViewMode();
+        }
+        renderTodoPage();
+        nav('todo', push, { view: todoViewMode });
+    }
+
+    function getTodoWeekContext(item) {
+        const sub = (window.COURSE_DATA || []).find(s => s.code === item.subjectCode);
+        if (!sub) return { sub: null, weekObj: null, section: 'weeks' };
+        const primarySection = item.section === 'events' ? 'events' : 'weeks';
+        const firstArr = primarySection === 'events' ? (sub.events || []) : (sub.weeks || []);
+        const secondArr = primarySection === 'events' ? (sub.weeks || []) : (sub.events || []);
+        let weekObj = firstArr.find(w => w.title === item.weekName) || null;
+        let section = primarySection;
+        if (!weekObj) {
+            weekObj = secondArr.find(w => w.title === item.weekName) || null;
+            section = primarySection === 'events' ? 'weeks' : 'events';
+        }
+        return { sub, weekObj, section };
+    }
+
+    function openTodoItem(item) {
+        const ctx = getTodoWeekContext(item);
+        if (!ctx.sub || !ctx.weekObj) {
+            showToast('Referenced item was not found.');
+            return;
+        }
+
+        currSub = ctx.sub;
+        if (item.type === 'week') {
+            if (ctx.weekObj.locked) {
+                showToast('🔒 This week is currently locked', 'locked');
+                return;
+            }
+            currentSubjectView = ctx.section === 'events' ? 'events' : 'weeks';
+            showContentByObj(ctx.weekObj, true, 'todo');
+            return;
+        }
+
+        const res = ctx.weekObj.resources ? ctx.weekObj.resources[item.resourceName] : null;
+        if (!res || !res.vis) {
+            showToast('Resource is no longer available.');
+            return;
+        }
+        if (ctx.weekObj.locked) {
+            alert('Locked');
+            return;
+        }
+        if (res.link && res.link !== '#') window.open(res.link, '_blank');
+        else alert('No link set.');
+    }
+
+    function buildTodoItemCard(item, showDueText = true) {
+        const row = document.createElement('div');
+        row.className = 'todo-item-row';
+        const accent = getSubjectColor(item.subjectCode);
+        const bg = getSubjectBg(item.subjectCode);
+        const isCompleted = item.status === 'completed';
+        const priority = getTodoPriorityMeta(item);
+        const title = item.type === 'week'
+            ? `${item.weekName}`
+            : `${item.weekName} • ${item.resourceName}`;
+        const ageText = getRelativeTimeText(item.dateAdded, 'Added');
+        const doneText = isCompleted ? getRelativeTimeText(item.dateCompleted, 'Completed') : '';
+        const dueText = showDueText && !isCompleted ? priority.dueText : '';
+
+        row.style.cssText = `border-left-color:${accent};`;
+
+        const openPart = document.createElement('div');
+        openPart.className = 'todo-item-open';
+        openPart.style.cssText = 'flex:1; min-width:0; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:9px; padding:10px 11px;';
+        openPart.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span class="todo-sub-chip" style="background:${bg}; color:${accent};">${item.subjectCode}</span>
+                <div class="todo-item-title">${item.type === 'week' ? '🗂️' : '📄'} ${title}</div>
+            </div>
+            <div class="todo-item-meta">${ageText}${doneText ? ` • ${doneText}` : ''}${dueText ? ` • ${dueText}` : ''}</div>
+        `;
+        openPart.onclick = () => openTodoItem(item);
+        row.appendChild(openPart);
+
+        const actions = document.createElement('div');
+        actions.className = 'todo-item-actions';
+
+        if (!isCompleted) {
+            const doneBtn = document.createElement('button');
+            doneBtn.className = 'todo-action-btn';
+            doneBtn.textContent = '✅ Done';
+            doneBtn.style.cssText = 'border:1px solid rgba(52,199,89,0.55); background:rgba(52,199,89,0.12); color:#34c759;';
+            doneBtn.onclick = () => markTodoDone(item.id);
+            actions.appendChild(doneBtn);
+        }
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'todo-action-btn';
+        removeBtn.textContent = '🗑️ Remove';
+        removeBtn.style.cssText = 'border:1px solid rgba(255,59,48,0.5); background:rgba(255,59,48,0.12); color:#ff3b30;';
+        removeBtn.onclick = () => removeTodoItem(item.id);
+        actions.appendChild(removeBtn);
+
+        row.appendChild(actions);
+        return row;
+    }
+
+    function getSubjectDisplayName(code) {
+        const sub = (window.COURSE_DATA || []).find(s => s.code === code);
+        return sub ? sub.name : code;
+    }
+
+    function renderTodoPage() {
+        const toggle = document.getElementById('todo-view-toggle');
+        const filterBar = document.getElementById('todo-filter-bar');
+        const activeList = document.getElementById('todo-active-list');
+        const completedWrap = document.getElementById('todo-completed-wrap');
+        if (!toggle || !filterBar || !activeList || !completedWrap) return;
+        filterBar.style.textAlign = 'center';
+
+        const allVisible = todoItems.filter(t => t.type === 'resource' && !isSubjectHidden(t.subjectCode));
+        const subjectSet = new Set(allVisible.map(t => t.subjectCode).filter(Boolean));
+        const resourceSet = new Set(allVisible.map(t => t.resourceName).filter(Boolean));
+        todoSubjectFilters = new Set([...todoSubjectFilters].filter(x => subjectSet.has(x)));
+        todoResourceFilters = new Set([...todoResourceFilters].filter(x => resourceSet.has(x)));
+
+        const bySubject = (item) => todoSubjectFilters.size === 0 || todoSubjectFilters.has(item.subjectCode);
+        const byResource = (item) => todoResourceFilters.size === 0 || todoResourceFilters.has(item.resourceName);
+        const active = allVisible.filter(t => t.status !== 'completed' && bySubject(t) && byResource(t));
+        const completed = allVisible.filter(t => t.status === 'completed' && bySubject(t) && byResource(t)).sort((a, b) => (b.dateCompleted || 0) - (a.dateCompleted || 0));
+
+        toggle.innerHTML = '';
+        ['grouped', 'priority'].forEach(mode => {
+            const btn = document.createElement('button');
+            btn.className = 'cal-view-btn' + (todoViewMode === mode ? ' active' : '');
+            btn.textContent = mode === 'grouped' ? 'Grouped by Subject' : 'Priority List';
+            btn.onclick = () => {
+                todoViewMode = mode;
+                saveTodoViewMode();
+                renderTodoPage();
+            };
+            toggle.appendChild(btn);
+        });
+
+        filterBar.innerHTML = '';
+        const anyTodoFilter = todoSubjectFilters.size > 0 || todoResourceFilters.size > 0;
+        const subjectList = [...subjectSet].sort();
+        const resourceList = [...resourceSet].sort((a, b) => a.localeCompare(b));
+
+        const togBtn = document.createElement('button');
+        const getTodoTogLabel = (open) => {
+            if (todoSubjectFilters.size > 0 || todoResourceFilters.size > 0) {
+                const parts = [];
+                if (todoSubjectFilters.size > 0) parts.push(`${todoSubjectFilters.size} subject${todoSubjectFilters.size > 1 ? 's' : ''}`);
+                if (todoResourceFilters.size > 0) parts.push(`${todoResourceFilters.size} resource${todoResourceFilters.size > 1 ? 's' : ''}`);
+                return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+            }
+            return `Filter <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+        };
+        togBtn.className = 'fp-toggle' + (anyTodoFilter ? ' has-filter' : '') + (fpOpenState.todo ? ' open' : '');
+        togBtn.innerHTML = getTodoTogLabel(fpOpenState.todo);
+        filterBar.appendChild(togBtn);
+
+        const collapsible = document.createElement('div');
+        collapsible.className = 'fp-bar-collapsible' + (fpOpenState.todo ? ' open' : '');
+        collapsible.style.cssText = 'flex-direction:column; gap:0; margin-top:8px; margin-bottom:8px; align-items:stretch;';
+        const outerBar = document.createElement('div');
+        outerBar.style.cssText = 'background:rgba(8,2,18,0.7); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:10px 18px; display:flex; flex-direction:column; gap:10px;';
+
+        const refreshTodoTog = () => {
+            const open = collapsible.classList.contains('open');
+            const activeState = todoSubjectFilters.size > 0 || todoResourceFilters.size > 0;
+            togBtn.className = 'fp-toggle' + (activeState ? ' has-filter' : '') + (open ? ' open' : '');
+            togBtn.innerHTML = getTodoTogLabel(open);
+        };
+
+        const subjectRowWrap = document.createElement('div');
+        subjectRowWrap.style.cssText = 'display:flex; align-items:center; gap:10px;';
+        const subjectLabel = document.createElement('span');
+        subjectLabel.textContent = 'Subjects';
+        subjectLabel.style.cssText = 'font-size:0.58rem; font-weight:700; color:rgba(196,181,219,0.45); text-transform:uppercase; letter-spacing:1.5px; white-space:nowrap; flex-shrink:0; min-width:46px;';
+        const subjectRow = document.createElement('div');
+        subjectRow.style.cssText = 'flex:1; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+        const allSubBtn = document.createElement('button');
+        allSubBtn.className = 'fp-chip' + (todoSubjectFilters.size === 0 ? ' active' : '');
+        allSubBtn.textContent = 'All';
+        allSubBtn.onclick = () => { todoSubjectFilters.clear(); renderTodoPage(); };
+        subjectRow.appendChild(allSubBtn);
+        subjectList.forEach(code => {
+            const btn = document.createElement('button');
+            btn.className = 'fp-chip' + (todoSubjectFilters.has(code) ? ' active' : '');
+            btn.textContent = code;
+            if (todoSubjectFilters.has(code)) {
+                const col = getSubjectColor(code);
+                btn.style.cssText = `background:${getSubjectBg(code)}; color:${col}; border-color:${col}; box-shadow:0 0 10px ${col}55;`;
+            }
+            btn.onclick = () => {
+                if (todoSubjectFilters.has(code)) todoSubjectFilters.delete(code);
+                else todoSubjectFilters.add(code);
+                renderTodoPage();
+            };
+            subjectRow.appendChild(btn);
+        });
+        subjectRowWrap.appendChild(subjectLabel);
+        subjectRowWrap.appendChild(subjectRow);
+        outerBar.appendChild(subjectRowWrap);
+
+        const rowDivider = document.createElement('div');
+        rowDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
+        outerBar.appendChild(rowDivider);
+
+        const resRowWrap = document.createElement('div');
+        resRowWrap.style.cssText = 'display:flex; align-items:center; gap:10px;';
+        const resLabel = document.createElement('span');
+        resLabel.textContent = 'Resources';
+        resLabel.style.cssText = 'font-size:0.58rem; font-weight:700; color:rgba(196,181,219,0.45); text-transform:uppercase; letter-spacing:1.5px; white-space:nowrap; flex-shrink:0; min-width:46px;';
+        const resRow = document.createElement('div');
+        resRow.style.cssText = 'flex:1; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; align-items:center;';
+        const allResBtn = document.createElement('button');
+        allResBtn.className = 'fp-chip' + (todoResourceFilters.size === 0 ? ' active' : '');
+        allResBtn.textContent = 'All';
+        allResBtn.onclick = () => { todoResourceFilters.clear(); renderTodoPage(); };
+        resRow.appendChild(allResBtn);
+        resourceList.forEach(typeName => {
+            const btn = document.createElement('button');
+            btn.className = 'fp-chip' + (todoResourceFilters.has(typeName) ? ' active' : '');
+            btn.textContent = typeName;
+            btn.onclick = () => {
+                if (todoResourceFilters.has(typeName)) todoResourceFilters.delete(typeName);
+                else todoResourceFilters.add(typeName);
+                renderTodoPage();
+            };
+            resRow.appendChild(btn);
+        });
+        resRowWrap.appendChild(resLabel);
+        resRowWrap.appendChild(resRow);
+        outerBar.appendChild(resRowWrap);
+
+        const clearDivider = document.createElement('div');
+        clearDivider.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:0 -4px;';
+        outerBar.appendChild(clearDivider);
+        const clearRow = document.createElement('div');
+        clearRow.style.cssText = 'display:flex; justify-content:center;';
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'fp-clear-btn';
+        clearBtn.innerHTML = '✕ Clear all filters';
+        clearBtn.onclick = () => {
+            todoSubjectFilters.clear();
+            todoResourceFilters.clear();
+            renderTodoPage();
+        };
+        clearRow.appendChild(clearBtn);
+        outerBar.appendChild(clearRow);
+
+        collapsible.appendChild(outerBar);
+        togBtn.addEventListener('click', () => {
+            const nowOpen = collapsible.classList.contains('open');
+            collapsible.classList.toggle('open', !nowOpen);
+            fpOpenState.todo = !nowOpen;
+            refreshTodoTog();
+        });
+        filterBar.appendChild(collapsible);
+
+        activeList.innerHTML = '';
+        if (active.length === 0) {
+            activeList.innerHTML = '<div class="empty-state">No pending To-Do items yet. Tap [+] on a week or resource.</div>';
+        } else if (todoViewMode === 'grouped') {
+            const groups = {};
+            active.forEach(item => {
+                if (!groups[item.subjectCode]) groups[item.subjectCode] = {};
+                const key = item.weekName || 'Unknown Week';
+                if (!groups[item.subjectCode][key]) groups[item.subjectCode][key] = [];
+                groups[item.subjectCode][key].push(item);
+            });
+            Object.keys(groups).sort().forEach(subCode => {
+                const section = document.createElement('div');
+                section.style.cssText = 'margin-bottom:16px;';
+                const headerColor = getSubjectColor(subCode);
+                section.innerHTML = `<div style="font-family:Orbitron,sans-serif; color:${headerColor}; border-bottom:1px solid ${headerColor}; padding-bottom:6px; margin-bottom:10px;">${getSubjectDisplayName(subCode)} <span style="opacity:0.65; font-size:0.72rem; margin-left:6px;">${subCode}</span></div>`;
+
+                Object.keys(groups[subCode]).forEach(weekName => {
+                    const weekItems = groups[subCode][weekName];
+                    const weekWrap = document.createElement('div');
+                    weekWrap.className = 'todo-week-group';
+                    const weekHeader = document.createElement('div');
+                    weekHeader.style.cssText = 'font-weight:700; color:#e5e5e5; margin-bottom:10px;';
+                    weekHeader.textContent = weekName;
+                    weekWrap.appendChild(weekHeader);
+
+                    weekItems.forEach(item => {
+                        weekWrap.appendChild(buildTodoItemCard(item, false));
+                    });
+
+                    section.appendChild(weekWrap);
+                });
+
+                activeList.appendChild(section);
+            });
+        } else {
+            [...active]
+                .sort((a, b) => getTodoPriorityMeta(a).ts - getTodoPriorityMeta(b).ts)
+                .forEach(item => activeList.appendChild(buildTodoItemCard(item, true)));
+        }
+
+        completedWrap.innerHTML = '';
+        const completedHeader = document.createElement('button');
+        completedHeader.style.cssText = 'width:100%; text-align:left; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.03); color:#aaa; border-radius:10px; padding:10px 12px; font-size:0.82rem; cursor:pointer;';
+        completedHeader.textContent = `${todoCompletedCollapsed ? '▶' : '▼'} Completed (${completed.length})`;
+        completedHeader.onclick = () => {
+            todoCompletedCollapsed = !todoCompletedCollapsed;
+            renderTodoPage();
+        };
+        completedWrap.appendChild(completedHeader);
+
+        if (!todoCompletedCollapsed && completed.length > 0) {
+            const list = document.createElement('div');
+            list.style.cssText = 'margin-top:10px;';
+            completed.forEach(item => list.appendChild(buildTodoItemCard(item, false)));
+            completedWrap.appendChild(list);
+        }
+    }
+
     function renderDirectory() {
         const filterBar = document.getElementById('directory-filter-bar');
         const list = document.getElementById('directory-list');
@@ -6534,7 +7621,7 @@
         filterBar.innerHTML = '';
         list.innerHTML = '';
 
-        const staffData = window.STAFF_DATA || [];
+        const staffData = getVisibleStaffData(window.STAFF_DATA || []);
         if (staffData.length === 0) {
             list.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#666; margin-top:30px; font-style:italic;">No staff data available yet.</div>';
             return;

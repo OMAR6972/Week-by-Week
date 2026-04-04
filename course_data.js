@@ -14728,6 +14728,59 @@ window.COURSE_DATA = [
     }
 ];
 
+window.SUBJECT_DETAILS_DATA = {
+    "CN": {
+        "gradeDistribution": "Final: 50\nMidterm: 20\nQuizzes: UNKOWN\nLab Reports: UNKOWN\nAssignments: UNKOWN\nProject: UNKOWN",
+        "examTypes": "Final: Written\nMidterm: MCQ\nQuizzes: MCQ",
+        "generalNotes": "Dr. Hossam cares about attendance very much, so make sure you attend or you'll face a very harsh fate 💀, attend and make sure you type what he LITERALLY said, don't think stating the answer from your perspective or your understanding will be enough, you need to say exactly what he said."
+    },
+    "DSA": {
+        "gradeDistribution": "Final: 50\nMidterm: 20\nPractical Exams (2): 10\nQuiz (1): 5\nMajor assessment: UNKOWN\nAssignments (2): 5\nProject: 10",
+        "examTypes": "Final: Written\nMidterm: Written\nQuizzes: Written",
+        "generalNotes": "Dr. Youssra tends to get some questions idea from dr. Ashraf's exams so make sure you go thgouh them.\nPractical Exams are just like the midterm questions."
+    },
+    "DB": {
+        "gradeDistribution": "Final: 50\nMidterm: 20\nPractical: 10\nQuizzes (2): 20",
+        "examTypes": "Final: Written\nMidterm: Written\nQuizzes: Written",
+        "generalNotes": ""
+    },
+    "CA": {
+        "gradeDistribution": "Final: 50\nMidterm: 20\nQuizzes: UNKOWN\nAssignments: UNKOWN\nProject: UNKOWN",
+        "examTypes": "Final: MCQ\nMidterm: MCQ\nQuizzes: MCQ",
+        "generalNotes": ""
+    },
+    "OS": {
+        "gradeDistribution": "Final: 50\nMidterm: 20\nProject: UKNOWN\nProgramming Assignment: UKNOWN\nQuizzes (2): UKNOWN",
+        "examTypes": "Final: Written\nMidterm: Written\nQuizzes: MCQ",
+        "generalNotes": "Dr. Sahar cares so much about attendance, so try to attend as much as you can, it's online anyway, if the attendance is good, she will heavily repeat the exam (not a single new question), if the attendance is not good, she will create maybe one or two questions (or more)."
+    },
+    "AI": {
+        "gradeDistribution": "Final: 50\nMidterm: 20\nQuizzes: 15\nProject: 15",
+        "examTypes": "Final: Written\nMidterm: Written\nQuizzes: MCQ",
+        "generalNotes": ""
+    },
+    "ML": {
+        "gradeDistribution": "Final: 50\nMidterm: 50\nQuizzes (3): 10\nWritten Assignment: 5\nPeer review activity: 5\nProject: 10",
+        "examTypes": "Final: Written\nMidterm: Written \nQuizzes: MCQ",
+        "generalNotes": "Dr. Nesma makes easy exams so don't piss her off and you'll be fine with."
+    },
+    "SW": {
+        "gradeDistribution": "",
+        "examTypes": "",
+        "generalNotes": ""
+    },
+    "QC": {
+        "gradeDistribution": "",
+        "examTypes": "",
+        "generalNotes": ""
+    },
+    "RB": {
+        "gradeDistribution": "",
+        "examTypes": "",
+        "generalNotes": ""
+    }
+};
+
 window.SCHEDULE_DATA = [
     {
         "week": 1,

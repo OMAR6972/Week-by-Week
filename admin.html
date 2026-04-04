@@ -153,6 +153,7 @@
     function init() {
         if(typeof window.COURSE_DATA === 'undefined') window.COURSE_DATA = [];
         if(typeof window.CONFIG === 'undefined') window.CONFIG = { resources: [], taskPresets: [] };
+        if(typeof window.SUBJECT_DETAILS_DATA === 'undefined') window.SUBJECT_DETAILS_DATA = {};
         
         if(!window.CONFIG.taskPresets || window.CONFIG.taskPresets.length === 0) {
             window.CONFIG.taskPresets = [
@@ -194,6 +195,12 @@
             if(!sub.weeks) sub.weeks = [];
             if(!sub.events) sub.events = [];
             if(!sub.playlists) sub.playlists = [];
+            if (!window.SUBJECT_DETAILS_DATA[sub.code] || typeof window.SUBJECT_DETAILS_DATA[sub.code] !== 'object') {
+                window.SUBJECT_DETAILS_DATA[sub.code] = { gradeDistribution: '', examTypes: '', generalNotes: '' };
+            }
+            if (typeof window.SUBJECT_DETAILS_DATA[sub.code].gradeDistribution !== 'string') window.SUBJECT_DETAILS_DATA[sub.code].gradeDistribution = '';
+            if (typeof window.SUBJECT_DETAILS_DATA[sub.code].examTypes !== 'string') window.SUBJECT_DETAILS_DATA[sub.code].examTypes = '';
+            if (typeof window.SUBJECT_DETAILS_DATA[sub.code].generalNotes !== 'string') window.SUBJECT_DETAILS_DATA[sub.code].generalNotes = '';
             
             const lists = [sub.weeks, sub.events];
             lists.forEach(list => {
@@ -291,6 +298,7 @@
             <div class="panel-header" style="padding:10px;">
                 <select class="view-select" onchange="subViewMode=this.value; wIdx=0; eIdx=0; pIdx=0; renderMiddleColumn(); renderEditor();">
                     <option value="subject" ${subViewMode==='subject'?'selected':''}>📋 SUBJECT DETAILS</option>
+                    <option value="details" ${subViewMode==='details'?'selected':''}>📚 SUBJECT CONTENT DETAILS</option>
                     <option value="weeks" ${subViewMode==='weeks'?'selected':''}>📚 WEEKS</option>
                     <option value="events" ${subViewMode==='events'?'selected':''}>🎯 EXAM MATERIALS</option>
                 </select>
@@ -305,7 +313,11 @@
 
         if (subViewMode === 'subject') {
             // No list needed for subject details view
-            listContainer.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px; padding:10px;">Subject details are shown in the editor panel →</div>';
+            listContainer.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px; padding:10px;">Subject basic info is shown in the editor panel →</div>';
+            btnContainer.innerHTML = '';
+        }
+        else if (subViewMode === 'details') {
+            listContainer.innerHTML = '<div style="text-align:center; color:#888; margin-top:20px; padding:10px;">Subject content details are shown in the editor panel →</div>';
             btnContainer.innerHTML = '';
         }
         else if (subViewMode === 'weeks') {
@@ -393,12 +405,12 @@
         let html = '';
 
         if (subViewMode === 'subject') {
-            // Subject Details - its own dedicated view
+            // Subject basic info
             html += `
             <div class="form-section">
-                <h3>Subject Details</h3>
+                <h3>Subject Basic Info</h3>
                 <div style="display:grid; grid-template-columns: 1fr 3fr; gap:10px;">
-                    <div><label>Code</label><input type="text" value="${sub.code}" oninput="updateData('sub', 'code', this.value)" onblur="renderSubjects()"></div>
+                    <div><label>Code</label><input type="text" value="${sub.code}" oninput="setSubjectCode(this.value)" onblur="renderSubjects()"></div>
                     <div><label>Name</label><input type="text" value="${sub.name}" oninput="updateData('sub', 'name', this.value)"></div>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 2fr; gap:10px; margin-top:10px;">
@@ -408,6 +420,23 @@
                     <div><label>Color</label><input type="color" value="${sub.color || getSubjectColorFallback(sub.code)}" oninput="updateData('sub', 'color', this.value)"></div>
                     <div><label>Drive Link</label><input type="text" placeholder="https://drive..." value="${sub.driveLink || ''}" oninput="updateData('sub', 'driveLink', this.value)"></div>
                 </div>
+            </div>`;
+            container.innerHTML = html;
+            if (mainEl) requestAnimationFrame(() => { mainEl.scrollTop = savedScroll; });
+            return;
+        }
+
+        if (subViewMode === 'details') {
+            const details = getSubjectDetailsEntry(sub.code);
+            html += `
+            <div class="form-section">
+                <h3>Subject Content Details</h3>
+                <label>Grade Distribution</label>
+                <textarea rows="4" placeholder="e.g. Midterm 25%, Final 35%, Assignments 20%, Labs 20%" oninput="window.SUBJECT_DETAILS_DATA['${sub.code}'].gradeDistribution=this.value; markDirty();">${details.gradeDistribution || ''}</textarea>
+                <label>Exam Types</label>
+                <textarea rows="4" placeholder="e.g. MCQ + Problem Solving, closed-book final" oninput="window.SUBJECT_DETAILS_DATA['${sub.code}'].examTypes=this.value; markDirty();">${details.examTypes || ''}</textarea>
+                <label>General Notes</label>
+                <textarea rows="6" placeholder="Any subject-specific notes for students..." oninput="window.SUBJECT_DETAILS_DATA['${sub.code}'].generalNotes=this.value; markDirty();">${details.generalNotes || ''}</textarea>
             </div>`;
             container.innerHTML = html;
             if (mainEl) requestAnimationFrame(() => { mainEl.scrollTop = savedScroll; });
@@ -598,6 +627,32 @@
         else if(scope === 'weeks') window.COURSE_DATA[cIdx].weeks[wIdx][field] = val;
         else if(scope === 'events') window.COURSE_DATA[cIdx].events[eIdx][field] = val;
         else if(scope === 'playlists') window.COURSE_DATA[cIdx].playlists[pIdx][field] = val;
+    }
+
+    function getSubjectDetailsEntry(code) {
+        if(typeof window.SUBJECT_DETAILS_DATA === 'undefined' || !window.SUBJECT_DETAILS_DATA) window.SUBJECT_DETAILS_DATA = {};
+        if(!window.SUBJECT_DETAILS_DATA[code] || typeof window.SUBJECT_DETAILS_DATA[code] !== 'object') {
+            window.SUBJECT_DETAILS_DATA[code] = { gradeDistribution: '', examTypes: '', generalNotes: '' };
+        }
+        if (typeof window.SUBJECT_DETAILS_DATA[code].gradeDistribution !== 'string') window.SUBJECT_DETAILS_DATA[code].gradeDistribution = '';
+        if (typeof window.SUBJECT_DETAILS_DATA[code].examTypes !== 'string') window.SUBJECT_DETAILS_DATA[code].examTypes = '';
+        if (typeof window.SUBJECT_DETAILS_DATA[code].generalNotes !== 'string') window.SUBJECT_DETAILS_DATA[code].generalNotes = '';
+        return window.SUBJECT_DETAILS_DATA[code];
+    }
+
+    function setSubjectCode(newCode) {
+        const oldCode = window.COURSE_DATA[cIdx].code;
+        updateData('sub', 'code', newCode);
+        if (oldCode !== newCode && window.SUBJECT_DETAILS_DATA) {
+            const existing = window.SUBJECT_DETAILS_DATA[oldCode];
+            if (existing && !window.SUBJECT_DETAILS_DATA[newCode]) {
+                window.SUBJECT_DETAILS_DATA[newCode] = existing;
+                delete window.SUBJECT_DETAILS_DATA[oldCode];
+            } else if (!window.SUBJECT_DETAILS_DATA[newCode]) {
+                window.SUBJECT_DETAILS_DATA[newCode] = { gradeDistribution: '', examTypes: '', generalNotes: '' };
+            }
+        }
+        markDirty();
     }
     
     function updateRes(key, field, val) {
@@ -1256,12 +1311,32 @@
     function delConfigType(i) { if(confirm("Del?")) { window.CONFIG.resources.splice(i,1); renderConfigEditor(); } }
     function updateConfigName(i, name) { window.CONFIG.resources[i].name = name; }
     
-    function addSubject() { window.COURSE_DATA.push({code:"NEW", name:"New", credits:"3 Credits", semester:"Spring 2026", color: "#e91e8c", subCode: "", weeks:[], events:[], playlists:[]}); cIdx = window.COURSE_DATA.length-1; subViewMode = 'subject'; renderSubjects(); renderMiddleColumn(); renderEditor(); }
-    function delSubject(e, i) { e.stopPropagation(); if(confirm("Del?")) { window.COURSE_DATA.splice(i,1); cIdx=0; renderSubjects(); renderEditor(); } }
+    function addSubject() { 
+        const newSubject = {code:"NEW", name:"New", credits:"3 Credits", semester:"Spring 2026", color: "#e91e8c", subCode: "", weeks:[], events:[], playlists:[]};
+        window.COURSE_DATA.push(newSubject);
+        if(typeof window.SUBJECT_DETAILS_DATA === 'undefined' || !window.SUBJECT_DETAILS_DATA) window.SUBJECT_DETAILS_DATA = {};
+        window.SUBJECT_DETAILS_DATA[newSubject.code] = { gradeDistribution: '', examTypes: '', generalNotes: '' };
+        cIdx = window.COURSE_DATA.length-1;
+        subViewMode = 'subject';
+        renderSubjects(); renderMiddleColumn(); renderEditor(); 
+        markDirty();
+    }
+    function delSubject(e, i) { 
+        e.stopPropagation(); 
+        if(confirm("Del?")) { 
+            const code = window.COURSE_DATA[i] && window.COURSE_DATA[i].code;
+            if(code && window.SUBJECT_DETAILS_DATA && window.SUBJECT_DETAILS_DATA[code]) delete window.SUBJECT_DETAILS_DATA[code];
+            window.COURSE_DATA.splice(i,1);
+            cIdx=0;
+            renderSubjects(); renderEditor(); 
+            markDirty();
+        } 
+    }
 
     window.saveData = () => {
         let content = "window.CONFIG = " + JSON.stringify(window.CONFIG, null, 4) + ";\n\n";
         content += "window.COURSE_DATA = " + JSON.stringify(window.COURSE_DATA, null, 4) + ";\n\n";
+        content += "window.SUBJECT_DETAILS_DATA = " + JSON.stringify(window.SUBJECT_DETAILS_DATA || {}, null, 4) + ";\n\n";
         content += "window.SCHEDULE_DATA = " + JSON.stringify(window.SCHEDULE_DATA, null, 4) + ";\n\n";
         content += "window.MIDTERM_DATA = " + JSON.stringify(window.MIDTERM_DATA, null, 4) + ";\n\n";
         content += "window.FINAL_DATA = " + JSON.stringify(window.FINAL_DATA, null, 4) + ";\n\n";
@@ -2051,11 +2126,11 @@
     let dataSnapshot = '';
 
     function takeSnapshot() {
-        dataSnapshot = JSON.stringify({ c: window.COURSE_DATA, s: window.SCHEDULE_DATA, m: window.MIDTERM_DATA, f: window.FINAL_DATA, st: window.STAFF_DATA, tt: window.TIMETABLE_DATA, cfg: window.CONFIG, u: window.UPDATES_DATA, n: window.NEWS_DATA });
+        dataSnapshot = JSON.stringify({ c: window.COURSE_DATA, sd: window.SUBJECT_DETAILS_DATA, s: window.SCHEDULE_DATA, m: window.MIDTERM_DATA, f: window.FINAL_DATA, st: window.STAFF_DATA, tt: window.TIMETABLE_DATA, cfg: window.CONFIG, u: window.UPDATES_DATA, n: window.NEWS_DATA });
     }
 
     function markDirty() {
-        const current = JSON.stringify({ c: window.COURSE_DATA, s: window.SCHEDULE_DATA, m: window.MIDTERM_DATA, f: window.FINAL_DATA, st: window.STAFF_DATA, tt: window.TIMETABLE_DATA, cfg: window.CONFIG, u: window.UPDATES_DATA, n: window.NEWS_DATA });
+        const current = JSON.stringify({ c: window.COURSE_DATA, sd: window.SUBJECT_DETAILS_DATA, s: window.SCHEDULE_DATA, m: window.MIDTERM_DATA, f: window.FINAL_DATA, st: window.STAFF_DATA, tt: window.TIMETABLE_DATA, cfg: window.CONFIG, u: window.UPDATES_DATA, n: window.NEWS_DATA });
         isDirty = current !== dataSnapshot;
     }
 
