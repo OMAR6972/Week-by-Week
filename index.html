@@ -1449,20 +1449,37 @@
 
     // Auto-expire "New" badges older than 7 days based on recentDate
     function autoExpireNewBadges() {
-        const DAYS_LIMIT = 6;
+        const DAYS_LIMIT = 7;
         const now = new Date();
+
+        function applyNewWindow(item) {
+            if (!item || !item.recentDate) return;
+
+            let publishDate = new Date(item.recentDate);
+            if (isNaN(publishDate.getTime())) {
+                const ts = parseDate(item.recentDate);
+                if (!ts) return;
+                publishDate = new Date(ts);
+            }
+
+            // Calculate difference in milliseconds
+            const diffTime = Math.abs(now - publishDate);
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+            // If the difference is LESS THAN OR EQUAL TO 7 days, keep NEW badge
+            if (diffDays <= DAYS_LIMIT) {
+                item.isNew = true;
+            } else {
+                item.isNew = false;
+            }
+        }
+
         window.COURSE_DATA.forEach(sub => {
             [...(sub.weeks || []), ...(sub.events || [])].forEach(wk => {
-                if (wk.isNew && wk.recentDate) {
-                    const ts = parseDate(wk.recentDate);
-                    if (ts > 0 && (now - ts) / 86400000 > DAYS_LIMIT) wk.isNew = false;
-                }
+                applyNewWindow(wk);
                 if (wk.resources) {
                     Object.values(wk.resources).forEach(res => {
-                        if (res.isNew && res.recentDate) {
-                            const ts = parseDate(res.recentDate);
-                            if (ts > 0 && (now - ts) / 86400000 > DAYS_LIMIT) res.isNew = false;
-                        }
+                        applyNewWindow(res);
                     });
                 }
             });
