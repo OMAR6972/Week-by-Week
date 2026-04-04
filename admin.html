@@ -1901,6 +1901,16 @@
     }
 
     // --- UPDATES/CHANGELOG MANAGER ---
+    function normalizeDateInputValue(raw) {
+        if (!raw) return '';
+        const text = String(raw).trim();
+        const m = text.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (m) return m[1];
+        const d = new Date(text);
+        if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+        return '';
+    }
+
     function toggleUpdatesManager() { setView('updates'); renderUpdatesManager(); }
 
     function renderUpdatesManager() {
@@ -1943,7 +1953,7 @@
                     </div>
                     <div style="flex:0 0 190px;">
                         <label>Date</label>
-                        <input type="date" value="${item.date || ''}" style="padding:8px 10px; color-scheme:dark;" oninput="window.UPDATES_DATA[${i}].date=this.value ? this.value+':00' : ''; markDirty();">
+                        <input type="date" value="${normalizeDateInputValue(item.date)}" style="padding:8px 10px; color-scheme:dark;" oninput="window.UPDATES_DATA[${i}].date=this.value || ''; markDirty();">
                     </div>
                 </div>
                 <div style="width:100%; margin-bottom:10px;">
@@ -1960,7 +1970,7 @@
     }
 
     function addUpdateEntry() {
-        window.UPDATES_DATA.push({ icon: '🚀', title: 'New Update', desc: '', date: new Date().toISOString().slice(0,19) });
+        window.UPDATES_DATA.push({ icon: '🚀', title: 'New Update', desc: '', date: new Date().toISOString().slice(0,10) });
         markDirty();
         renderUpdatesManager();
     }
