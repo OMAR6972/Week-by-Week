@@ -920,62 +920,62 @@
     <div class="nav-brand" onclick="nav('home')">WEEK BY WEEK</div>
     <div class="nav-links" id="nav-links">
         <div class="nav-item" id="nav-item-home">
-            <div class="nav-link active" data-nav="home" onclick="navFromBar('home')">
+            <div class="nav-link active" data-nav="home" data-link="#home" onclick="navFromBar('home')">
                 <span class="nav-icon">🏠</span> Subjects <span class="nav-chevron">▼</span>
             </div>
             <div class="nav-dropdown" id="dd-subjects"></div>
         </div>
         <div class="nav-item" id="nav-item-todo">
-            <div class="nav-link nav-link-todo" data-nav="todo" onclick="navFromBar('todo')">
+            <div class="nav-link nav-link-todo" data-nav="todo" data-link="#todo" onclick="navFromBar('todo')">
                 <span class="nav-icon">✅</span> To-Do
             </div>
         </div>
         <div class="nav-item">
-            <div class="nav-link nav-link-history" data-nav="recent" onclick="navFromBar('recent')">
+            <div class="nav-link nav-link-history" data-nav="recent" data-link="#recent" onclick="navFromBar('recent')">
                 <span class="nav-icon">📜</span> History
             </div>
         </div>
         <div class="nav-item" id="nav-item-schedule">
-            <div class="nav-link nav-link-schedule" data-nav="schedule" onclick="navFromBar('schedule')">
+            <div class="nav-link nav-link-schedule" data-nav="schedule" data-link="#schedule" onclick="navFromBar('schedule')">
                 <span class="nav-icon">🗓️</span> Semester Map <span class="nav-chevron">▼</span>
             </div>
             <div class="nav-dropdown" id="dd-schedule"></div>
         </div>
         <div class="nav-item" id="nav-item-deadlines">
-            <div class="nav-link nav-link-deadlines" data-nav="deadlines" onclick="navFromBar('deadlines')">
+            <div class="nav-link nav-link-deadlines" data-nav="deadlines" data-link="#deadlines" onclick="navFromBar('deadlines')">
                 <span class="nav-icon">⏳</span> Deadlines <span class="dd-badge" id="dd-deadline-count" style="background:rgba(0,229,255,0.2); color:#00E5FF; display:none;"></span> <span class="nav-chevron">▼</span>
             </div>
             <div class="nav-dropdown" id="dd-deadlines"></div>
         </div>
         <div class="nav-item" id="nav-item-midterms">
-            <div class="nav-link nav-link-midterms" data-nav="midterm" onclick="navFromBar('midterm')">
+            <div class="nav-link nav-link-midterms" data-nav="midterm" data-link="#midterm" onclick="navFromBar('midterm')">
                 <span class="nav-icon">📝</span> Midterms / Finals
             </div>
         </div>
         <div class="nav-item" id="nav-item-useful">
-            <div class="nav-link nav-link-useful" data-nav="useful-links" onclick="navFromBar('useful-links')">
+            <div class="nav-link nav-link-useful" data-nav="useful-links" data-link="#useful-links" onclick="navFromBar('useful-links')">
                 <span class="nav-icon">🔗</span> Useful Links <span class="nav-chevron">▼</span>
             </div>
             <div class="nav-dropdown" id="dd-useful"></div>
         </div>
         <div class="nav-item" id="nav-item-timetable">
-            <div class="nav-link nav-link-timetable" data-nav="timetable" onclick="navFromBar('timetable')">
+            <div class="nav-link nav-link-timetable" data-nav="timetable" data-link="#timetable" onclick="navFromBar('timetable')">
                 <span class="nav-icon">🗓️</span> Timetable
             </div>
         </div>
         <div class="nav-item" id="nav-item-directory">
-            <div class="nav-link nav-link-directory" data-nav="directory" onclick="navFromBar('directory')">
+            <div class="nav-link nav-link-directory" data-nav="directory" data-link="#directory" onclick="navFromBar('directory')">
                 <span class="nav-icon">👥</span> Staff Contacts <span class="nav-chevron">▼</span>
             </div>
             <div class="nav-dropdown" id="dd-directory"></div>
         </div>
         <div class="nav-item" id="nav-item-gpa">
-            <div class="nav-link nav-link-gpa" data-nav="gpa" onclick="navFromBar('gpa')">
+            <div class="nav-link nav-link-gpa" data-nav="gpa" data-link="#gpa" onclick="navFromBar('gpa')">
                 <span class="nav-icon">🎓</span> GPA Calc
             </div>
         </div>
         <div class="nav-item" id="nav-item-updates">
-            <div class="nav-link nav-link-updates" data-nav="updates" onclick="navFromBar('updates')">
+            <div class="nav-link nav-link-updates" data-nav="updates" data-link="#updates" onclick="navFromBar('updates')">
                 <span class="nav-icon">🚀</span> Updates
             </div>
         </div>
@@ -992,18 +992,18 @@
             <p class="subtitle">Select a subject to begin <span class="visit-badge"><span class="vb-dot"></span> <span class="vb-num" id="visit-count">...</span> visits</span></p>
         </header>
         <div class="header-actions">
-            <button class="recent-btn" onclick="showRecent()">📜 History</button>
-            <button class="schedule-btn" onclick="showSchedule()">🗓️ Semester Map</button>
-            <button class="deadline-btn" onclick="showDeadlines()">⏳ Deadlines</button>
+            <button class="recent-btn" data-link="#recent" onclick="showRecent()">📜 History</button>
+            <button class="schedule-btn" data-link="#schedule" onclick="showSchedule()">🗓️ Semester Map</button>
+            <button class="deadline-btn" data-link="#deadlines" onclick="showDeadlines()">⏳ Deadlines</button>
             <button class="others-toggle-btn" onclick="toggleHomeOthers()">📂 Others <span class="others-arrow">▼</span></button>
             <div class="others-expand-area" id="home-others-expand">
-                <button class="todo-btn" onclick="showTodo()">✅ My To-Do List</button>
-                <button class="midterm-btn" onclick="showMidterms()">📝 Midterms / Finals</button>
-                <button class="useful-btn" onclick="showUsefulLinks()">🔗 Useful Links</button>
-                <button class="timetable-btn" onclick="showTimetable()">🗓️ Timetable</button>
-                <button class="directory-btn" onclick="showDirectory()">👥 Staff Contacts</button>
-                <button class="gpa-btn" onclick="showGpa()">🎓 GPA Calculator</button>
-                <button class="updates-btn" onclick="showUpdates()">🚀 Updates</button>
+                <button class="todo-btn" data-link="#todo" onclick="showTodo()">✅ My To-Do List</button>
+                <button class="midterm-btn" data-link="#midterm" onclick="showMidterms()">📝 Midterms / Finals</button>
+                <button class="useful-btn" data-link="#useful-links" onclick="showUsefulLinks()">🔗 Useful Links</button>
+                <button class="timetable-btn" data-link="#timetable" onclick="showTimetable()">🗓️ Timetable</button>
+                <button class="directory-btn" data-link="#directory" onclick="showDirectory()">👥 Staff Contacts</button>
+                <button class="gpa-btn" data-link="#gpa" onclick="showGpa()">🎓 GPA Calculator</button>
+                <button class="updates-btn" data-link="#updates" onclick="showUpdates()">🚀 Updates</button>
             </div>
         </div>
         <div class="grid subjects-grid" id="subjects-grid"></div>
@@ -1157,10 +1157,10 @@
         </div>
         
         <div id="subject-tabs" class="subject-tabs" style="margin-bottom:12px;">
-            <button id="tab-weeks" class="sub-tab active" onclick="renderSubjectView('weeks')">📚 Weeks</button>
-            <button id="tab-events" class="sub-tab" onclick="renderSubjectView('events')">🎯 Exam Materials</button>
-            <button id="tab-playlists" class="sub-tab" onclick="renderSubjectView('playlists')">🔗 Useful Links</button>
-            <button id="tab-details" class="sub-tab" onclick="renderSubjectView('details')">📋 Details</button>
+            <button id="tab-weeks" class="sub-tab active" data-link="#weeks" onclick="renderSubjectView('weeks')">📚 Weeks</button>
+            <button id="tab-events" class="sub-tab" data-link="#weeks" onclick="renderSubjectView('events')">🎯 Exam Materials</button>
+            <button id="tab-playlists" class="sub-tab" data-link="#weeks" onclick="renderSubjectView('playlists')">🔗 Useful Links</button>
+            <button id="tab-details" class="sub-tab" data-link="#weeks" onclick="renderSubjectView('details')">📋 Details</button>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px; min-height:36px;">
@@ -1580,6 +1580,8 @@
     const HIDDEN_WEEKS_KEY = 'hiddenWeekKeys';
     const TODO_ITEMS_KEY = 'todoItems';
     const TODO_VIEW_KEY = 'todoViewMode';
+    const DEADLINE_STATE_KEY = 'deadlineItemStates';
+    const DEADLINE_TODO_DISMISSED_KEY = 'deadlineTodoDismissed';
     let hiddenSubjectSet = (() => {
         try { return new Set(JSON.parse(localStorage.getItem(HIDDEN_SUBJECTS_KEY) || '[]')); }
         catch(e) { return new Set(); }
@@ -1607,6 +1609,152 @@
     let todoCompletedCollapsed = true;
     let todoSubjectFilters = new Set();
     let todoResourceFilters = new Set();
+    let deadlineItemStates = (() => {
+        try {
+            const parsed = JSON.parse(localStorage.getItem(DEADLINE_STATE_KEY) || '{}');
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch(e) {
+            return {};
+        }
+    })();
+    let dismissedDeadlineTodoMap = (() => {
+        try {
+            const parsed = JSON.parse(localStorage.getItem(DEADLINE_TODO_DISMISSED_KEY) || '{}');
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch(e) {
+            return {};
+        }
+    })();
+
+    function saveDeadlineItemStates() {
+        try { localStorage.setItem(DEADLINE_STATE_KEY, JSON.stringify(deadlineItemStates)); } catch(e) {}
+    }
+
+    function saveDismissedDeadlineTodos() {
+        try { localStorage.setItem(DEADLINE_TODO_DISMISSED_KEY, JSON.stringify(dismissedDeadlineTodoMap)); } catch(e) {}
+    }
+
+    function isDeadlineTodoDismissed(signature) {
+        return !!(signature && dismissedDeadlineTodoMap[signature]);
+    }
+
+    function setDeadlineTodoDismissed(signature, dismissed) {
+        if (!signature) return;
+        if (dismissed) dismissedDeadlineTodoMap[signature] = true;
+        else delete dismissedDeadlineTodoMap[signature];
+        saveDismissedDeadlineTodos();
+    }
+
+    function isQuizOrDiscussionTask(taskObj) {
+        const hay = `${taskObj && taskObj.name || ''} ${taskObj && taskObj.type || ''}`.toLowerCase();
+        return /\bquiz\b|\bexam\b|\bdiscussion\b/.test(hay);
+    }
+
+    const DEADLINE_TODO_WINDOW_DAYS = 7;
+
+    function isDeadlineWithinTodoWindow(compareTs, nowTs = Date.now()) {
+        if (!compareTs || compareTs <= 0) return false;
+        const maxTs = nowTs + DEADLINE_TODO_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+        return compareTs >= nowTs && compareTs <= maxTs;
+    }
+
+    function getScheduleDeadlineTodoMeta(wk, task) {
+        if (!wk || !task) return { dueTs: 0, compareTs: 0, hasExplicitTime: false };
+        const nowTs = Date.now();
+        const parsedStart = getTaskEffectiveDeadlineMeta(task, wk.week);
+        const tsStart = parsedStart.timestamp;
+        if (!tsStart) return { dueTs: 0, compareTs: 0, hasExplicitTime: false };
+        const compareStart = parsedStart.hasTime ? tsStart : getEndOfDayTimestamp(tsStart);
+
+        if (task.deadlineEndDate && String(task.deadlineEndDate).trim() !== '') {
+            const parsedEnd = parseDateMeta(task.deadlineEndDate);
+            const tsEnd = parsedEnd.timestamp;
+            if (tsEnd && tsEnd > tsStart) {
+                const compareEnd = parsedEnd.hasTime ? tsEnd : getEndOfDayTimestamp(tsEnd);
+                if (nowTs >= tsStart && nowTs <= compareEnd) {
+                    return { dueTs: tsEnd, compareTs: compareEnd, hasExplicitTime: !!parsedEnd.hasTime };
+                }
+            }
+        }
+
+        return { dueTs: tsStart, compareTs: compareStart, hasExplicitTime: !!parsedStart.hasTime };
+    }
+
+    function buildScheduleDeadlineSignature(wIndex, tIndex, weekNum, taskObj) {
+        return `schedule::${wIndex}::${tIndex}::${weekNum || ''}::${taskObj && taskObj.sub || ''}::${taskObj && taskObj.name || ''}`;
+    }
+
+    function buildNewsDeadlineSignature(newsIndex, item) {
+        return `news::${newsIndex}::${item && item.sub || ''}::${item && item.title || ''}`;
+    }
+
+    function getDeadlineState(signature) {
+        return deadlineItemStates[signature] || 'active';
+    }
+
+    function setDeadlineState(signature, status) {
+        if (!signature) return;
+        if (status === 'active') delete deadlineItemStates[signature];
+        else deadlineItemStates[signature] = status;
+        saveDeadlineItemStates();
+    }
+
+    function findTodoByDeadlineSignature(signature) {
+        return todoItems.filter(t => t.deadlineSignature === signature);
+    }
+
+    function syncTodoWithDeadlineState(signature, status) {
+        if (!signature) return;
+        if (status === 'hidden') {
+            const before = todoItems.length;
+            todoItems = todoItems.filter(t => t.deadlineSignature !== signature);
+            if (todoItems.length !== before) saveTodoItems();
+            return;
+        }
+        if (status === 'completed') {
+            let changed = false;
+            todoItems = todoItems.map(t => {
+                if (t.deadlineSignature !== signature || t.status === 'completed') return t;
+                changed = true;
+                return { ...t, status: 'completed', dateCompleted: Date.now() };
+            });
+            if (changed) saveTodoItems();
+        }
+    }
+
+    function setScheduleDeadlineStatus(wIndex, tIndex, status) {
+        const wk = (window.SCHEDULE_DATA || [])[wIndex];
+        const task = wk && (wk.tasks || [])[tIndex];
+        if (!wk || !task) return;
+        const signature = buildScheduleDeadlineSignature(wIndex, tIndex, wk.week, task);
+        setDeadlineState(signature, status);
+        syncTodoWithDeadlineState(signature, status);
+        showToast(status === 'active' ? 'Deadline restored' : (status === 'completed' ? 'Marked as completed' : 'Deadline hidden'), 'todo');
+        if (currentPageId === 'deadlines') refreshDeadlinesInPlace();
+        if (currentPageId === 'todo') renderTodoPage();
+        populateDeadlinesDropdown();
+    }
+
+    function setNewsDeadlineStatus(newsIndex, status) {
+        const item = (window.NEWS_DATA || [])[newsIndex];
+        if (!item) return;
+        const signature = buildNewsDeadlineSignature(newsIndex, item);
+        setDeadlineState(signature, status);
+        syncTodoWithDeadlineState(signature, status);
+        showToast(status === 'active' ? 'Deadline restored' : (status === 'completed' ? 'Marked as completed' : 'Deadline hidden'), 'todo');
+        if (currentPageId === 'deadlines') refreshDeadlinesInPlace();
+        if (currentPageId === 'todo') renderTodoPage();
+        populateDeadlinesDropdown();
+    }
+
+    function refreshDeadlinesInPlace() {
+        const y = window.scrollY || 0;
+        const prevSkip = _dlSkipFilterRebuild;
+        _dlSkipFilterRebuild = true;
+        showDeadlines(false);
+        _dlSkipFilterRebuild = prevSkip;
+        requestAnimationFrame(() => window.scrollTo(0, y));
+    }
 
     function saveHiddenSubjects() {
         try { localStorage.setItem(HIDDEN_SUBJECTS_KEY, JSON.stringify([...hiddenSubjectSet])); } catch(e) {}
@@ -1831,6 +1979,21 @@
     }
 
     function getTodoPriorityMeta(item) {
+        if (item.type === 'deadline') {
+            const ts = Number(item.dueTimestamp) || 0;
+            const now = Date.now();
+            let dueText = ts ? 'Due soon' : 'No set date';
+            if (ts) {
+                const compareTs = item.hasExplicitTime ? ts : getEndOfDayTimestamp(ts);
+                const diffDays = Math.floor((compareTs - now) / (1000 * 60 * 60 * 24));
+                if (compareTs < now) dueText = 'Overdue';
+                else if (diffDays <= 0) dueText = 'Due today';
+                else if (diffDays === 1) dueText = 'Due tomorrow';
+                else dueText = `Due in ${diffDays} days`;
+            }
+            return { ts: ts || Number.MAX_SAFE_INTEGER, dueText };
+        }
+
         const now = Date.now();
         const targetWeek = extractWeekNumber(item.weekName);
         let bestTs = 0;
@@ -1875,17 +2038,26 @@
             resourceName: item.resourceName || '',
             link: item.link || '',
             section: item.section === 'events' ? 'events' : 'weeks',
+            dueTimestamp: Number(item.dueTimestamp) || 0,
+            hasExplicitTime: !!item.hasExplicitTime,
+            deadlineSignature: item.deadlineSignature || '',
+            deadlineSource: item.deadlineSource || '',
+            deadlineWIndex: Number.isInteger(item.deadlineWIndex) ? item.deadlineWIndex : -1,
+            deadlineTIndex: Number.isInteger(item.deadlineTIndex) ? item.deadlineTIndex : -1,
+            deadlineNewsIndex: Number.isInteger(item.deadlineNewsIndex) ? item.deadlineNewsIndex : -1,
             dateAdded: item.dateAdded || Date.now(),
             status: 'active',
             dateCompleted: null
         };
 
-        const duplicate = todoItems.some(t =>
-            t.status === 'active' &&
-            t.subjectCode === normalized.subjectCode &&
-            t.weekName === normalized.weekName &&
-            t.resourceName === normalized.resourceName
-        );
+        const duplicate = normalized.deadlineSignature
+            ? todoItems.some(t => t.status === 'active' && t.deadlineSignature === normalized.deadlineSignature)
+            : todoItems.some(t =>
+                t.status === 'active' &&
+                t.subjectCode === normalized.subjectCode &&
+                t.weekName === normalized.weekName &&
+                t.resourceName === normalized.resourceName
+            );
         if (duplicate) {
             if (!suppressToast) showToast('Already in To-Do list', 'todo');
             return false;
@@ -1896,6 +2068,74 @@
         if (!suppressToast) showToast('✅ Added to To-Do', 'todo');
         if (currentPageId === 'todo') renderTodoPage();
         return true;
+    }
+
+    function addScheduleDeadlineTodo(wIndex, tIndex, options = {}) {
+        const wk = (window.SCHEDULE_DATA || [])[wIndex];
+        const task = wk && (wk.tasks || [])[tIndex];
+        if (!wk || !task) return false;
+        if (isQuizOrDiscussionTask(task)) {
+            if (!options.suppressToast) showToast('Quiz/Discussion deadlines are excluded from To-Do auto/deadline add.', 'locked');
+            return false;
+        }
+        const meta = getScheduleDeadlineTodoMeta(wk, task);
+        if (!meta.compareTs || !isDeadlineWithinTodoWindow(meta.compareTs)) {
+            if (!options.suppressToast) showToast('Only deadlines due within 7 days can be added to To-Do.', 'locked');
+            return false;
+        }
+        const signature = buildScheduleDeadlineSignature(wIndex, tIndex, wk.week, task);
+        if (options.suppressToast && isDeadlineTodoDismissed(signature)) return false;
+        if (!options.suppressToast) setDeadlineTodoDismissed(signature, false);
+        return addTodoItem({
+            type: 'deadline',
+            subjectCode: task.sub || '',
+            subjectName: getSubjectDisplayName(task.sub || ''),
+            weekName: `Week ${wk.week}`,
+            resourceName: task.name || 'Deadline Task',
+            section: 'weeks',
+            dueTimestamp: meta.dueTs || 0,
+            hasExplicitTime: !!meta.hasExplicitTime,
+            deadlineSignature: signature,
+            deadlineSource: 'schedule',
+            deadlineWIndex: wIndex,
+            deadlineTIndex: tIndex,
+            deadlineNewsIndex: -1
+        }, options);
+    }
+
+    function addNewsDeadlineTodo(newsIndex, options = {}) {
+        const n = (window.NEWS_DATA || [])[newsIndex];
+        if (!n || !n.hasDeadline) return false;
+        const pseudoTask = { name: n.title || 'Announcement', type: n.type || '' };
+        if (isQuizOrDiscussionTask(pseudoTask)) {
+            if (!options.suppressToast) showToast('Quiz/Discussion deadlines are excluded from To-Do auto/deadline add.', 'locked');
+            return false;
+        }
+        const ts = parseNewsDeadlineTs(n.deadlineDate, n.deadlineTime);
+        const hasExplicitTime = !!(n.deadlineTime && String(n.deadlineTime).trim() !== '');
+        const compareTs = hasExplicitTime ? ts : getEndOfDayTimestamp(ts);
+        if (!ts || !isDeadlineWithinTodoWindow(compareTs)) {
+            if (!options.suppressToast) showToast('Only deadlines due within 7 days can be added to To-Do.', 'locked');
+            return false;
+        }
+        const signature = buildNewsDeadlineSignature(newsIndex, n);
+        if (options.suppressToast && isDeadlineTodoDismissed(signature)) return false;
+        if (!options.suppressToast) setDeadlineTodoDismissed(signature, false);
+        return addTodoItem({
+            type: 'deadline',
+            subjectCode: n.sub || 'NEWS',
+            subjectName: n.sub ? getSubjectDisplayName(n.sub) : 'News',
+            weekName: 'News',
+            resourceName: n.title || 'Announcement',
+            section: 'weeks',
+            dueTimestamp: ts || 0,
+            hasExplicitTime,
+            deadlineSignature: signature,
+            deadlineSource: 'news',
+            deadlineWIndex: -1,
+            deadlineTIndex: -1,
+            deadlineNewsIndex: newsIndex
+        }, options);
     }
 
     function addWeekTodo(sub, weekObj) {
@@ -1937,6 +2177,10 @@
     }
 
     function removeTodoItem(todoId) {
+        const target = todoItems.find(t => t.id === todoId);
+        if (target && target.type === 'deadline' && target.deadlineSignature) {
+            setDeadlineTodoDismissed(target.deadlineSignature, true);
+        }
         todoItems = todoItems.filter(t => t.id !== todoId);
         saveTodoItems();
         renderTodoPage();
@@ -1945,9 +2189,13 @@
     function markTodoDone(todoId) {
         todoItems = todoItems.map(t => {
             if (t.id !== todoId) return t;
+            if (t.deadlineSignature) {
+                setDeadlineState(t.deadlineSignature, 'completed');
+            }
             return { ...t, status: 'completed', dateCompleted: Date.now() };
         });
         saveTodoItems();
+        populateDeadlinesDropdown();
         renderTodoPage();
     }
 
@@ -2716,6 +2964,7 @@
 
                 if(entry.type === 'week') {
                     const item = entry.item;
+                    el.dataset.link = buildWeekHash(item.subCode, item.wkObj, false);
                     el.onclick = () => { currSub = window.COURSE_DATA.find(s => s.code === item.subCode); showContentByObj(item.wkObj, true, 'recent'); };
                     let resList = "";
                     if(item.wkObj.resources) {
@@ -2733,6 +2982,7 @@
                     `;
                 } else if(entry.type === 'res-single') {
                     const item = entry.item;
+                    el.dataset.link = buildWeekHash(item.subCode, item.wkObj, false);
                     el.onclick = () => { currSub = window.COURSE_DATA.find(s => s.code === item.subCode); showContentByObj(item.wkObj, true, 'recent'); };
                     el.innerHTML = `
                         <div class="recent-header"><span>${item.subName} - ${item.wkObj.title}</span><span class="recent-time">${item.dateStr}</span></div>
@@ -2765,6 +3015,7 @@
                             <span style="color:white; font-weight:600; font-size:0.9rem; flex:1;">${r.resName}</span>
                             <span style="color:#9fb8dc; font-size:0.73rem; white-space:nowrap;">${singleEditTime}</span>
                         `;
+                        row.dataset.link = buildWeekHash(r.subCode, r.wkObj, false);
                         row.addEventListener('click', (e) => {
                             e.stopPropagation();
                             currSub = window.COURSE_DATA.find(s => s.code === r.subCode);
@@ -2822,6 +3073,7 @@
             el.className = 'recent-card';
             if (entry.type === 'week') {
                 const item = entry.item;
+                el.dataset.link = buildWeekHash(item.subCode, item.wkObj, false);
                 el.onclick = () => { currSub = window.COURSE_DATA.find(s => s.code === item.subCode); showContentByObj(item.wkObj, true, 'recent'); };
                 let resList = '';
                 if (item.wkObj.resources) {
@@ -2831,6 +3083,7 @@
                 el.innerHTML = `<div class="recent-header"><span>${item.subName} - ${item.wkObj.title}</span><span class="recent-time">${item.dateStr}</span></div><div style="margin-top:5px; color:#888; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Full Update Includes:</div><div class="recent-sub">${resList}</div>`;
             } else if (entry.type === 'res-single') {
                 const item = entry.item;
+                el.dataset.link = buildWeekHash(item.subCode, item.wkObj, false);
                 el.onclick = () => { currSub = window.COURSE_DATA.find(s => s.code === item.subCode); showContentByObj(item.wkObj, true, 'recent'); };
                 el.innerHTML = `<div class="recent-header"><span>${item.subName} - ${item.wkObj.title}</span><span class="recent-time">${item.dateStr}</span></div><div class="recent-sub" style="margin-top:10px;">New Upload: <strong style="color:white">${item.resName}</strong></div><div class="recent-icons">${iconMap[item.resName] || "📂"}</div>`;
             } else if (entry.type === 'res-batch') {
@@ -2848,6 +3101,7 @@
                     const row = document.createElement('div');
                     row.style.cssText = `display:flex; align-items:center; gap:10px; margin-top:8px; padding:8px 12px; border-radius:10px; background:rgba(0,0,0,0.2); cursor:pointer; transition:0.2s; border-left:3px solid ${subColor};`;
                     row.innerHTML = `<span style="font-size:1.2rem;">${iconMap[r.resName]||'📂'}</span><span style="background:${subBg}; color:${subColor}; font-size:0.7rem; font-weight:bold; padding:2px 8px; border-radius:6px;">${r.subCode}</span><span style="color:#aaa; font-size:0.85rem;">${r.wkTitle}</span><span style="color:white; font-weight:600; font-size:0.9rem; flex:1;">${r.resName}</span><span style="color:#9fb8dc; font-size:0.73rem; white-space:nowrap;">${singleEditTime}</span>`;
+                    row.dataset.link = buildWeekHash(r.subCode, r.wkObj, false);
                     row.addEventListener('click', e => { e.stopPropagation(); currSub = window.COURSE_DATA.find(s => s.code === r.subCode); showContentByObj(r.wkObj, true, 'recent'); });
                     row.addEventListener('mouseenter', () => { row.style.background = 'rgba(255,255,255,0.06)'; row.style.transform = 'translateX(4px)'; });
                     row.addEventListener('mouseleave', () => { row.style.background = 'rgba(0,0,0,0.2)'; row.style.transform = 'translateX(0)'; });
@@ -2912,17 +3166,34 @@
             if(tasks.length) {
                 tasks.forEach((t, tIndex) => {
                     if (isSubjectHidden(t.sub)) return;
-                    if(t.isCompleted) {
-                        const parsedCompleted = getTaskEffectiveDeadlineMeta(t, wk.week);
-                        const ts = parsedCompleted.timestamp;
-                        if(ts !== 0) completed.push({ wIndex, tIndex, task: t, week: wk.week, timestamp: ts, hasExplicitTime: parsedCompleted.hasTime });
-                        return;
-                    }
                     const parsedStart = getTaskEffectiveDeadlineMeta(t, wk.week);
                     const tsStart = parsedStart.timestamp;
                     const hasExplicitTime = parsedStart.hasTime;
-                    if(tsStart === 0) { unscheduled.push({ wIndex, tIndex, task: t, week: wk.week }); return; }
-                    const compareStartTs = hasExplicitTime ? tsStart : getEndOfDayTimestamp(tsStart);
+                    const compareStartTs = tsStart ? (hasExplicitTime ? tsStart : getEndOfDayTimestamp(tsStart)) : 0;
+                    const signature = buildScheduleDeadlineSignature(wIndex, tIndex, wk.week, t);
+                    const manualState = getDeadlineState(signature);
+
+                    if (manualState === 'completed' || manualState === 'hidden') {
+                        completed.push({
+                            source: 'schedule',
+                            wIndex,
+                            tIndex,
+                            task: t,
+                            week: wk.week,
+                            timestamp: tsStart || Date.now(),
+                            hasExplicitTime,
+                            deadlineSignature: signature,
+                            manualState,
+                            canRestore: tsStart === 0 || compareStartTs >= now
+                        });
+                        return;
+                    }
+
+                    if(t.isCompleted) {
+                        if(tsStart !== 0) completed.push({ source: 'schedule', wIndex, tIndex, task: t, week: wk.week, timestamp: tsStart, hasExplicitTime, deadlineSignature: signature, canRestore: compareStartTs >= now });
+                        return;
+                    }
+                    if(tsStart === 0) { unscheduled.push({ source: 'schedule', wIndex, tIndex, task: t, week: wk.week, deadlineSignature: signature }); return; }
 
                     if(t.deadlineEndDate && t.deadlineEndDate.trim() !== '') {
                         const parsedEnd = parseDateMeta(t.deadlineEndDate);
@@ -2930,17 +3201,17 @@
                         if(tsEnd !== 0 && tsEnd > tsStart) {  // only valid if end is genuinely after start
                             const compareEndTs = parsedEnd.hasTime ? tsEnd : getEndOfDayTimestamp(tsEnd);
                             if(now >= tsStart && now <= compareEndTs) {
-                                ongoing.push({ wIndex, tIndex, task: t, week: wk.week, timestamp: tsStart, endTimestamp: tsEnd, hasExplicitTime, endHasExplicitTime: parsedEnd.hasTime });
+                                ongoing.push({ source: 'schedule', wIndex, tIndex, task: t, week: wk.week, timestamp: tsStart, endTimestamp: tsEnd, hasExplicitTime, endHasExplicitTime: parsedEnd.hasTime, deadlineSignature: signature });
                                 return;
                             } else if(now > compareEndTs) {
-                                completed.push({ wIndex, tIndex, task: t, week: wk.week, timestamp: tsEnd, hasExplicitTime: parsedEnd.hasTime });
+                                completed.push({ source: 'schedule', wIndex, tIndex, task: t, week: wk.week, timestamp: tsEnd, hasExplicitTime: parsedEnd.hasTime, deadlineSignature: signature, canRestore: false });
                                 return;
                             }
                         }
                     }
 
                     const isPast = compareStartTs < now;
-                    const item = { wIndex, tIndex, task: t, week: wk.week, timestamp: tsStart, hasExplicitTime };
+                    const item = { source: 'schedule', wIndex, tIndex, task: t, week: wk.week, timestamp: tsStart, hasExplicitTime, deadlineSignature: signature };
                     if(isPast) completed.push(item);
                     else upcoming.push(item);
                 });
@@ -2951,12 +3222,31 @@
             if (!n || !n.hasDeadline) return;
             if (n.sub && isSubjectHidden(n.sub)) return;
             const ts = parseNewsDeadlineTs(n.deadlineDate, n.deadlineTime);
+            const signature = buildNewsDeadlineSignature(newsIndex, n);
+            const manualState = getDeadlineState(signature);
+
+            if (manualState === 'completed' || manualState === 'hidden') {
+                completed.push({
+                    source: 'news',
+                    newsIndex,
+                    task: { icon: n.emoji || '📢', name: n.title || 'Announcement', sub: n.sub || 'NEWS' },
+                    week: 'News',
+                    timestamp: ts || Date.now(),
+                    hasExplicitTime: !!(n.deadlineTime && String(n.deadlineTime).trim() !== ''),
+                    deadlineSignature: signature,
+                    manualState,
+                    canRestore: ts === 0 || ts >= now
+                });
+                return;
+            }
+
             if (ts === 0) {
                 unscheduled.push({
                     source: 'news',
                     newsIndex,
                     task: { icon: n.emoji || '📢', name: n.title || 'Announcement', sub: n.sub || 'NEWS' },
-                    week: 'News'
+                    week: 'News',
+                    deadlineSignature: signature
                 });
                 return;
             }
@@ -2966,7 +3256,8 @@
                 task: { icon: n.emoji || '📢', name: n.title || 'Announcement', sub: n.sub || 'NEWS' },
                 week: 'News',
                 timestamp: ts,
-                hasExplicitTime: !!(n.deadlineTime && String(n.deadlineTime).trim() !== '')
+                hasExplicitTime: !!(n.deadlineTime && String(n.deadlineTime).trim() !== ''),
+                deadlineSignature: signature
             };
             if (ts >= now) upcoming.push(item);
         });
@@ -3195,6 +3486,56 @@
         const filteredCompleted   = applyDeadlineFilters(completed);
         const filteredUnscheduled = applyDeadlineFilters(unscheduled);
 
+        function isDeadlineTodoEligible(item) {
+            return !isQuizOrDiscussionTask(item && item.task);
+        }
+
+        function buildDeadlineCardAttrs(item, isComp) {
+            const source = item.source === 'news' ? 'news' : 'schedule';
+            const canRestore = !!item.canRestore;
+            const canDone = !isQuizOrDiscussionTask(item && item.task);
+            const canAddTodo = isDeadlineTodoEligible(item);
+            const hasTodo = !!(item.deadlineSignature && findTodoByDeadlineSignature(item.deadlineSignature).some(t => t.status === 'active'));
+            const wIndex = Number.isInteger(item.wIndex) ? item.wIndex : -1;
+            const tIndex = Number.isInteger(item.tIndex) ? item.tIndex : -1;
+            const newsIndex = Number.isInteger(item.newsIndex) ? item.newsIndex : -1;
+            const stage = isComp ? 'completed' : 'active';
+            return `data-dl-source="${source}" data-dl-stage="${stage}" data-dl-w="${wIndex}" data-dl-t="${tIndex}" data-dl-news="${newsIndex}" data-dl-can-restore="${canRestore ? '1' : '0'}" data-dl-can-done="${canDone ? '1' : '0'}" data-dl-can-add-todo="${canAddTodo ? '1' : '0'}" data-dl-has-todo="${hasTodo ? '1' : '0'}"`;
+        }
+
+        // Auto-add only deadlines that are determined and due within the next 7 days.
+        const eligibleDeadlineSignatures = new Set();
+        [...ongoing, ...upcoming].forEach(item => {
+            if (!isDeadlineTodoEligible(item)) return;
+            if (isDeadlineTodoDismissed(item.deadlineSignature)) return;
+            if (item.source === 'news') {
+                const n = (window.NEWS_DATA || [])[item.newsIndex];
+                const ts = parseNewsDeadlineTs(n && n.deadlineDate, n && n.deadlineTime);
+                const hasExplicitTime = !!(n && n.deadlineTime && String(n.deadlineTime).trim() !== '');
+                const compareTs = hasExplicitTime ? ts : getEndOfDayTimestamp(ts);
+                if (!ts || !isDeadlineWithinTodoWindow(compareTs)) return;
+                if (item.deadlineSignature) eligibleDeadlineSignatures.add(item.deadlineSignature);
+                addNewsDeadlineTodo(item.newsIndex, { suppressToast: true });
+                return;
+            }
+            const wk = (window.SCHEDULE_DATA || [])[item.wIndex];
+            const t = wk && (wk.tasks || [])[item.tIndex];
+            const meta = getScheduleDeadlineTodoMeta(wk, t);
+            if (!meta.compareTs || !isDeadlineWithinTodoWindow(meta.compareTs)) return;
+            if (item.deadlineSignature) eligibleDeadlineSignatures.add(item.deadlineSignature);
+            addScheduleDeadlineTodo(item.wIndex, item.tIndex, { suppressToast: true });
+        });
+
+        // Prune active deadline To-Do items that are now outside the 7-day window or lack determined time/date.
+        const beforeTodoLen = todoItems.length;
+        todoItems = todoItems.filter(t => {
+            if (t.status === 'completed') return true;
+            if (t.type !== 'deadline') return true;
+            if (!t.deadlineSignature) return false;
+            return eligibleDeadlineSignatures.has(t.deadlineSignature);
+        });
+        if (todoItems.length !== beforeTodoLen) saveTodoItems();
+
         if (filteredOngoing.length > 0) {
             ongoingContainer.style.display = 'block';
         }
@@ -3274,8 +3615,9 @@
                     : '';
 
                 const onClick = item.source === 'news' ? 'openNewsPanel()' : `goToScheduleTask(${item.wIndex}, ${item.tIndex})`;
+                const cardAttrs = buildDeadlineCardAttrs(item, isComp);
                 html += `
-                    <div class="card ${isComp ? 'completed' : ''}" style="border-left: 4px solid ${accentColor}; flex-direction: row; cursor: pointer; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center;" onclick="${onClick}">
+                    <div class="card deadline-action-card ${isComp ? 'completed' : ''}" ${cardAttrs} style="border-left: 4px solid ${accentColor}; flex-direction: row; cursor: pointer; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center;" onclick="${onClick}">
                         <span class="sub-badge" style="background: ${bgColor}; color: ${badgeTextColor}; min-width: 52px; font-size: 0.72rem; padding: 5px 10px; border-radius:8px;">${item.task.sub}</span>
                         <div style="flex: 1; margin-left: 15px;">
                             <div class="dl-text" style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${item.task.icon} ${item.task.name}</div>
@@ -3339,7 +3681,7 @@
                 })();
 
                 ongoingHtml += `
-                    <div class="card" style="border-left: 4px solid #af52de; flex-direction: row; cursor: pointer; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center; background: linear-gradient(135deg, rgba(175,82,222,0.15), var(--card-bg)); box-shadow: 0 0 20px rgba(175,82,222,0.1);" onclick="goToScheduleTask(${item.wIndex}, ${item.tIndex})">
+                    <div class="card deadline-action-card" ${buildDeadlineCardAttrs(item, false)} style="border-left: 4px solid #af52de; flex-direction: row; cursor: pointer; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center; background: linear-gradient(135deg, rgba(175,82,222,0.15), var(--card-bg)); box-shadow: 0 0 20px rgba(175,82,222,0.1);" onclick="goToScheduleTask(${item.wIndex}, ${item.tIndex})">
                         <span class="sub-badge" style="background: ${bgColor}; color: ${accentColor}; min-width: 52px; font-size: 0.72rem; padding: 5px 10px; border-radius:8px;">${item.task.sub}</span>
                         <div style="flex: 1; margin-left: 15px;">
                             <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${item.task.icon} ${item.task.name}</div>
@@ -3371,7 +3713,7 @@
                 const bgColor = getSubjectBg(item.task.sub);
                 const onClick = item.source === 'news' ? 'openNewsPanel()' : `goToScheduleTask(${item.wIndex}, ${item.tIndex})`;
                 unschHtml += `
-                    <div class="card" style="border-left: 4px solid ${accentColor}; flex-direction: row; cursor: pointer; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center; opacity:0.75;" onclick="${onClick}">
+                    <div class="card deadline-action-card" ${buildDeadlineCardAttrs(item, false)} style="border-left: 4px solid ${accentColor}; flex-direction: row; cursor: pointer; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center; opacity:0.75;" onclick="${onClick}">
                         <span class="sub-badge" style="background: ${bgColor}; color: ${accentColor}; min-width: 52px; font-size: 0.72rem; padding: 5px 10px; border-radius:8px;">${item.task.sub}</span>
                         <div style="flex: 1; margin-left: 15px;">
                             <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${item.task.icon} ${item.task.name}</div>
@@ -3384,7 +3726,9 @@
             unschList.innerHTML = unschHtml;
         }
 
-        nav('deadlines', push);
+        if (currentPageId !== 'deadlines' || push) {
+            nav('deadlines', push);
+        }
     }
 
     // Re-renders lists only (skips filter bar rebuild) when a filter chip is tapped
@@ -3399,6 +3743,106 @@
         showSchedule(true, 'deadlines');
         setTimeout(() => { openModal(wIndex, tIndex); }, 150);
     }
+
+    let deadlineActionMenu = null;
+    function closeDeadlineActionMenu() {
+        if (deadlineActionMenu) {
+            deadlineActionMenu.remove();
+            deadlineActionMenu = null;
+        }
+    }
+
+    function openDeadlineActionMenu(e, card) {
+        if (!card) return;
+        const source = card.dataset.dlSource || 'schedule';
+        const stage = card.dataset.dlStage || 'active';
+        const wIndex = parseInt(card.dataset.dlW || '-1', 10);
+        const tIndex = parseInt(card.dataset.dlT || '-1', 10);
+        const newsIndex = parseInt(card.dataset.dlNews || '-1', 10);
+        const canRestore = card.dataset.dlCanRestore === '1';
+        const canDone = card.dataset.dlCanDone === '1';
+        const canAddTodo = card.dataset.dlCanAddTodo === '1';
+        const hasTodo = card.dataset.dlHasTodo === '1';
+
+        const actions = [];
+        const addAction = (label, fn) => actions.push({ label, fn });
+
+        if (stage === 'completed') {
+            if (canRestore) {
+                addAction('Unhide', () => {
+                    if (source === 'news') setNewsDeadlineStatus(newsIndex, 'active');
+                    else setScheduleDeadlineStatus(wIndex, tIndex, 'active');
+                });
+            }
+        } else {
+            if (canDone) {
+                addAction('Mark Done', () => {
+                    if (source === 'news') setNewsDeadlineStatus(newsIndex, 'completed');
+                    else setScheduleDeadlineStatus(wIndex, tIndex, 'completed');
+                });
+            }
+            addAction('Hide', () => {
+                if (source === 'news') setNewsDeadlineStatus(newsIndex, 'hidden');
+                else setScheduleDeadlineStatus(wIndex, tIndex, 'hidden');
+            });
+            if (canAddTodo && !hasTodo) {
+                addAction('Add to To-Do', () => {
+                    if (source === 'news') addNewsDeadlineTodo(newsIndex);
+                    else addScheduleDeadlineTodo(wIndex, tIndex);
+                });
+            }
+        }
+
+        if (!actions.length) return;
+
+        closeDeadlineActionMenu();
+        const menu = document.createElement('div');
+        menu.style.cssText = 'position:fixed; z-index:10050; min-width:180px; background:rgba(10,0,18,0.97); border:1px solid rgba(255,255,255,0.14); border-radius:10px; box-shadow:0 16px 36px rgba(0,0,0,0.5); padding:6px;';
+        actions.forEach((act, idx) => {
+            const btn = document.createElement('button');
+            btn.textContent = act.label;
+            btn.style.cssText = 'display:block; width:100%; text-align:left; background:transparent; color:#e6e6e6; border:none; padding:9px 11px; border-radius:8px; font-size:0.82rem; cursor:pointer;';
+            btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(255,255,255,0.08)'; });
+            btn.addEventListener('mouseleave', () => { btn.style.background = 'transparent'; });
+            btn.addEventListener('click', (evt) => {
+                evt.preventDefault();
+                evt.stopPropagation();
+                closeDeadlineActionMenu();
+                act.fn();
+            });
+            menu.appendChild(btn);
+            if (idx < actions.length - 1) {
+                const sep = document.createElement('div');
+                sep.style.cssText = 'height:1px; background:rgba(255,255,255,0.08); margin:3px 0;';
+                menu.appendChild(sep);
+            }
+        });
+        document.body.appendChild(menu);
+        deadlineActionMenu = menu;
+
+        const mw = 190;
+        const mh = 44 * actions.length + 14;
+        const x = Math.min(e.clientX, window.innerWidth - mw - 8);
+        const y = Math.min(e.clientY, window.innerHeight - mh - 8);
+        menu.style.left = `${Math.max(6, x)}px`;
+        menu.style.top = `${Math.max(6, y)}px`;
+    }
+
+    document.addEventListener('contextmenu', function(e) {
+        const card = e.target && e.target.closest ? e.target.closest('.deadline-action-card') : null;
+        if (!card) {
+            closeDeadlineActionMenu();
+            return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        openDeadlineActionMenu(e, card);
+    }, true);
+
+    document.addEventListener('click', closeDeadlineActionMenu, true);
+    document.addEventListener('scroll', closeDeadlineActionMenu, true);
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDeadlineActionMenu(); });
 
     // --- USEFUL LINKS GLOBAL PAGE ---
     function showUsefulLinks(push = true, filterType = 'All Links', subjectFilter = null, badgeFilters = null) {
@@ -4398,6 +4842,7 @@
             const card = document.createElement('div');
             card.className = 'card';
             card.style.cssText = 'border-left:4px solid ' + getSubjectColor(exam.sub) + '; flex-direction:row; cursor:pointer; padding:14px 18px; margin-bottom:10px; display:flex; align-items:center;';
+            card.dataset.link = '#midterm';
             card.addEventListener('click', (function(i){ return function(){ openModalFn(i); }; })(idx));
 
             const badge = document.createElement('span');
@@ -4858,6 +5303,16 @@
     function renderSubjectView(viewType, pushState = true) {
         currentSubjectView = viewType;
         closeSubjectFilterDropdown(); // close filter dropdown when switching tabs
+
+        const subjectHashBase = currSub && currSub.code ? `#${currSub.code}` : '#weeks';
+        const tabWeeks = document.getElementById('tab-weeks');
+        const tabEvents = document.getElementById('tab-events');
+        const tabPlaylists = document.getElementById('tab-playlists');
+        const tabDetails = document.getElementById('tab-details');
+        if (tabWeeks) tabWeeks.dataset.link = subjectHashBase;
+        if (tabEvents) tabEvents.dataset.link = `${subjectHashBase}/events`;
+        if (tabPlaylists) tabPlaylists.dataset.link = `${subjectHashBase}/links`;
+        if (tabDetails) tabDetails.dataset.link = `${subjectHashBase}/details`;
         
         document.getElementById('tab-weeks').classList.remove('active');
         document.getElementById('tab-events').classList.remove('active');
@@ -5921,6 +6376,8 @@
         window.SCHEDULE_DATA.forEach((wk, wIndex) => {
             getVisibleScheduleTasks(wk.tasks).forEach((t) => {
                 const tIndex = (wk.tasks || []).indexOf(t);
+                const signature = buildScheduleDeadlineSignature(wIndex, tIndex, wk.week, t);
+                if (getDeadlineState(signature) !== 'active') return;
                 if(t.isCompleted) return;
                 const parsedStart = getTaskEffectiveDeadlineMeta(t, wk.week);
                 const ts = parsedStart.timestamp;
@@ -5941,6 +6398,8 @@
         (window.NEWS_DATA || []).forEach((n, newsIndex) => {
             if (!n || !n.hasDeadline) return;
             if (n.sub && isSubjectHidden(n.sub)) return;
+            const signature = buildNewsDeadlineSignature(newsIndex, n);
+            if (getDeadlineState(signature) !== 'active') return;
             const ts = parseNewsDeadlineTs(n.deadlineDate, n.deadlineTime);
             const hasExplicitTime = !!(n.deadlineTime && String(n.deadlineTime).trim() !== '');
             const compareTs = hasExplicitTime ? ts : getEndOfDayTimestamp(ts);
@@ -7345,6 +7804,17 @@
     }
 
     function openTodoItem(item) {
+        if (item.type === 'deadline') {
+            if (item.deadlineSource === 'news') {
+                openNewsPanel();
+                return;
+            }
+            if (Number.isInteger(item.deadlineWIndex) && Number.isInteger(item.deadlineTIndex) && item.deadlineWIndex >= 0 && item.deadlineTIndex >= 0) {
+                goToScheduleTask(item.deadlineWIndex, item.deadlineTIndex);
+                return;
+            }
+        }
+
         const ctx = getTodoWeekContext(item);
         if (!ctx.sub || !ctx.weekObj) {
             showToast('Referenced item was not found.');
@@ -7384,10 +7854,11 @@
         const priority = getTodoPriorityMeta(item);
         const title = item.type === 'week'
             ? `${item.weekName}`
-            : `${item.weekName} • ${item.resourceName}`;
+            : (item.type === 'deadline' ? `${item.resourceName}` : `${item.weekName} • ${item.resourceName}`);
         const ageText = getRelativeTimeText(item.dateAdded, 'Added');
         const doneText = isCompleted ? getRelativeTimeText(item.dateCompleted, 'Completed') : '';
         const dueText = showDueText && !isCompleted ? priority.dueText : '';
+        const itemIcon = item.type === 'week' ? '🗂️' : (item.type === 'deadline' ? '⏳' : '📄');
 
         row.style.cssText = `border-left-color:${accent};`;
 
@@ -7397,7 +7868,7 @@
         openPart.innerHTML = `
             <div style="display:flex; align-items:center; gap:8px;">
                 <span class="todo-sub-chip" style="background:${bg}; color:${accent};">${item.subjectCode}</span>
-                <div class="todo-item-title">${item.type === 'week' ? '🗂️' : '📄'} ${title}</div>
+                <div class="todo-item-title">${itemIcon} ${title}</div>
             </div>
             <div class="todo-item-meta">${ageText}${doneText ? ` • ${doneText}` : ''}${dueText ? ` • ${dueText}` : ''}</div>
         `;
@@ -7440,16 +7911,16 @@
         if (!toggle || !filterBar || !activeList || !completedWrap) return;
         filterBar.style.textAlign = 'center';
 
-        const allVisible = todoItems.filter(t => t.type === 'resource' && !isSubjectHidden(t.subjectCode));
+        const allVisible = todoItems.filter(t => (t.type === 'resource' || t.type === 'deadline') && !isSubjectHidden(t.subjectCode));
         const subjectSet = new Set(allVisible.map(t => t.subjectCode).filter(Boolean));
-        const resourceSet = new Set(allVisible.map(t => t.resourceName).filter(Boolean));
+        const resourceSet = new Set(allVisible.filter(t => t.type === 'resource').map(t => t.resourceName).filter(Boolean));
         todoSubjectFilters = new Set([...todoSubjectFilters].filter(x => subjectSet.has(x)));
         todoResourceFilters = new Set([...todoResourceFilters].filter(x => resourceSet.has(x)));
 
         const bySubject = (item) => todoSubjectFilters.size === 0 || todoSubjectFilters.has(item.subjectCode);
         const byResource = (item) => todoResourceFilters.size === 0 || todoResourceFilters.has(item.resourceName);
-        const active = allVisible.filter(t => t.status !== 'completed' && bySubject(t) && byResource(t));
-        const completed = allVisible.filter(t => t.status === 'completed' && bySubject(t) && byResource(t)).sort((a, b) => (b.dateCompleted || 0) - (a.dateCompleted || 0));
+        const active = allVisible.filter(t => t.status !== 'completed' && bySubject(t) && (t.type === 'deadline' ? true : byResource(t)));
+        const completed = allVisible.filter(t => t.status === 'completed' && bySubject(t) && (t.type === 'deadline' ? true : byResource(t))).sort((a, b) => (b.dateCompleted || 0) - (a.dateCompleted || 0));
 
         toggle.innerHTML = '';
         ['grouped', 'priority'].forEach(mode => {
@@ -7584,11 +8055,21 @@
         filterBar.appendChild(collapsible);
 
         activeList.innerHTML = '';
-        if (active.length === 0) {
-            activeList.innerHTML = '<div class="empty-state">No pending To-Do items yet. Tap [+] on a week or resource.</div>';
-        } else if (todoViewMode === 'grouped') {
+        const studyingItems = active.filter(i => i.type === 'resource');
+        const taskItems = active.filter(i => i.type === 'deadline');
+
+        const sectionTitle = (text, color) => {
+            const el = document.createElement('div');
+            el.style.cssText = `font-family:'Orbitron',sans-serif; color:${color}; border-bottom:1px solid ${color}; padding-bottom:6px; margin:14px 0 10px; letter-spacing:1.3px;`;
+            el.textContent = text;
+            return el;
+        };
+
+        const renderGroupedItems = (items, showDueText) => {
+            if (!items.length) return null;
+            const wrap = document.createElement('div');
             const groups = {};
-            active.forEach(item => {
+            items.forEach(item => {
                 if (!groups[item.subjectCode]) groups[item.subjectCode] = {};
                 const key = item.weekName || 'Unknown Week';
                 if (!groups[item.subjectCode][key]) groups[item.subjectCode][key] = [];
@@ -7599,7 +8080,6 @@
                 section.style.cssText = 'margin-bottom:16px;';
                 const headerColor = getSubjectColor(subCode);
                 section.innerHTML = `<div style="font-family:Orbitron,sans-serif; color:${headerColor}; border-bottom:1px solid ${headerColor}; padding-bottom:6px; margin-bottom:10px;">${getSubjectDisplayName(subCode)} <span style="opacity:0.65; font-size:0.72rem; margin-left:6px;">${subCode}</span></div>`;
-
                 Object.keys(groups[subCode]).forEach(weekName => {
                     const weekItems = groups[subCode][weekName];
                     const weekWrap = document.createElement('div');
@@ -7608,20 +8088,47 @@
                     weekHeader.style.cssText = 'font-weight:700; color:#e5e5e5; margin-bottom:10px;';
                     weekHeader.textContent = weekName;
                     weekWrap.appendChild(weekHeader);
-
-                    weekItems.forEach(item => {
-                        weekWrap.appendChild(buildTodoItemCard(item, false));
-                    });
-
+                    weekItems.forEach(item => weekWrap.appendChild(buildTodoItemCard(item, showDueText)));
                     section.appendChild(weekWrap);
                 });
-
-                activeList.appendChild(section);
+                wrap.appendChild(section);
             });
-        } else {
-            [...active]
+            return wrap;
+        };
+
+        const renderPriorityItems = (items, showDueText) => {
+            if (!items.length) return null;
+            const wrap = document.createElement('div');
+            [...items]
                 .sort((a, b) => getTodoPriorityMeta(a).ts - getTodoPriorityMeta(b).ts)
-                .forEach(item => activeList.appendChild(buildTodoItemCard(item, true)));
+                .forEach(item => wrap.appendChild(buildTodoItemCard(item, showDueText)));
+            return wrap;
+        };
+
+        if (!studyingItems.length && !taskItems.length) {
+            activeList.innerHTML = '<div class="empty-state">No pending To-Do items yet.</div>';
+        } else {
+            activeList.appendChild(sectionTitle('STUDYING', '#2ecc71'));
+            if (!studyingItems.length) {
+                const emptyStudy = document.createElement('div');
+                emptyStudy.className = 'empty-state';
+                emptyStudy.textContent = 'No studying resources pending.';
+                activeList.appendChild(emptyStudy);
+            } else {
+                const block = todoViewMode === 'grouped' ? renderGroupedItems(studyingItems, false) : renderPriorityItems(studyingItems, true);
+                if (block) activeList.appendChild(block);
+            }
+
+            activeList.appendChild(sectionTitle('TASKS', '#00E5FF'));
+            if (!taskItems.length) {
+                const emptyTasks = document.createElement('div');
+                emptyTasks.className = 'empty-state';
+                emptyTasks.textContent = 'No task deadlines pending.';
+                activeList.appendChild(emptyTasks);
+            } else {
+                const block = todoViewMode === 'grouped' ? renderGroupedItems(taskItems, true) : renderPriorityItems(taskItems, true);
+                if (block) activeList.appendChild(block);
+            }
         }
 
         completedWrap.innerHTML = '';
@@ -9101,17 +9608,76 @@
     // ── Global link context menu ──────────────────────────────────────────────
     (function() {
         let menu = null;
+        let suppressUrl = null;
+        let suppressUntil = 0;
+
+        function openInBackgroundTab(url) {
+            const w = window.open(url, '_blank', 'noopener,noreferrer');
+            if (w) {
+                try { w.blur(); } catch (_) {}
+                try { window.focus(); } catch (_) {}
+            }
+        }
 
         function closeMenu() {
             if (menu) { menu.remove(); menu = null; }
         }
 
         function findLink(el) {
+            const toAbsoluteLink = (rawUrl) => {
+                if (!rawUrl || !rawUrl.trim()) return null;
+                try { return new URL(rawUrl.trim(), window.location.href).href; }
+                catch (_) { return rawUrl.trim(); }
+            };
+
+            // GPA should always resolve to GPA page, regardless of parent clickable cards.
+            const gpaNode = el && typeof el.closest === 'function'
+                ? el.closest('.gpa-btn, .nav-link-gpa, [data-nav="gpa"], [data-link="#gpa"], [onclick*="showGpa("]')
+                : null;
+            if (gpaNode) return toAbsoluteLink('#gpa');
+
+            const mapOnclickToLink = (node) => {
+                if (!node || typeof node.getAttribute !== 'function') return null;
+                const onClickCode = (node.getAttribute('onclick') || '').trim();
+                if (!onClickCode) return null;
+
+                const navMatch = onClickCode.match(/navFromBar\('([^']+)'\)/);
+                if (navMatch && navMatch[1]) return `#${navMatch[1]}`;
+
+                if (/showRecent\s*\(/.test(onClickCode)) return '#recent';
+                if (/showSchedule\s*\(/.test(onClickCode)) return '#schedule';
+                if (/showDeadlines\s*\(/.test(onClickCode)) return '#deadlines';
+                if (/showTodo\s*\(/.test(onClickCode)) return '#todo';
+                if (/showMidterms\s*\(/.test(onClickCode)) return '#midterm';
+                if (/showUsefulLinks\s*\(/.test(onClickCode)) return '#useful-links';
+                if (/showTimetable\s*\(/.test(onClickCode)) return '#timetable';
+                if (/showDirectory\s*\(/.test(onClickCode)) return '#directory';
+                if (/showGpa\s*\(/.test(onClickCode)) return '#gpa';
+                if (/showUpdates\s*\(/.test(onClickCode)) return '#updates';
+
+                if (/goToScheduleTask\s*\(/.test(onClickCode) || /openModal\s*\(/.test(onClickCode)) return '#schedule';
+
+                if (currSub && currSub.code) {
+                    if (/renderSubjectView\('weeks'\)/.test(onClickCode)) return `#${currSub.code}`;
+                    if (/renderSubjectView\('events'\)/.test(onClickCode)) return `#${currSub.code}/events`;
+                    if (/renderSubjectView\('playlists'\)/.test(onClickCode)) return `#${currSub.code}/links`;
+                    if (/renderSubjectView\('details'\)/.test(onClickCode)) return `#${currSub.code}/details`;
+                }
+
+                return null;
+            };
+
             // Walk up DOM from target — find data-link attr or <a href>
             let node = el;
             while (node && node !== document.body) {
-                if (node.dataset && node.dataset.link && node.dataset.link.trim()) return node.dataset.link.trim();
-                if (node.tagName === 'A' && node.href && !node.href.startsWith('javascript')) return node.href;
+                if (node.classList && (node.classList.contains('gpa-btn') || node.classList.contains('nav-link-gpa'))) {
+                    return toAbsoluteLink('#gpa');
+                }
+                if (node.dataset && node.dataset.link && node.dataset.link.trim()) return toAbsoluteLink(node.dataset.link);
+                if (node.dataset && node.dataset.nav && node.dataset.nav.trim()) return toAbsoluteLink(`#${node.dataset.nav.trim()}`);
+                const mappedLink = mapOnclickToLink(node);
+                if (mappedLink) return toAbsoluteLink(mappedLink);
+                if (node.tagName === 'A' && node.href && !node.href.startsWith('javascript')) return toAbsoluteLink(node.href);
                 node = node.parentElement;
             }
             return null;
@@ -9119,14 +9685,19 @@
 
         function showMenu(x, y, url) {
             closeMenu();
+            suppressUrl = url;
+            suppressUntil = Date.now() + 1200;
             menu = document.createElement('div');
             menu.id = 'wbw-ctx-menu';
 
             const openBtn = document.createElement('button');
             openBtn.innerHTML = '<span class="ctx-icon">↗</span> Open in new tab';
             openBtn.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
-                window.open(url, '_blank', 'noopener');
+                suppressUrl = url;
+                suppressUntil = Date.now() + 600;
+                openInBackgroundTab(url);
                 closeMenu();
             });
 
@@ -9175,15 +9746,30 @@
             const url = findLink(e.target);
             if (!url) return;
             e.preventDefault();
-            window.open(url, '_blank', 'noopener');
+            e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            openInBackgroundTab(url);
         });
+
+        // Extra guard: block accidental same-tab click-through right after opening a new tab.
+        document.addEventListener('click', function(e) {
+            if (!suppressUrl || Date.now() > suppressUntil) return;
+            const url = findLink(e.target);
+            if (url && url === suppressUrl) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            }
+        }, true);
 
         document.addEventListener('contextmenu', function(e) {
             const url = findLink(e.target);
             if (!url) { closeMenu(); return; } // no link — let browser handle it
             e.preventDefault();
+            e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
             showMenu(e.clientX, e.clientY, url);
-        });
+        }, true);
 
         document.addEventListener('click', closeMenu);
         document.addEventListener('scroll', closeMenu, true);
