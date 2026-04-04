@@ -16903,6 +16903,36 @@ window.UPDATES_DATA = [
         "title": "GPA Calculator",
         "desc": "The live GPA calculator pre-loads subjects, tracking cumulative progress using past GPAs with flexible letter grade or points-lost inputs. The drag-and-drop Group Semesters mode lets you name terms, color-code breakdowns, monitor subject counts alongside credits, or add prior GPA summaries. You can also export results as a clean image, utilizing the new import/export button to seamlessly transfer data between websites without retyping.",
         "date": "2026-03-20"
+    },
+    {
+        "icon": "📱",
+        "title": "Mobile Swipe Navigation",
+        "desc": "Navigating on your phone is now much faster. You can simply swipe left or right on your screen to seamlessly jump back and forth between weeks!",
+        "date": "2026-03-29"
+    },
+    {
+        "icon": "✅",
+        "title": "Personal To-Do List",
+        "desc": "Save specific resources or bulk-add whole weeks using the new [+] button. Your To-Do tab cleanly groups items by subject, tracks how long they've been pending, and automatically bumps upcoming quizzes to the top of your priority list.",
+        "date": "2026-04-04"
+    },
+    {
+        "icon": "👁️",
+        "title": "Hide Subjects",
+        "desc": "\nDeclutter your dashboard by clicking the crossed-eye icon on any subject. This completely hides it from your Home, Deadlines, and Announcements. You can restore hidden subjects anytime at the bottom of the Home page.",
+        "date": "2026-04-04"
+    },
+    {
+        "icon": "🔗",
+        "title": "Shareable Links",
+        "desc": "You can now share direct links! The URL automatically updates when you open a subject or week (e.g., /#OS/week4). Copy and share it so your friends jump straight to the exact material instead of the home page.",
+        "date": "2026-04-04"
+    },
+    {
+        "icon": "📋",
+        "title": "Subject Details Tab",
+        "desc": "A new \"Details\" tab inside each subject view gives you a quick, accessible overview of the course structure, including grade distribution, exam types, and instructor notes.",
+        "date": "2026-04-04"
     }
 ];
 
