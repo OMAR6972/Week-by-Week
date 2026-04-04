@@ -9161,6 +9161,69 @@
         document.addEventListener('scroll', closeMenu, true);
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeMenu(); });
     })();
+
+    window.addEventListener('message', function(event) {
+        const msg = event && event.data;
+        if (!msg || msg.type !== 'LIVE_UPDATE' || !msg.payload || typeof msg.payload !== 'object') return;
+
+        const payload = msg.payload;
+        const prevPage = currentPageId || 'home';
+        const prevSubCode = currSub && currSub.code ? currSub.code : null;
+        const prevSubView = currentSubjectView || 'weeks';
+        const prevContentTitle = currentContentObj && currentContentObj.title ? currentContentObj.title : null;
+        const prevContentFrom = weekNavFrom || 'weeks';
+
+        if (payload.CONFIG !== undefined) window.CONFIG = payload.CONFIG;
+        if (payload.COURSE_DATA !== undefined) window.COURSE_DATA = payload.COURSE_DATA;
+        if (payload.SUBJECT_DETAILS_DATA !== undefined) window.SUBJECT_DETAILS_DATA = payload.SUBJECT_DETAILS_DATA;
+        if (payload.SCHEDULE_DATA !== undefined) window.SCHEDULE_DATA = payload.SCHEDULE_DATA;
+        if (payload.MIDTERM_DATA !== undefined) window.MIDTERM_DATA = payload.MIDTERM_DATA;
+        if (payload.FINAL_DATA !== undefined) window.FINAL_DATA = payload.FINAL_DATA;
+        if (payload.STAFF_DATA !== undefined) window.STAFF_DATA = payload.STAFF_DATA;
+        if (payload.TIMETABLE_DATA !== undefined) window.TIMETABLE_DATA = payload.TIMETABLE_DATA;
+        if (payload.UPDATES_DATA !== undefined) window.UPDATES_DATA = payload.UPDATES_DATA;
+        if (payload.NEWS_DATA !== undefined) window.NEWS_DATA = payload.NEWS_DATA;
+
+        iconMap = {};
+        if (window.CONFIG && window.CONFIG.resources) {
+            window.CONFIG.resources.forEach(r => iconMap[r.name] = r.icon);
+        }
+
+        init();
+
+        const restoreSub = prevSubCode ? (window.COURSE_DATA || []).find(s => s.code === prevSubCode) : null;
+        if (prevPage === 'weeks' && restoreSub) {
+            currentSubjectView = prevSubView;
+            showWeeks(restoreSub, false);
+            return;
+        }
+
+        if (prevPage === 'content' && restoreSub && prevContentTitle) {
+            currentSubjectView = prevSubView;
+            currSub = restoreSub;
+            const source = prevSubView === 'events' ? (restoreSub.events || []) : (restoreSub.weeks || []);
+            const found = source.find(w => w.title === prevContentTitle) || null;
+            if (found) {
+                showContentByObj(found, false, prevContentFrom);
+                return;
+            }
+            showWeeks(restoreSub, false);
+            return;
+        }
+
+        if (prevPage === 'schedule') { showSchedule(false, 'home'); return; }
+        if (prevPage === 'deadlines') { showDeadlines(false); return; }
+        if (prevPage === 'midterm') { showMidterms(false, 'home'); return; }
+        if (prevPage === 'todo') { showTodo(false, todoViewMode); return; }
+        if (prevPage === 'useful-links') { showUsefulLinks(false, currentUsefulFilter, currentUsefulSubject); return; }
+        if (prevPage === 'directory') { showDirectory(false); return; }
+        if (prevPage === 'timetable') { showTimetable(false); return; }
+        if (prevPage === 'gpa') { showGpa(false); return; }
+        if (prevPage === 'updates') { showUpdates(false); return; }
+        if (prevPage === 'recent') { showRecent(); return; }
+
+        nav('home', false);
+    });
 </script>
 </body>
 </html>

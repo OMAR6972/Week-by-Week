@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="logo.png">
     <style>
         :root { --bg: #0a0012; --panel: #1a0d2e; --accent: #e91e8c; --text: #fff; --hover: rgba(233,30,140,0.1); }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; margin: 0; overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; margin: 0; overflow: hidden; box-sizing: border-box; padding-top: 44px; }
         
         .sidebar { width: 300px; background: #130822; border-right: 1px solid #333; display: flex; flex-direction: column; }
         .middle { width: 350px; background: var(--panel); border-right: 1px solid #333; display: flex; flex-direction: column; }
@@ -67,9 +67,80 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0a0012; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+        .admin-topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 12px;
+            background: rgba(19, 8, 34, 0.95);
+            border-bottom: 1px solid #333;
+            z-index: 1200;
+        }
+
+        .preview-toggle-btn {
+            background: rgba(0, 122, 255, 0.15);
+            color: #4a90e2;
+            border: 1px solid rgba(74, 144, 226, 0.4);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preview-toggle-btn:hover {
+            background: rgba(74, 144, 226, 0.25);
+        }
+
+        #editor-pane {
+            display: flex;
+            flex: 1;
+            min-width: 0;
+            height: 100%;
+            transition: width 0.25s ease;
+        }
+
+        #preview-container {
+            width: 0;
+            opacity: 0;
+            overflow: hidden;
+            border-left: 1px solid #333;
+            background: #0a0012;
+            transition: width 0.25s ease, opacity 0.2s ease;
+        }
+
+        #preview-frame {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #0a0012;
+        }
+
+        body.preview-on #editor-pane {
+            width: 50vw;
+            flex: 0 0 50vw;
+        }
+
+        body.preview-on #preview-container {
+            width: 50vw;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
+
+<div class="admin-topbar">
+    <button id="preview-toggle-btn" class="preview-toggle-btn" onclick="togglePreview()">🖥️ Toggle Preview</button>
+</div>
+
+<div id="editor-pane">
 
 <div class="sidebar">
     <div onclick="toggleSubjectsTab()" class="btn-config" id="btn-subjects-tab" style="background:#e91e8c; color:white;">📋 SUBJECTS</div>
@@ -102,6 +173,12 @@
     </div>
 </div>
 
+</div>
+
+<div id="preview-container">
+    <iframe id="preview-frame" src="index.html" title="Live Preview"></iframe>
+</div>
+
 <button class="btn btn-save" onclick="saveData()">💾 SAVE & DOWNLOAD</button>
 
 <script src="course_data.js"></script>
@@ -110,6 +187,8 @@
     let dragSrcIndex = null; 
     let viewMode = 'editor'; 
     let subViewMode = 'weeks'; 
+    let previewEnabled = false;
+    let previewDebounceTimer = null;
 
     function getSubjectColorFallback(code) {
         const colors = { 'CA': '#ff9500', 'DSA': '#34c759', 'DB': '#007aff', 'OS': '#ff2d55', 'CN': '#af52de', 'AI': '#B388FF' };
@@ -2121,6 +2200,50 @@
         dropdown.style.display = 'none';
     }
 
+    function buildPreviewPayload() {
+        const snapshot = {
+            CONFIG: window.CONFIG || {},
+            COURSE_DATA: window.COURSE_DATA || [],
+            SUBJECT_DETAILS_DATA: window.SUBJECT_DETAILS_DATA || {},
+            SCHEDULE_DATA: window.SCHEDULE_DATA || [],
+            MIDTERM_DATA: window.MIDTERM_DATA || [],
+            FINAL_DATA: window.FINAL_DATA || [],
+            STAFF_DATA: window.STAFF_DATA || [],
+            TIMETABLE_DATA: window.TIMETABLE_DATA || {},
+            UPDATES_DATA: window.UPDATES_DATA || [],
+            NEWS_DATA: window.NEWS_DATA || []
+        };
+        try {
+            return JSON.parse(JSON.stringify(snapshot));
+        } catch (e) {
+            return snapshot;
+        }
+    }
+
+    function broadcastToPreview() {
+        if (!previewEnabled) return;
+        const frame = document.getElementById('preview-frame');
+        if (!frame || !frame.contentWindow) return;
+        frame.contentWindow.postMessage({ type: 'LIVE_UPDATE', payload: buildPreviewPayload() }, '*');
+    }
+
+    function schedulePreviewBroadcast() {
+        if (!previewEnabled) return;
+        if (previewDebounceTimer) clearTimeout(previewDebounceTimer);
+        previewDebounceTimer = setTimeout(() => {
+            previewDebounceTimer = null;
+            broadcastToPreview();
+        }, 300);
+    }
+
+    function togglePreview() {
+        previewEnabled = !previewEnabled;
+        document.body.classList.toggle('preview-on', previewEnabled);
+        const btn = document.getElementById('preview-toggle-btn');
+        if (btn) btn.textContent = previewEnabled ? '🧩 Hide Preview' : '🖥️ Toggle Preview';
+        if (previewEnabled) schedulePreviewBroadcast();
+    }
+
     // --- UNSAVED CHANGES WARNING ---
     let isDirty = false;
     let dataSnapshot = '';
@@ -2132,11 +2255,12 @@
     function markDirty() {
         const current = JSON.stringify({ c: window.COURSE_DATA, sd: window.SUBJECT_DETAILS_DATA, s: window.SCHEDULE_DATA, m: window.MIDTERM_DATA, f: window.FINAL_DATA, st: window.STAFF_DATA, tt: window.TIMETABLE_DATA, cfg: window.CONFIG, u: window.UPDATES_DATA, n: window.NEWS_DATA });
         isDirty = current !== dataSnapshot;
+        schedulePreviewBroadcast();
     }
 
     // Listen for changes on all inputs
-    document.addEventListener('input', function() { markDirty(); });
-    document.addEventListener('change', function() { markDirty(); });
+    document.addEventListener('input', function() { markDirty(); schedulePreviewBroadcast(); });
+    document.addEventListener('change', function() { markDirty(); schedulePreviewBroadcast(); });
 
     window.addEventListener('beforeunload', function(e) {
         if(isDirty) {
@@ -2164,6 +2288,13 @@
 
     init();
     takeSnapshot();
+
+    const previewFrame = document.getElementById('preview-frame');
+    if (previewFrame) {
+        previewFrame.addEventListener('load', function() {
+            if (previewEnabled) schedulePreviewBroadcast();
+        });
+    }
 </script>
 </body>
 </html>
