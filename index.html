@@ -110,12 +110,12 @@
         .recent-time { font-size: 0.8rem; color: var(--accent-pink); font-weight: bold; white-space: nowrap; flex-shrink: 0; }
 
         /* ── Swipe navigation flash overlay ── */
-        .swipe-flash { position: fixed; top: 50%; transform: translateY(-50%); z-index: 3000; pointer-events: none; display: flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 50px; background: rgba(181,25,214,0.35); border: 1.5px solid rgba(181,25,214,0.7); backdrop-filter: blur(14px); color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 1px; opacity: 0; transition: opacity 0.15s ease; box-shadow: 0 0 28px rgba(181,25,214,0.45); max-width: 120px; }
-        .swipe-flash.left  { left: 12px; }
-        .swipe-flash.right { right: 12px; }
+        .swipe-flash { position: fixed; top: 50%; transform: translateY(-50%); z-index: 3000; pointer-events: none; display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 50px; background: rgba(181,25,214,0.35); border: 1.5px solid rgba(181,25,214,0.7); backdrop-filter: blur(14px); color: #fff; font-family: 'Orbitron', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px; opacity: 0; transition: opacity 0.15s ease; box-shadow: 0 0 28px rgba(181,25,214,0.45); max-width: 160px; }
+        .swipe-flash.left  { left: 10px; }
+        .swipe-flash.right { right: 10px; }
         .swipe-flash.show  { opacity: 1; }
-        .swipe-flash-arrow { font-size: 1.4rem; line-height: 1; flex-shrink: 0; }
-        .swipe-flash-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.65rem; }
+        .swipe-flash-arrow { font-size: 1.1rem; line-height: 1; flex-shrink: 0; display: flex; align-items: center; }
+        .swipe-flash-label { font-size: 0.62rem; line-height: 1.25; word-break: break-word; white-space: normal; text-align: center; }
         @keyframes swipeArrowLeft  { 0%,100%{transform:translateX(0)}50%{transform:translateX(-4px)} }
         @keyframes swipeArrowRight { 0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}  }
         .swipe-flash.left  .swipe-flash-arrow { animation: swipeArrowLeft  0.45s ease infinite; }
@@ -569,8 +569,8 @@
             .recent-icons { font-size: 1rem; letter-spacing: 2px; }
             /* Deadlines: no clipping for long screenshots */
             #deadlines-page { overflow: visible !important; height: auto !important; }
-            /* Mobile only: badges compact — custom-badge shrunk so week title is visible */
-            .custom-badge { font-size: 0.56rem !important; padding: 2px 6px !important; border-bottom-left-radius: 8px !important; max-width: 60% !important; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            /* Mobile only: badges compact — smaller but full text wraps freely */
+            .custom-badge { font-size: 0.56rem !important; padding: 2px 6px !important; border-bottom-left-radius: 8px !important; max-width: 60% !important; line-height: 1.3; white-space: normal !important; overflow: visible !important; text-overflow: unset !important; word-break: break-word; }
             /* NEW badge: small, sits below custom-badge so they don't overlap */
             .badge-new { font-size: 0.5rem !important; padding: 2px 4px !important; margin-left: 3px !important; border-radius: 5px !important; letter-spacing: 0.5px !important; }
             .card:has(.custom-badge) .badge-new { display: block; position: absolute; top: 26px; right: 6px; margin-left: 0; font-size: 0.48rem !important; padding: 1px 4px !important; }
@@ -1020,8 +1020,9 @@
             <div id="timetable-legend"></div>
             <div class="tt-grid-wrap"><table class="tt-grid" id="timetable-grid"></table></div>
         </div>
-        <div id="timetable-export-bar" style="display:flex; justify-content:center; margin-top:30px;">
-            <button class="timetable-export-btn" onclick="exportTimetableImage()">📸 Save as Image</button>
+        <div id="timetable-export-bar" style="display:flex; justify-content:center; gap:10px; margin-top:30px; flex-wrap:wrap;">
+            <button class="timetable-export-btn" onclick="exportTimetableImage()">📸 Screenshot Timetable</button>
+            <button class="timetable-export-btn" onclick="exportTimetableDayImage()">📅 Screenshot Day</button>
         </div>
     </div>
 
@@ -1406,7 +1407,7 @@
 
     // Auto-expire "New" badges older than 7 days based on recentDate
     function autoExpireNewBadges() {
-        const DAYS_LIMIT = 7;
+        const DAYS_LIMIT = 6;
         const now = new Date();
         window.COURSE_DATA.forEach(sub => {
             [...(sub.weeks || []), ...(sub.events || [])].forEach(wk => {
@@ -2869,7 +2870,7 @@
 
         } // end !_ulSkipFilterRebuild
 
-        // ── Render links ──────────────────────────────────────
+        // ── Render links — in same subject-urgency order as homepage ──────────
         list.style.display = 'flex';
         list.style.flexDirection = 'column';
         list.style.maxWidth = '900px';
@@ -2878,7 +2879,8 @@
 
         let renderedCount = 0;
 
-        window.COURSE_DATA.forEach(sub => {
+        const orderedForLinks = getHomepageOrderedSubjects();
+        orderedForLinks.forEach(sub => {
             if (currentUsefulSubject.size > 0 && !currentUsefulSubject.has(sub.code)) return;
             if (!sub.playlists || sub.playlists.length === 0) return;
 
@@ -2935,8 +2937,10 @@
                 } else {
                     const gWrap = document.createElement('div');
                     gWrap.style.cssText = `border-left:3px solid ${color}; margin-bottom:8px; border-radius:12px; background:rgba(0,0,0,0.15); overflow:hidden;`;
-                    const firstBadges = (item.items[0].badges || []).filter(b=>b.text);
-                    const gBadgeHtml = firstBadges.map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${b.text}</span>`).join('');
+                    // Collect ALL unique badges across every item in the group
+                    const gBadgeMap = new Map();
+                    item.items.forEach(p => { (p.badges||[]).filter(b=>b.text).forEach(b => { if(!gBadgeMap.has(b.text)) gBadgeMap.set(b.text, b.color||'#e91e8c'); }); });
+                    const gBadgeHtml = [...gBadgeMap.entries()].map(([txt,col]) => `<span style="background:${col}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${txt}</span>`).join('');
                     const gHeader = document.createElement('div');
                     gHeader.style.cssText = `display:flex; align-items:center; gap:10px; padding:10px 16px; cursor:pointer; transition:background 0.2s;`;
                     gHeader.onmouseenter = () => { gHeader.style.background = 'rgba(255,255,255,0.04)'; };
@@ -4253,8 +4257,10 @@
                 const groupEl = document.createElement('div');
                 groupEl.style.cssText = 'grid-column: 1 / -1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin: 5px 0;';
                 const firstItem = item.items[0];
-                const commonBadges = firstItem.badges || [];
-                const hBadgeHtml = commonBadges.filter(b=>b.text).map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${b.text}</span>`).join('');
+                // Collect ALL unique badges across every item in the group
+                const allGroupBadgeMap = new Map();
+                item.items.forEach(p => { (p.badges||[]).filter(b=>b.text).forEach(b => { if(!allGroupBadgeMap.has(b.text)) allGroupBadgeMap.set(b.text, b.color||'#e91e8c'); }); });
+                const hBadgeHtml = [...allGroupBadgeMap.entries()].map(([txt,col]) => `<span style="background:${col}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${txt}</span>`).join('');
                 let innerHtml = `<div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);"><span style="font-size:1.8rem;">${firstItem.icon || '🔗'}</span><div style="flex:1;"><div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${item.name}</div></div><div style="display:flex; gap:4px; flex-wrap:wrap;">${hBadgeHtml}</div><span style="color:var(--text-sub); font-size:0.8rem; white-space:nowrap;">${item.items.length} links</span></div>`;
                 item.items.forEach(p => {
                     const pBadges = (p.badges || []).filter(b=>b.text);
@@ -6669,7 +6675,9 @@
             });
         });
 
-        const orderedSubjects = subjects.filter(s => subjectGroups[s] && subjectGroups[s].length > 0);
+        const orderedSubjects = getHomepageOrderedSubjects()
+            .map(s => s.code)
+            .filter(s => subjectGroups[s] && subjectGroups[s].length > 0);
         orderedSubjects.forEach(sub => renderSubjectGroup(sub, subjectGroups[sub], list));
     }
 
@@ -7527,6 +7535,88 @@
         const title = el ? el.querySelector('h1') : null;
         const subtitle = el ? el.querySelector('p.subtitle') : null;
         capturePageImage(el, 'timetable.png', [bar, backBtn, title, subtitle]);
+    }
+
+    function exportTimetableDayImage() {
+        if (typeof window.html2canvas !== 'function') {
+            showToast('⏳ Loading screenshot library...', 'locked');
+            const poll = setInterval(() => { if (typeof window.html2canvas === 'function') { clearInterval(poll); exportTimetableDayImage(); } }, 200);
+            return;
+        }
+        const TD = window.TIMETABLE_DATA;
+        if (!TD) { showToast('No timetable data.'); return; }
+
+        // Build a day-picker popup
+        const days = TD.days || [];
+        if (days.length === 0) { showToast('No days in timetable.'); return; }
+
+        // If a picker already exists, remove it
+        const existingPicker = document.getElementById('tt-day-picker');
+        if (existingPicker) { existingPicker.remove(); return; }
+
+        const picker = document.createElement('div');
+        picker.id = 'tt-day-picker';
+        picker.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#0a0012;border:1px solid rgba(233,30,140,0.4);border-radius:16px;padding:20px 24px;z-index:3000;box-shadow:0 0 40px rgba(233,30,140,0.2);min-width:260px;';
+        picker.innerHTML = `<div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;color:var(--accent-pink);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;text-align:center;">Select Day</div>
+            <div id="tt-day-picker-btns" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>
+            <button onclick="document.getElementById('tt-day-picker').remove()" style="display:block;margin:14px auto 0;background:none;border:1px solid #555;color:#888;padding:4px 16px;border-radius:8px;cursor:pointer;font-size:0.78rem;">Cancel</button>`;
+
+        const btnWrap = picker.querySelector('#tt-day-picker-btns');
+        days.forEach((day, di) => {
+            const b = document.createElement('button');
+            b.textContent = day;
+            b.style.cssText = 'background:rgba(233,30,140,0.1);border:1px solid rgba(233,30,140,0.4);color:#e91e8c;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;';
+            b.onmouseover = () => { b.style.background = '#e91e8c'; b.style.color = '#fff'; };
+            b.onmouseout  = () => { b.style.background = 'rgba(233,30,140,0.1)'; b.style.color = '#e91e8c'; };
+            b.onclick = () => { picker.remove(); _captureOneDay(di, day); };
+            btnWrap.appendChild(b);
+        });
+        document.body.appendChild(picker);
+    }
+
+    function _captureOneDay(dayIndex, dayName) {
+        const TD = window.TIMETABLE_DATA;
+        const times = TD.timeSlots[ttMode] || TD.timeSlots.normal;
+        const entries = (TD.sections[ttSection] || []).filter(e => ttSelectedSubjects.includes(e.subject) && e.day === dayIndex);
+
+        const usedSlots = new Set(entries.map(e => e.slot));
+        const slotIndices = usedSlots.size > 0 ? [...usedSlots].sort((a,b)=>a-b) : times.map((_,i)=>i);
+
+        const shell = document.createElement('div');
+        shell.style.cssText = 'position:absolute;left:-9999px;top:0;background:#0a0012;padding:24px 28px;font-family:Work Sans,Arial,sans-serif;box-sizing:border-box;min-width:340px;';
+
+        // Header: day name + section/mode info
+        shell.innerHTML = `<div style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:900;color:#e91e8c;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">${dayName}</div>
+            <div style="font-size:11px;color:#888;margin-bottom:18px;">Section ${ttSection} · ${ttMode.charAt(0).toUpperCase()+ttMode.slice(1)} schedule</div>`;
+
+        if (entries.length === 0) {
+            shell.innerHTML += `<div style="text-align:center;color:#555;padding:30px 0;font-size:13px;">No classes on ${dayName}</div>`;
+        } else {
+            slotIndices.forEach(si => {
+                const cellEntries = entries.filter(e => e.slot === si);
+                if (cellEntries.length === 0) return;
+                const timeLabel = times[si] || '';
+                shell.innerHTML += `<div style="font-size:10px;color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;margin-top:12px;">${timeLabel}</div>`;
+                cellEntries.forEach(e => {
+                    const sc = TT_SUBJECT_COLORS[e.subject] || { text:'#ccc' };
+                    const ts = TT_TYPE_STYLES[e.type] || TT_TYPE_STYLES.lec;
+                    shell.innerHTML += `<div style="background:${ts.bg};border:1px solid ${ts.border};border-radius:10px;padding:10px 14px;margin-bottom:6px;">
+                        <div style="color:${sc.text};font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;margin-bottom:3px;">${e.subject}</div>
+                        <div style="color:${ts.text};font-size:11px;">${ts.label}${e.room?' · '+e.room:''}</div>
+                        ${e.note?`<div style="color:${ts.text};font-size:10px;margin-top:3px;opacity:0.8;">${e.note}</div>`:''}
+                    </div>`;
+                });
+            });
+        }
+
+        document.body.appendChild(shell);
+        showToast('📸 Generating image...', 'locked');
+        requestAnimationFrame(() => {
+            window.html2canvas(shell, { backgroundColor:'#0a0012', scale:2.5, useCORS:true, allowTaint:true, width:shell.scrollWidth, windowWidth:shell.scrollWidth, logging:false })
+                .then(canvas => { canvas.toBlob(blob => { if(blob) { downloadBlob(blob, `timetable-${dayName.toLowerCase()}.png`); showToast('📸 Image saved!','locked'); } }); })
+                .catch(() => showToast('⚠️ Could not generate image','locked'))
+                .finally(() => shell.remove());
+        });
     }
 
     function _buildExamShell(isFinals) {
