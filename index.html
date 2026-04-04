@@ -1614,12 +1614,20 @@
         };
         history.replaceState({page: 'home'}, null, "");
         
-        // Keep first paint light: defer heavy deadline dropdown rendering until requested.
+        // Keep summary/background stats active on startup (urgency, badges, notifications).
+        populateAllDropdowns();
+        setInterval(populateDeadlinesDropdown, 60000);
         renderQuickActions();
         if (typeof window.NEWS_DATA === 'undefined') window.NEWS_DATA = [];
         renderNewsBtn();
         animateActivePageWaterfall();
         setTimeout(maybeShowNewsToast, 1800);
+    }
+
+    if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
 
     function parseDateMeta(str) {
