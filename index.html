@@ -647,6 +647,14 @@
             .subject-code-label { font-size: 0.62rem !important; padding: 1px 5px !important; }
             /* Week cards: 2-col rectangle, column layout, proportional internals */
             #weeks-grid .card { padding: 14px 12px 12px; border-radius: 12px; flex-direction: column; align-items: flex-start; gap: 0; min-height: 85px; }
+            /* Details tab on phone: use full-height single-column card so text is never clipped */
+            #weeks-grid.details-mode { grid-template-columns: 1fr !important; }
+            #weeks-grid.details-mode .card {
+                height: auto !important;
+                min-height: 0 !important;
+                align-self: start !important;
+                cursor: default;
+            }
             /* Title: reduced so it fits comfortably in half-width; top padding clears the custom-badge */
             #weeks-grid .card div[style*="1.5rem"],
             #weeks-grid .card div[style*="font-family:'Orbitron'"] { font-size: 1rem !important; margin-bottom: 5px !important; padding-top: 22px !important; line-height: 1.25 !important; word-break: break-word; }
@@ -5753,6 +5761,7 @@
         const filterBar = document.getElementById('filter-bar');
         const gridWeeks = document.getElementById('weeks-grid');
         const gridPlaylists = document.getElementById('playlists-grid');
+        if (gridWeeks) gridWeeks.classList.toggle('details-mode', viewType === 'details');
 
         if (viewType === 'playlists') {
             filterBar.style.display = 'none';
