@@ -16945,6 +16945,12 @@ window.UPDATES_DATA = [
         "title": "Integrated Deadlines & Tasks",
         "desc": "You can now mark deadlines as \"Done\" to hide them and reduce clutter. General tasks will automatically sync to your To-Do list, and you can right-click any deadline to manually add it to your daily tasks.",
         "date": "2026-04-04"
+    },
+    {
+        "icon": "📅",
+        "title": "Save Daily Timetables",
+        "desc": "You no longer have to save your entire weekly timetable! You can now select and save just a single day at a time, making it much easier to focus strictly on today's schedule.",
+        "date": "2026-04-04"
     }
 ];
 

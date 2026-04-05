@@ -1689,7 +1689,7 @@
 
     function isQuizOrDiscussionTask(taskObj) {
         const hay = `${taskObj && taskObj.name || ''} ${taskObj && taskObj.type || ''}`.toLowerCase();
-        return /\bquiz\b|\bexam\b|\bdiscussion\b/.test(hay);
+        return /\bquiz\b|\bexam\b|\bdiscussion\b|\bpresentation\b/.test(hay);
     }
 
     const DEADLINE_TODO_WINDOW_DAYS = 7;
@@ -2116,7 +2116,7 @@
         const task = wk && (wk.tasks || [])[tIndex];
         if (!wk || !task) return false;
         if (isQuizOrDiscussionTask(task)) {
-            if (!options.suppressToast) showToast('Quiz/Discussion deadlines are excluded from To-Do auto/deadline add.', 'locked');
+            if (!options.suppressToast) showToast('Quiz/Discussion/Presentation deadlines are excluded from To-Do.', 'locked');
             return false;
         }
         const meta = getScheduleDeadlineTodoMeta(wk, task);
@@ -2149,7 +2149,7 @@
         if (!n || !n.hasDeadline) return false;
         const pseudoTask = { name: n.title || 'Announcement', type: n.type || '' };
         if (isQuizOrDiscussionTask(pseudoTask)) {
-            if (!options.suppressToast) showToast('Quiz/Discussion deadlines are excluded from To-Do auto/deadline add.', 'locked');
+            if (!options.suppressToast) showToast('Quiz/Discussion/Presentation deadlines are excluded from To-Do.', 'locked');
             return false;
         }
         const ts = parseNewsDeadlineTs(n.deadlineDate, n.deadlineTime);
