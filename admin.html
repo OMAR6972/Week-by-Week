@@ -145,6 +145,7 @@
 <div class="sidebar">
     <div onclick="toggleSubjectsTab()" class="btn-config" id="btn-subjects-tab" style="background:#e91e8c; color:white;">📋 SUBJECTS</div>
     <div onclick="toggleSchedule()" class="btn-schedule">📅 MANAGE SCHEDULE</div>
+    <div onclick="toggleScheduleDeadlines()" class="btn-deadlines">⏳ MANAGE DEADLINES</div>
     <div onclick="toggleUsefulLinks()" class="btn-expire" style="background:#b519d6;">🔗 MANAGE USEFUL LINKS</div>
     <div onclick="toggleOthersGroup()" class="btn-config" id="btn-others" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">📁 OTHERS <span id="others-arrow" style="font-size:0.8rem;">▸</span></div>
     <div id="others-group" style="display:none;">
@@ -184,6 +185,9 @@
 <script src="course_data.js"></script>
 <script>
     let cIdx = 0; let wIdx = 0; let eIdx = 0; let pIdx = 0; let schWIdx = 0; 
+    let schedulePanelMode = 'weeks';
+    let dlWIdx = -1;
+    let dlTIdx = -1;
     let dragSrcIndex = null; 
     let viewMode = 'editor'; 
     let subViewMode = 'weeks'; 
@@ -300,7 +304,8 @@
 
     function toggleConfig() { setView('config'); renderConfigEditor(); }
     function toggleRecents() { setView('recents'); renderRecentsManager(); }
-    function toggleSchedule() { setView('schedule'); renderScheduleWeeks(); renderScheduleEditor(); }
+    function toggleSchedule() { setView('schedule'); schedulePanelMode = 'weeks'; renderScheduleWeeks(); renderScheduleEditor(); }
+    function toggleScheduleDeadlines() { setView('schedule'); schedulePanelMode = 'deadlines'; renderScheduleWeeks(); renderDeadlineEditor(); }
     function toggleMidterms() { setView('midterms'); renderMidtermsManager(); }
     function toggleUsefulLinks() { setView('usefullinks'); renderUsefulLinksManager(); }
     function toggleSubjectsTab() { exitView(); }
@@ -828,14 +833,193 @@
     }
 
     // --- SCHEDULE EDITOR ---
+    function createEmptyScheduleTask(defaultSubCode) {
+        return {
+            sub: defaultSubCode || (window.COURSE_DATA.length > 0 ? window.COURSE_DATA[0].code : 'UNK'),
+            name: 'New Task',
+            icon: '📝',
+            when: '',
+            where: '',
+            coverage: '',
+            note: '',
+            noteLink: '',
+            noteNote: '',
+            whenLink: '',
+            whereLink: '',
+            whenNote: '',
+            whereNote: '',
+            coverageLink: '',
+            coverageNote: '',
+            submitText: '',
+            submitLink: '',
+            submitNote: '',
+            deadlineDate: '',
+            deadlineEndDate: '',
+            isCompleted: false
+        };
+    }
+
+    function parseAdminDeadlineDate(raw) {
+        if (!raw || !raw.trim()) return null;
+        const txt = raw.trim();
+        const iso = txt.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (iso) return new Date(parseInt(iso[1], 10), parseInt(iso[2], 10) - 1, parseInt(iso[3], 10), 23, 59);
+        const dm = txt.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s+(\d{1,2}):(\d{2})\s*(AM|PM)?)?$/i);
+        if (!dm) return null;
+        let hour = 23;
+        let min = 59;
+        if (dm[4] && dm[5]) {
+            hour = parseInt(dm[4], 10);
+            min = parseInt(dm[5], 10);
+            const ampm = (dm[6] || '').toUpperCase();
+            if (ampm === 'PM' && hour < 12) hour += 12;
+            if (ampm === 'AM' && hour === 12) hour = 0;
+        }
+        return new Date(parseInt(dm[3], 10), parseInt(dm[2], 10) - 1, parseInt(dm[1], 10), hour, min);
+    }
+
+    function normalizeAdminDeadlineDate(raw) {
+        if (!raw || !raw.trim()) return '';
+        const txt = raw.trim();
+        const iso = txt.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (iso) return `${iso[3]}/${iso[2]}/${iso[1]} 11:59 PM`;
+        const dmNoTime = txt.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+        if (dmNoTime) return `${dmNoTime[1].padStart(2,'0')}/${dmNoTime[2].padStart(2,'0')}/${dmNoTime[3]} 11:59 PM`;
+        return txt;
+    }
+
+    function inferWeekIndexFromDate(dateObj) {
+        if (!dateObj || !window.SCHEDULE_DATA || window.SCHEDULE_DATA.length === 0) return -1;
+
+        for (let i = 0; i < window.SCHEDULE_DATA.length; i++) {
+            const wk = window.SCHEDULE_DATA[i] || {};
+            if (!wk.dateStart || !wk.dateEnd) continue;
+            const s = new Date(`${wk.dateStart}T00:00:00`);
+            const e = new Date(`${wk.dateEnd}T23:59:59`);
+            if (!Number.isNaN(s.getTime()) && !Number.isNaN(e.getTime()) && dateObj >= s && dateObj <= e) return i;
+        }
+
+        const startSource = (window.CONFIG && window.CONFIG.semesterStart) ? window.CONFIG.semesterStart : '2026-02-07';
+        const semStart = new Date(`${startSource}T00:00:00`);
+        if (!Number.isNaN(semStart.getTime())) {
+            const diffDays = Math.floor((dateObj - semStart) / 86400000);
+            if (diffDays >= 0) {
+                const expectedWeek = Math.floor(diffDays / 7) + 1;
+                const idx = window.SCHEDULE_DATA.findIndex(wk => Number(wk.week) === expectedWeek);
+                if (idx !== -1) return idx;
+            }
+        }
+
+        return window.SCHEDULE_DATA.length > 0 ? 0 : -1;
+    }
+
+    function collectScheduleDeadlineEntries() {
+        const now = Date.now();
+        const out = [];
+        window.SCHEDULE_DATA.forEach((wk, weekIdx) => {
+            (wk.tasks || []).forEach((task, taskIdx) => {
+                if (!task.deadlineDate || !task.deadlineDate.trim()) return;
+                const endStr = (task.deadlineEndDate && task.deadlineEndDate.trim()) ? task.deadlineEndDate : task.deadlineDate;
+                const endDate = pDate(endStr) || parseAdminDeadlineDate(endStr);
+                const endTs = endDate ? endDate.getTime() : NaN;
+                out.push({
+                    weekIdx,
+                    taskIdx,
+                    week: wk,
+                    task,
+                    endTs,
+                    validDate: Number.isFinite(endTs),
+                    upcoming: Number.isFinite(endTs) ? endTs >= now : false,
+                    completed: !!task.isCompleted
+                });
+            });
+        });
+
+        const bucket = item => {
+            if (item.completed) return 3;
+            if (!item.validDate) return 2;
+            return item.upcoming ? 0 : 1;
+        };
+
+        out.sort((a, b) => {
+            const ba = bucket(a), bb = bucket(b);
+            if (ba !== bb) return ba - bb;
+            if (ba === 0) return a.endTs - b.endTs;
+            if (ba === 1 || ba === 3) return b.endTs - a.endTs;
+            if (a.weekIdx !== b.weekIdx) return a.weekIdx - b.weekIdx;
+            return a.taskIdx - b.taskIdx;
+        });
+        return out;
+    }
+
+    function ensureDeadlineSelection(entries) {
+        if (!entries || entries.length === 0) { dlWIdx = -1; dlTIdx = -1; return; }
+        if (!entries.some(e => e.weekIdx === dlWIdx && e.taskIdx === dlTIdx)) {
+            dlWIdx = entries[0].weekIdx;
+            dlTIdx = entries[0].taskIdx;
+        }
+    }
+
+    function refreshScheduleViews() {
+        if (viewMode !== 'schedule') return;
+        renderScheduleWeeks();
+        if (schedulePanelMode === 'deadlines') renderDeadlineEditor();
+        else renderScheduleEditor();
+    }
+
+    function setSchedulePanelMode(mode) {
+        schedulePanelMode = mode === 'deadlines' ? 'deadlines' : 'weeks';
+        refreshScheduleViews();
+    }
+
     function renderScheduleWeeks() {
+        const prevList = document.getElementById('sch-week-list');
+        const prevScrollTop = prevList ? prevList.scrollTop : 0;
         const mid = document.getElementById('middle-col');
+        const isDeadlineMode = schedulePanelMode === 'deadlines';
         mid.innerHTML = `
-            <div class="panel-header" style="background:#ff9500; color:black;">SCHEDULE WEEKS</div>
+            <div class="panel-header" style="background:#ff9500; color:black; display:flex; flex-direction:column; align-items:stretch; gap:8px;">
+                <span>SCHEDULE MANAGER</span>
+                <select class="view-select" style="font-family:'Segoe UI',sans-serif; font-size:0.84rem; text-transform:none; border-color:#aa6400;" onchange="setSchedulePanelMode(this.value)">
+                    <option value="weeks" ${!isDeadlineMode ? 'selected' : ''}>📅 All Weeks</option>
+                    <option value="deadlines" ${isDeadlineMode ? 'selected' : ''}>⏳ Upcoming Deadlines</option>
+                </select>
+            </div>
             <div id="sch-week-list" class="list-container"></div>
-            <button class="btn btn-add" style="background:#ff9500; color:black;" onclick="addScheduleWeek()">+ Add Schedule Week</button>
+            ${isDeadlineMode ? '<button class="btn btn-add" style="background:#00E5FF; color:black;" onclick="renderDeadlineEditor()">↻ Refresh Deadlines</button>' : '<button class="btn btn-add" style="background:#ff9500; color:black;" onclick="addScheduleWeek()">+ Add Schedule Week</button>'}
         `;
         const list = document.getElementById('sch-week-list');
+
+        if (isDeadlineMode) {
+            const entries = collectScheduleDeadlineEntries();
+            ensureDeadlineSelection(entries);
+            if (entries.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:#777; padding:20px;">No tasks with deadlines yet.<br><span style="font-size:0.8rem; color:#666;">Use the add box in the editor panel to create one.</span></div>';
+                list.scrollTop = prevScrollTop;
+                return;
+            }
+            entries.forEach(entry => {
+                const el = document.createElement('div');
+                const isActive = entry.weekIdx === dlWIdx && entry.taskIdx === dlTIdx;
+                el.className = `list-item ${isActive ? 'active' : ''}`;
+                if (isActive) el.style.borderLeftColor = '#00E5FF';
+                const weekLabel = (entry.week.weekName && entry.week.weekName.trim()) ? entry.week.weekName.trim() : `Week ${entry.week.week}`;
+                const status = entry.completed
+                    ? '<span style="font-size:0.62rem; background:rgba(90,90,90,0.45); color:#ccc; padding:1px 6px; border-radius:10px;">COMPLETED</span>'
+                    : (entry.upcoming ? '<span style="font-size:0.62rem; background:rgba(52,199,89,0.2); color:#34c759; padding:1px 6px; border-radius:10px;">UPCOMING</span>' : '<span style="font-size:0.62rem; background:rgba(255,149,0,0.2); color:#ff9500; padding:1px 6px; border-radius:10px;">PAST</span>');
+                el.innerHTML = `
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:700; color:${getSubjectColor(entry.task.sub)};">${escHtml(entry.task.sub || 'UNK')}</span>${status}</div>
+                        <div style="margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escHtml(entry.task.icon || '📝')} ${escHtml(entry.task.name || 'Untitled Task')}</div>
+                        <div style="font-size:0.72rem; color:#8aa2bd; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escHtml(entry.task.deadlineDate || '')} • ${escHtml(weekLabel)}</div>
+                    </div>`;
+                el.onclick = () => { dlWIdx = entry.weekIdx; dlTIdx = entry.taskIdx; renderScheduleWeeks(); renderDeadlineEditor(); };
+                list.appendChild(el);
+            });
+            list.scrollTop = prevScrollTop;
+            return;
+        }
+
         window.SCHEDULE_DATA.forEach((wk, i) => {
             const el = document.createElement('div');
             el.className = `list-item ${i === schWIdx ? 'active' : ''}`;
@@ -845,6 +1029,60 @@
             el.onclick = (e) => { if(e.target.tagName !== 'BUTTON') { schWIdx = i; renderScheduleWeeks(); renderScheduleEditor(); } };
             list.appendChild(el);
         });
+
+        list.scrollTop = prevScrollTop;
+    }
+
+    function getTaskDeadlineTimestamp(task) {
+        if (!task) return Number.POSITIVE_INFINITY;
+        const ref = (task.deadlineEndDate && task.deadlineEndDate.trim()) ? task.deadlineEndDate : task.deadlineDate;
+        const dt = pDate(ref) || parseAdminDeadlineDate(ref);
+        return dt ? dt.getTime() : Number.POSITIVE_INFINITY;
+    }
+
+    function insertTaskSortedByDeadline(tasks, task) {
+        const ts = getTaskDeadlineTimestamp(task);
+        let idx = tasks.findIndex(t => ts < getTaskDeadlineTimestamp(t));
+        if (idx === -1) idx = tasks.length;
+        tasks.splice(idx, 0, task);
+        return idx;
+    }
+
+    function relocateScheduleTaskByDeadline(weekIdx, taskIdx) {
+        const srcWeek = window.SCHEDULE_DATA[weekIdx];
+        if (!srcWeek || !srcWeek.tasks || !srcWeek.tasks[taskIdx]) return { moved: false, weekIdx, taskIdx };
+
+        const task = srcWeek.tasks[taskIdx];
+        if (!task.deadlineDate || !task.deadlineDate.trim()) return { moved: false, weekIdx, taskIdx };
+
+        const normalized = normalizeAdminDeadlineDate(task.deadlineDate);
+        const parsed = parseAdminDeadlineDate(normalized) || pDate(normalized);
+        if (!parsed) return { moved: false, weekIdx, taskIdx };
+
+        task.deadlineDate = normalized;
+        const targetWeekIdx = inferWeekIndexFromDate(parsed);
+        if (targetWeekIdx < 0 || !window.SCHEDULE_DATA[targetWeekIdx]) return { moved: false, weekIdx, taskIdx };
+
+        const movedTask = srcWeek.tasks.splice(taskIdx, 1)[0];
+        const targetTasks = window.SCHEDULE_DATA[targetWeekIdx].tasks || (window.SCHEDULE_DATA[targetWeekIdx].tasks = []);
+        const targetTaskIdx = insertTaskSortedByDeadline(targetTasks, movedTask);
+
+        schWIdx = targetWeekIdx;
+        if (schedulePanelMode === 'deadlines') {
+            dlWIdx = targetWeekIdx;
+            dlTIdx = targetTaskIdx;
+        }
+
+        return {
+            moved: targetWeekIdx !== weekIdx || targetTaskIdx !== taskIdx,
+            weekIdx: targetWeekIdx,
+            taskIdx: targetTaskIdx
+        };
+    }
+
+    function commitScheduleTaskDeadline(weekIdx, taskIdx) {
+        relocateScheduleTaskByDeadline(weekIdx, taskIdx);
+        refreshScheduleViews();
     }
 
     function autoExtractDeadline(tIdx) {
@@ -897,7 +1135,8 @@
 
         task.deadlineDate = startStr;
         task.deadlineEndDate = endStr;
-        renderScheduleEditor();
+        relocateScheduleTaskByDeadline(schWIdx, tIdx);
+        refreshScheduleViews();
     }
 
     function renderScheduleEditor() {
@@ -1033,7 +1272,7 @@
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:5px; margin-bottom:6px;">
-                        <input type="text" placeholder="e.g. 25/03/2026 10:00 AM" value="${task.deadlineDate || ''}" style="margin:0; flex:1;" oninput="updateSchTask(${tIdx}, 'deadlineDate', this.value)">
+                        <input type="text" placeholder="e.g. 25/03/2026 10:00 AM" value="${task.deadlineDate || ''}" style="margin:0; flex:1;" oninput="updateSchTask(${tIdx}, 'deadlineDate', this.value)" onblur="commitScheduleTaskDeadline(${schWIdx}, ${tIdx})">
                         <button class="btn-time" style="background:#00E5FF; color:black; font-weight:bold; border:none; padding:8px 12px; font-size:0.9rem;" onclick="autoExtractDeadline(${tIdx})" title="Auto-Extract from 'When?' field">🪄 Auto</button>
                     </div>
                     ${task.deadlineEndDate ? `<div style="display:flex; align-items:center; gap:8px; margin-top:4px; background:rgba(175,82,222,0.1); padding:6px 10px; border-radius:6px; border:1px solid rgba(175,82,222,0.25);">
@@ -1049,10 +1288,107 @@
     }
 
     function updateSchTask(tIdx, field, val) { window.SCHEDULE_DATA[schWIdx].tasks[tIdx][field] = val; }
-    function addScheduleWeek() { window.SCHEDULE_DATA.push({ week: window.SCHEDULE_DATA.length + 1, tasks: [] }); schWIdx = window.SCHEDULE_DATA.length - 1; renderScheduleWeeks(); renderScheduleEditor(); }
-    function delScheduleWeek(e, i) { e.stopPropagation(); if(confirm("Delete this week?")) { window.SCHEDULE_DATA.splice(i, 1); schWIdx = 0; renderScheduleWeeks(); renderScheduleEditor(); } }
-    function addScheduleTask() { window.SCHEDULE_DATA[schWIdx].tasks.push({ sub: window.COURSE_DATA.length > 0 ? window.COURSE_DATA[0].code : "UNK", name: "New Task", icon: "📝", when: "", where: "", coverage: "", note: "", noteLink: "", noteNote: "", whenLink: "", whereLink: "", whenNote: "", whereNote: "", coverageLink: "", coverageNote: "", submitText: "", submitLink: "", submitNote: "", deadlineDate: "", deadlineEndDate: "", isCompleted: false }); renderScheduleWeeks(); renderScheduleEditor(); }
-    function delScheduleTask(tIdx) { if(confirm("Remove this task?")) { window.SCHEDULE_DATA[schWIdx].tasks.splice(tIdx, 1); renderScheduleWeeks(); renderScheduleEditor(); } }
+    function addScheduleWeek() { window.SCHEDULE_DATA.push({ week: window.SCHEDULE_DATA.length + 1, tasks: [] }); schWIdx = window.SCHEDULE_DATA.length - 1; refreshScheduleViews(); }
+    function delScheduleWeek(e, i) { e.stopPropagation(); if(confirm("Delete this week?")) { window.SCHEDULE_DATA.splice(i, 1); schWIdx = Math.max(0, Math.min(schWIdx, window.SCHEDULE_DATA.length - 1)); refreshScheduleViews(); } }
+    function addScheduleTask() { window.SCHEDULE_DATA[schWIdx].tasks.push(createEmptyScheduleTask()); refreshScheduleViews(); }
+    function delScheduleTask(tIdx) { if(confirm("Remove this task?")) { window.SCHEDULE_DATA[schWIdx].tasks.splice(tIdx, 1); refreshScheduleViews(); } }
+
+    function addScheduleDeadlineQuick() {
+        const subEl = document.getElementById('dl-add-sub');
+        const nameEl = document.getElementById('dl-add-name');
+        const iconEl = document.getElementById('dl-add-icon');
+        const dateEl = document.getElementById('dl-add-date');
+        if (!subEl || !nameEl || !iconEl || !dateEl) return;
+
+        const normalized = normalizeAdminDeadlineDate(dateEl.value || '');
+        const parsed = parseAdminDeadlineDate(normalized);
+        if (!parsed) { alert('Please enter a valid deadline date. Example: 07/04/2026 11:59 PM or 2026-04-07'); return; }
+
+        const wIdx = inferWeekIndexFromDate(parsed);
+        if (wIdx < 0 || !window.SCHEDULE_DATA[wIdx]) { alert('Could not infer week. Add schedule weeks first.'); return; }
+        if (!window.SCHEDULE_DATA[wIdx].tasks) window.SCHEDULE_DATA[wIdx].tasks = [];
+
+        const task = createEmptyScheduleTask(subEl.value || (window.COURSE_DATA[0] && window.COURSE_DATA[0].code) || 'UNK');
+        task.name = (nameEl.value || '').trim() || 'New Deadline Task';
+        task.icon = (iconEl.value || '').trim() || '📝';
+        task.deadlineDate = normalized;
+        window.SCHEDULE_DATA[wIdx].tasks.push(task);
+
+        dlWIdx = wIdx;
+        dlTIdx = window.SCHEDULE_DATA[wIdx].tasks.length - 1;
+        schedulePanelMode = 'deadlines';
+        refreshScheduleViews();
+    }
+
+    function renderDeadlineEditor() {
+        const container = document.getElementById('editor-area');
+        const entries = collectScheduleDeadlineEntries();
+        ensureDeadlineSelection(entries);
+
+        const subOptions = window.COURSE_DATA.map(sub => `<option value="${escAttr(sub.code)}">${escHtml(sub.code)} - ${escHtml(sub.name)}</option>`).join('');
+        const addPanel = `
+            <div class="form-section" style="border-color:#00E5FF;">
+                <h3 style="color:#00E5FF;">⏳ Add New Deadline (Auto Week Detection)</h3>
+                <div style="display:grid; grid-template-columns: 90px 1fr 1fr 1.2fr auto; gap:10px; align-items:end;">
+                    <div><label>Icon</label><input id="dl-add-icon" type="text" value="📝" style="margin:0;"></div>
+                    <div><label>Task Name</label><input id="dl-add-name" type="text" placeholder="e.g. Assignment 2" style="margin:0;"></div>
+                    <div><label>Subject</label><select id="dl-add-sub" style="margin:0;">${subOptions}</select></div>
+                    <div><label>Deadline Date</label><input id="dl-add-date" type="text" placeholder="dd/mm/yyyy hh:mm AM or yyyy-mm-dd" style="margin:0;"></div>
+                    <button class="btn" style="background:#00E5FF; color:black; height:36px;" onclick="addScheduleDeadlineQuick()">+ Add</button>
+                </div>
+                <div style="font-size:0.75rem; color:#888; margin-top:8px;">Date is used to auto-place the task in the matching week by range or semester timeline.</div>
+            </div>`;
+
+        if (entries.length === 0) {
+            container.innerHTML = addPanel + '<div class="form-section" style="border-color:#333;"><div style="text-align:center; color:#777;">No deadlines found yet. Add one above to start managing them in upcoming order.</div></div>';
+            return;
+        }
+
+        const wk = window.SCHEDULE_DATA[dlWIdx];
+        const task = wk && wk.tasks ? wk.tasks[dlTIdx] : null;
+        if (!task) {
+            container.innerHTML = addPanel + '<div class="form-section" style="border-color:#333;"><div style="text-align:center; color:#777;">Select a deadline from the middle list.</div></div>';
+            return;
+        }
+
+        let myOpts = '';
+        window.COURSE_DATA.forEach(sub => { myOpts += `<option value="${sub.code}" ${task.sub === sub.code ? 'selected' : ''}>${sub.code}</option>`; });
+        const weekLabel = (wk.weekName && wk.weekName.trim()) ? wk.weekName.trim() : `Week ${wk.week}`;
+        let presetOptions = '<option value="" disabled selected>Preset...</option>';
+        window.CONFIG.taskPresets.forEach(tp => { presetOptions += `<option value="${tp.icon}|${tp.name}">${tp.icon} ${tp.name}</option>`; });
+
+        container.innerHTML = addPanel + `
+            <div class="form-section" style="border-color:#00E5FF;">
+                <h3 style="color:#00E5FF;">Deadline Editor</h3>
+                <div class="res-item" style="flex-direction:column; border-left:4px solid ${getSubjectColor(task.sub)};">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        <div style="font-size:0.8rem; color:#8aa2bd;">📍 ${escHtml(weekLabel)} <span style="color:#666;">(task #${dlTIdx + 1})</span></div>
+                        <button class="btn-time" style="background:#2f3d55; border-color:#4a90e2;" onclick="schedulePanelMode='weeks'; schWIdx=${dlWIdx}; renderScheduleWeeks(); renderScheduleEditor();">Open in Week View</button>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                        <select style="width:100px; margin:0;" onchange="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].sub=this.value; refreshScheduleViews();">${myOpts}</select>
+                        <select style="width:140px; margin:0; font-size:0.85rem;" onchange="if(this.value){ const v=this.value.split('|'); window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].icon=v[0]; window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].name=v[1]; refreshScheduleViews(); }">${presetOptions}</select>
+                        <input type="text" placeholder="Icon" value="${escAttr(task.icon || '')}" style="width:50px; margin:0;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].icon=this.value">
+                        <input type="text" placeholder="Task Name" value="${escAttr(task.name || '')}" style="flex:1; margin:0;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].name=this.value">
+                        <button class="btn btn-del" onclick="if(confirm('Remove this task?')){ window.SCHEDULE_DATA[${dlWIdx}].tasks.splice(${dlTIdx},1); refreshScheduleViews(); }">✕ Remove</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:12px; width:100%; overflow:hidden;">
+                        <div style="min-width:0;"><label style="height:40px; display:flex; align-items:flex-end; padding-bottom:5px; box-sizing:border-box;"><span style="line-height:1.2;">When? <span style="font-size:0.7rem; color:#888; font-weight:normal; display:block;">(Date in brackets like (25/03))</span></span></label><input type="text" value="${escAttr(task.when || '')}" style="margin-bottom:4px;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].when=this.value"><input type="text" placeholder="URL (Optional)" value="${escAttr(task.whenLink || '')}" style="font-size:0.8rem; margin-bottom:4px; background:rgba(0,0,0,0.5);" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].whenLink=this.value"><input type="text" placeholder="Link note" value="${escAttr(task.whenNote || '')}" style="font-size:0.75rem; margin-bottom:4px; background:rgba(74,144,226,0.1); border-color:rgba(74,144,226,0.3); color:#4a90e2;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].whenNote=this.value"></div>
+                        <div style="min-width:0;"><label style="height:40px; display:flex; align-items:flex-end; padding-bottom:5px; box-sizing:border-box;">Where?</label><input type="text" value="${escAttr(task.where || '')}" style="margin-bottom:4px;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].where=this.value"><input type="text" placeholder="URL (Optional)" value="${escAttr(task.whereLink || '')}" style="font-size:0.8rem; margin-bottom:4px; background:rgba(0,0,0,0.5);" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].whereLink=this.value"><input type="text" placeholder="Link note" value="${escAttr(task.whereNote || '')}" style="font-size:0.75rem; margin-bottom:4px; background:rgba(74,144,226,0.1); border-color:rgba(74,144,226,0.3); color:#4a90e2;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].whereNote=this.value"></div>
+                        <div style="min-width:0;"><label style="height:40px; display:flex; align-items:flex-end; padding-bottom:5px; box-sizing:border-box;">Coverage?</label><input type="text" value="${escAttr(task.coverage || '')}" style="margin-bottom:4px;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].coverage=this.value"><input type="text" placeholder="URL (Optional)" value="${escAttr(task.coverageLink || '')}" style="font-size:0.8rem; margin-bottom:4px; background:rgba(0,0,0,0.5);" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].coverageLink=this.value"><input type="text" placeholder="Link note" value="${escAttr(task.coverageNote || '')}" style="font-size:0.75rem; margin-bottom:4px; background:rgba(74,144,226,0.1); border-color:rgba(74,144,226,0.3); color:#4a90e2;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].coverageNote=this.value"></div>
+                        <div style="min-width:0;"><label style="height:40px; display:flex; align-items:flex-end; padding-bottom:5px; box-sizing:border-box;">📤 Submit?</label><input type="text" value="${escAttr(task.submitText || '')}" style="margin-bottom:4px;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].submitText=this.value"><input type="text" placeholder="URL (optional)" value="${escAttr(task.submitLink || '')}" style="font-size:0.8rem; margin-bottom:4px; background:rgba(0,0,0,0.5);" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].submitLink=this.value"><input type="text" placeholder="Link note" value="${escAttr(task.submitNote || '')}" style="font-size:0.75rem; margin-bottom:4px; background:rgba(74,144,226,0.1); border-color:rgba(74,144,226,0.3); color:#4a90e2;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].submitNote=this.value"></div>
+                    </div>
+                    <label>Extra Notes:</label><textarea rows="2" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].note=this.value">${escHtml(task.note || '')}</textarea>
+                    <input type="text" placeholder="URL for Notes (Optional)" value="${escAttr(task.noteLink || '')}" style="font-size:0.8rem; margin-bottom:4px; background:rgba(0,0,0,0.5);" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].noteLink=this.value">
+                    <input type="text" placeholder="Link note" value="${escAttr(task.noteNote || '')}" style="font-size:0.75rem; margin-bottom:4px; background:rgba(74,144,226,0.1); border-color:rgba(74,144,226,0.3); color:#4a90e2;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].noteNote=this.value">
+                    <div style="width:100%; margin-top:10px; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; border:1px solid rgba(0, 229, 255, 0.3);">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;"><label style="color:#00E5FF; margin:0;">⏳ Deadline Tracker</label><label class="checkbox-label" style="margin:0;"><input type="checkbox" ${task.isCompleted ? 'checked' : ''} onchange="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].isCompleted=this.checked; refreshScheduleViews();"> Mark Completed</label></div>
+                        <div style="display:flex; align-items:center; gap:5px; margin-bottom:6px;"><input type="text" value="${escAttr(task.deadlineDate || '')}" style="margin:0; flex:1;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].deadlineDate=this.value" onblur="commitScheduleTaskDeadline(${dlWIdx}, ${dlTIdx})"><button class="btn-time" style="background:#00E5FF; color:black; font-weight:bold; border:none; padding:8px 12px; font-size:0.9rem;" onclick="schWIdx=${dlWIdx}; autoExtractDeadline(${dlTIdx})" title="Auto-Extract from 'When?' field">🪄 Auto</button></div>
+                        ${task.deadlineEndDate ? `<div style="display:flex; align-items:center; gap:8px; margin-top:4px; background:rgba(175,82,222,0.1); padding:6px 10px; border-radius:6px; border:1px solid rgba(175,82,222,0.25);"><span style="color:#af52de; font-size:0.8rem; font-weight:bold; white-space:nowrap;">🔄 Ends:</span><input type="text" value="${escAttr(task.deadlineEndDate)}" style="margin:0; flex:1; font-size:0.85rem;" oninput="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].deadlineEndDate=this.value"><button class="btn btn-del" style="font-size:0.7rem; padding:2px 8px;" onclick="window.SCHEDULE_DATA[${dlWIdx}].tasks[${dlTIdx}].deadlineEndDate=''; refreshScheduleViews();">Clear</button></div>` : ''}
+                    </div>
+                </div>
+            </div>`;
+    }
 
     function updateDeadlines() {
         let count = 0;
@@ -1071,7 +1407,7 @@
                 });
             }
         });
-        if(viewMode === 'schedule') { renderScheduleEditor(); }
+        refreshScheduleViews();
         alert(`Updated and automatically marked ${count} past tasks as completed!`);
     }
 

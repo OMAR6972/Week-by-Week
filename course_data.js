@@ -14784,7 +14784,9 @@ window.SUBJECT_DETAILS_DATA = {
 window.SCHEDULE_DATA = [
     {
         "week": 1,
-        "tasks": []
+        "tasks": [],
+        "dateStart": "2026-02-07",
+        "dateEnd": "2026-02-14"
     },
     {
         "week": 2,
@@ -14812,7 +14814,9 @@ window.SCHEDULE_DATA = [
                 "deadlineEndDate": "",
                 "isCompleted": true
             }
-        ]
+        ],
+        "dateStart": "2026-02-14",
+        "dateEnd": "2026-02-20"
     },
     {
         "week": 3,
@@ -14857,7 +14861,9 @@ window.SCHEDULE_DATA = [
                 "isCompleted": true
             }
         ],
-        "isMidterm": false
+        "isMidterm": false,
+        "dateEnd": "2026-02-27",
+        "dateStart": "2026-02-21"
     },
     {
         "week": 4,
@@ -14925,7 +14931,9 @@ window.SCHEDULE_DATA = [
                 "deadlineEndDate": "",
                 "isCompleted": true
             }
-        ]
+        ],
+        "dateStart": "2026-02-28",
+        "dateEnd": "2026-03-06"
     },
     {
         "week": 5,
@@ -15045,7 +15053,9 @@ window.SCHEDULE_DATA = [
                 "deadlineEndDate": "",
                 "isCompleted": true
             }
-        ]
+        ],
+        "dateStart": "2026-03-07",
+        "dateEnd": "2026-03-13"
     },
     {
         "week": 6,
@@ -15164,7 +15174,9 @@ window.SCHEDULE_DATA = [
                 "deadlineEndDate": "",
                 "isCompleted": true
             }
-        ]
+        ],
+        "dateStart": "2026-03-14",
+        "dateEnd": "2026-03-20"
     },
     {
         "week": 7,
@@ -15261,48 +15273,21 @@ window.SCHEDULE_DATA = [
                 "deadlineEndDate": "",
                 "isCompleted": false
             }
-        ]
+        ],
+        "dateStart": "2026-03-21",
+        "dateEnd": "2026-03-27"
     },
     {
         "week": 8,
         "tasks": [],
         "isMidterm": true,
-        "note": "Midterms Week!"
+        "note": "Midterms Week!",
+        "dateStart": "2026-03-27",
+        "dateEnd": "2026-04-03"
     },
     {
         "week": 9,
         "tasks": [
-            {
-                "sub": "DSA",
-                "name": "Quiz",
-                "icon": "🧠",
-                "when": "",
-                "where": "",
-                "coverage": "",
-                "note": ""
-            },
-            {
-                "sub": "DB",
-                "name": "Quiz",
-                "icon": "🧠",
-                "when": "",
-                "where": "",
-                "coverage": "",
-                "note": ""
-            },
-            {
-                "sub": "CN",
-                "name": "Lab Report 3",
-                "icon": "📊",
-                "when": "Tuesday (6/4) at 11:59 PM",
-                "where": "",
-                "coverage": "",
-                "note": "Don't overdo it, just write what we saw in the lab and some photos and that's it.",
-                "deadlineDate": "06/04/2026 11:59 PM",
-                "submitText": "LMS",
-                "submitLink": "https://lms.eng.asu.edu.eg/mod/assign/view.php?id=194500",
-                "submitNote": "Submit here now!"
-            },
             {
                 "sub": "ML",
                 "name": "Peer Review Discussion ",
@@ -15420,7 +15405,9 @@ window.SCHEDULE_DATA = [
             }
         ],
         "isMidterm": false,
-        "isFinals": false
+        "isFinals": false,
+        "dateStart": "2026-04-04",
+        "dateEnd": "2026-04-10"
     },
     {
         "week": 10,
@@ -15486,11 +15473,27 @@ window.SCHEDULE_DATA = [
                 "deadlineEndDate": "",
                 "isCompleted": false
             }
-        ]
+        ],
+        "dateStart": "2026-04-11",
+        "dateEnd": "2026-04-17"
     },
     {
         "week": 11,
         "tasks": [
+            {
+                "sub": "CN",
+                "name": "Lab Report 3",
+                "icon": "📊",
+                "when": "Monday (20/4) at 11:59 PM",
+                "where": "",
+                "coverage": "",
+                "note": "Don't overdo it, just write what we saw in the lab and some photos and that's it.",
+                "deadlineDate": "20/04/2026 11:59 PM",
+                "submitText": "LMS",
+                "submitLink": "https://lms.eng.asu.edu.eg/mod/assign/view.php?id=194500",
+                "submitNote": "Submit here now!",
+                "deadlineEndDate": ""
+            },
             {
                 "sub": "CA",
                 "name": "Assignment",
@@ -15635,7 +15638,9 @@ window.SCHEDULE_DATA = [
                 "deadlineEndDate": "",
                 "isCompleted": false
             }
-        ]
+        ],
+        "dateStart": "2026-04-18",
+        "dateEnd": "2026-04-24"
     },
     {
         "week": 12,
@@ -15681,7 +15686,9 @@ window.SCHEDULE_DATA = [
                 "deadlineEndDate": "",
                 "isCompleted": false
             }
-        ]
+        ],
+        "dateStart": "2026-04-25",
+        "dateEnd": "2026-05-01"
     },
     {
         "week": 13,
@@ -15771,7 +15778,9 @@ window.SCHEDULE_DATA = [
                 "deadlineEndDate": "",
                 "isCompleted": false
             }
-        ]
+        ],
+        "dateStart": "2026-05-02",
+        "dateEnd": "2026-05-08"
     },
     {
         "week": 14,
@@ -15848,7 +15857,9 @@ window.SCHEDULE_DATA = [
                 "deadlineEndDate": "",
                 "isCompleted": false
             }
-        ]
+        ],
+        "dateStart": "2026-05-09",
+        "dateEnd": "2026-05-15"
     },
     {
         "week": 15,
@@ -15871,7 +15882,9 @@ window.SCHEDULE_DATA = [
                 "coverage": "",
                 "note": ""
             }
-        ]
+        ],
+        "dateStart": "2026-05-16",
+        "dateEnd": "2026-05-22"
     }
 ];
 
