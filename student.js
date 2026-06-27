@@ -7548,7 +7548,7 @@
             <div class="gpa-row-credits">${sub.credits} cr</div>
             <div class="gpa-row-inputs">
                 <select class="gpa-select" style="flex:1; min-width:60px;" onchange="gpaSetGrade('${sem.id}', ${sIdx}, this.value)">${gradeOpts}</select>
-                <input type="number" class="gpa-input" style="width:50px; padding:4px 6px; flex-shrink:0; text-align:center;" placeholder="Pts" min="0" max="100" value="${sub.pointsLost !== '' ? sub.pointsLost : ''}" oninput="gpaSetPoints('${sem.id}', ${sIdx}, this.value)">
+                <input type="number" id="gpa-pts-${sem.id}-${sIdx}" class="gpa-input" style="width:50px; padding:4px 6px; flex-shrink:0; text-align:center;" placeholder="Pts" min="0" max="100" value="${sub.pointsLost !== '' ? sub.pointsLost : ''}" oninput="gpaSetPoints('${sem.id}', ${sIdx}, this.value)">
             </div>
             ${resultHtml}
             <button class="gpa-row-remove" onclick="gpaRemoveSubject('${sem.id}', ${sIdx})" title="Remove">✕</button>`;
@@ -7614,6 +7614,9 @@
         renderGpaPage();
         gpaRecalc();
         gpaSaveState();
+        // keep the cursor in the points field after the re-render (fixes "one char then closes")
+        const _pts = document.getElementById('gpa-pts-' + semId + '-' + idx);
+        if (_pts) { _pts.focus(); try { const v = _pts.value; _pts.value = ''; _pts.value = v; } catch (e) {} }
     }
 
     function gpaRemoveSubject(semId, idx) {
