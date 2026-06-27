@@ -589,7 +589,7 @@
         }
     }
 
-    const NAV_TAB_ORDER = ['home', 'recent', 'schedule', 'deadlines', 'midterm', 'useful-links', 'timetable', 'directory', 'gpa', 'updates'];
+    const NAV_TAB_ORDER = ['home', 'schedule', 'deadlines', 'midterm', 'useful-links', 'timetable', 'directory', 'gpa'];
 
     function getPageLabel(pageId) {
         const labels = {

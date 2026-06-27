@@ -550,12 +550,6 @@
                     
                     <div class="checkbox-row" style="background:#150a25; padding:10px; border-radius:8px;">
                         <label class="checkbox-label"><input type="checkbox" ${item.locked ? 'checked' : ''} onchange="updateData('${subViewMode}', 'locked', this.checked)"> Locked</label>
-                        <div style="display:flex; align-items:center; gap:5px; background:#2a1b3d; padding:2px 8px; border-radius:4px; border:1px solid #444;">
-                            <label class="checkbox-label"><input type="checkbox" ${item.isRecent ? 'checked' : ''} onchange="updateData('${subViewMode}', 'isRecent', this.checked)"> <span style="color:#4a90e2">History</span></label>
-                            <input type="text" style="width:140px; margin:0; font-size:0.8rem;" placeholder="Date..." value="${item.recentDate || ''}" oninput="updateData('${subViewMode}', 'recentDate', this.value)">
-                            <button class="btn-time" onclick="setNowContainer()">🕒</button>
-                            <button class="btn-time" style="background:#3d1a1a; color:#ff6b6b; border-color:#ff6b6b44;" onclick="clearHistoryContainer()" title="Clear history">✕</button>
-                        </div>
                     </div>
 
                     <div style="background:#150a25; padding:10px; border-radius:8px; margin-top:10px;">
@@ -698,12 +692,6 @@
                         <strong>${key}</strong>
                         <div class="checkbox-row" style="margin:0; gap:10px;">
                             <label class="checkbox-label"><input type="checkbox" ${val.vis ? 'checked' : ''} onchange="updateRes('${key}', 'vis', this.checked)"> Show</label>
-                            <div style="display:flex; align-items:center; gap:5px; background:#2a1b3d; padding:2px 8px; border-radius:4px; border:1px solid #444;">
-                                <label class="checkbox-label"><input type="checkbox" ${val.isRecent ? 'checked' : ''} onchange="toggleRecentRes('${key}', this.checked)"> History</label>
-                                <input type="text" style="width:140px; margin:0; font-size:0.8rem;" placeholder="Date..." value="${val.recentDate || ''}" oninput="updateRes('${key}', 'recentDate', this.value)">
-                                <button class="btn-time" onclick="setNowRes('${key}')">🕒</button>
-                                <button class="btn-time" style="background:#3d1a1a; color:#ff6b6b; border-color:#ff6b6b44;" onclick="clearHistoryRes('${key}')" title="Clear history">✕</button>
-                            </div>
                         </div>
                     </div>
                     <input type="text" placeholder="Link/File..." value="${val.link}" oninput="updateRes('${key}', 'link', this.value)">
