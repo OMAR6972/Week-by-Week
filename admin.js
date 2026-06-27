@@ -2650,7 +2650,8 @@
     }
 
     const _origSave = window.saveData;
-    window.saveData = function() {
+    window.exportBackupFile = _origSave;   // optional "download a backup file" button
+    window.saveData = async function() {
         // Run validation first — non-blocking, just warn
         const warnings = runSaveValidation();
         if (warnings.length > 0) {
@@ -2660,10 +2661,17 @@
                 '\n\nSave anyway? (You can fix these after.)';
             if (!confirm(msg)) return; // user chose to go back and fix
         }
-        _origSave();
+        const st = document.getElementById('save-status');
+        // Phase 4: save straight to the live database
+        if (typeof window.__ahSaveToDatabase === 'function') {
+            if (st) { st.textContent = 'Saving…'; st.style.color = '#aaa'; }
+            const ok = await window.__ahSaveToDatabase();
+            if (!ok) { if (st) { st.textContent = '✕ Save failed'; st.style.color = '#ff3b30'; } return; }
+        } else {
+            _origSave(); // fallback to file download if the database layer isn't loaded
+        }
         takeSnapshot();
         isDirty = false;
-        const st = document.getElementById('save-status');
         if (st) {
             st.textContent = '✓ Saved';
             st.style.color = '#00c853';
@@ -2679,5 +2687,6 @@
         }
     });
 
-    init();
-    takeSnapshot();
+    // Phase 4: do not auto-start. The login layer (admin-auth.js) calls this
+    // after a successful login + loading the live data from the database.
+    window.__ahAdminBoot = function () { init(); takeSnapshot(); };

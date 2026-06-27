@@ -11,7 +11,9 @@
 <div class="admin-topbar">
     <button class="btn-hamburger" onclick="toggleSidebar()" title="Toggle navigation">☰</button>
     <span id="save-status" style="font-size:0.75rem; color:#666; margin-left:8px;"></span>
-    <button class="btn btn-save" onclick="saveData()">💾 Save & Download</button>
+    <button class="btn btn-save" onclick="saveData()">💾 Save to site</button>
+    <button class="btn" onclick="exportBackupFile()" title="Download a backup copy of all data" style="margin-left:6px;">⬇ Backup</button>
+    <button class="btn" onclick="__ahLogout()" title="Log out" style="margin-left:6px;">⎋ Log out</button>
 </div>
 
 <div id="sidebar-backdrop" onclick="closeSidebar()"></div>
@@ -62,6 +64,10 @@
 </div>
 
 <script src="course_data.js"></script>
+<!-- Supabase login + live save (Phase 4) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script src="admin.js"></script>
+<script src="admin-auth.js"></script>
 </body>
 </html>
