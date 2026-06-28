@@ -1,4 +1,5 @@
 /* Academic Hub - admin.css (extracted from admin.html, Phase 1) */
+/* VERSION: 2026-06-28-semesters-mobile  (if you see this line, you have the new file) */
         :root { --bg: #0a0012; --panel: #1a0d2e; --accent: #e91e8c; --text: #fff; --hover: rgba(233,30,140,0.1); }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; margin: 0; overflow: hidden; box-sizing: border-box; padding-top: 44px; }
         
