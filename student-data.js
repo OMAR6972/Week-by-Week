@@ -136,6 +136,12 @@
     .then(function (res) {
       var list = (res && !res.error && res.data) ? res.data : [];
       var selected = pickSemester(list, urlSem());
+      var currentSlug = null;
+      for (var i = 0; i < list.length; i++) { if (list[i].is_current) { currentSlug = list[i].slug; break; } }
+      if (!currentSlug && list.length) currentSlug = list[0].slug;
+      // Exposed for the GPA calculator: which semester is the default, and are we on it?
+      window.__ahCurrentSemSlug = currentSlug;
+      window.__ahIsCurrentSem = currentSlug ? (selected === currentSlug) : true;
       mountSwitcher(list, selected);
       return loadSemester(selected);   // selected === null -> plain load (pre-migration)
     }, function () {

@@ -2629,11 +2629,62 @@
         return warnings;
     }
 
+    // --- Auto timestamps + auto-announcements (feature 7.2) ---
+    // On save we stamp a createdAt on any new week / new visible resource.
+    // The student site uses createdAt for the "NEW" badge (14 days) and the
+    // "Updated X ago" line — no manual History dates needed. If a resource is
+    // added 2+ days after its week first appeared, we auto-post an announcement
+    // instead of re-flagging the whole week as new.
+    function ahLocalDateTime() {
+        const d = new Date(), p = n => String(n).padStart(2, '0');
+        return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+               'T' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }
+    function ahStampAndAnnounce() {
+        const nowISO = new Date().toISOString();
+        const nowTs = Date.now();
+        const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+        if (typeof window.NEWS_DATA === 'undefined') window.NEWS_DATA = [];
+        (window.COURSE_DATA || []).forEach(sub => {
+            ['weeks', 'events'].forEach(section => {
+                (sub[section] || []).forEach(wk => {
+                    if (!wk.createdAt) wk.createdAt = nowISO;
+                    const wkTs = new Date(wk.createdAt).getTime();
+                    const res = wk.resources || {};
+                    Object.keys(res).forEach(key => {
+                        const r = res[key];
+                        if (!r) return;
+                        const isReal = r.vis && r.link && r.link !== '#';
+                        if (!isReal) return;
+                        if (!r.createdAt) {
+                            r.createdAt = nowISO;
+                            // late-added resource -> announcement instead of a week badge
+                            if (!isNaN(wkTs) && (nowTs - wkTs) >= TWO_DAYS && !r.announced) {
+                                r.announced = true;
+                                window.NEWS_DATA.unshift({
+                                    title: 'New ' + key + ' added — ' + (sub.code || sub.name || '') + ', ' + (wk.title || ''),
+                                    sub: '',
+                                    body: '',
+                                    emoji: '🆕',
+                                    link: r.link,
+                                    linkNote: 'Open ' + key,
+                                    publishedAt: ahLocalDateTime(),
+                                    _auto: true
+                                });
+                            }
+                        }
+                    });
+                });
+            });
+        });
+    }
+
     const _origSave = window.saveData;
     window.exportBackupFile = _origSave;   // optional "download a backup file" button
     window.saveData = async function() {
         // History was removed, so the old history-date warnings no longer apply.
         const warnings = [];
+        ahStampAndAnnounce();   // auto createdAt + auto announcements for late resources
         if (warnings.length > 0) {
             const msg = `⚠️ Save Warning (${warnings.length} issue${warnings.length > 1 ? 's' : ''}):\n\n` +
                 warnings.slice(0, 8).join('\n') +

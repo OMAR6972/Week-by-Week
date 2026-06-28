@@ -4147,7 +4147,7 @@
 
                 const lockIcon = w.locked ? '<div class="week-lock-icon" style="font-size:2rem; margin-bottom:10px">🔒</div>' : '';
                 const status = w.locked ? 'UNAVAILABLE' : 'CLICK TO VIEW';
-                const badge = w.isNew ? '<span class="badge-new">NEW!</span>' : '';
+                const badge = isWeekNew(w) ? '<span class="badge-new">NEW!</span>' : '';
                 let customBadge = '';
                 if(w.showBadge && w.badgeText) {
                     customBadge = `<div class="custom-badge" style="background:${w.badgeColor || '#e91e8c'}">${w.badgeText}</div>`;
@@ -4186,7 +4186,7 @@
                         const customBadge = (w.showBadge && w.badgeText)
                             ? `<div class="custom-badge" style="background:${w.badgeColor || '#e91e8c'}">${w.badgeText}</div>`
                             : '';
-                        const resBadgeCard = res.isNew ? '<div style="margin-top:5px;"><span class="badge-new" style="margin-left:0;">NEW!</span></div>' : '';
+                        const resBadgeCard = isResNew(res) ? '<div style="margin-top:5px;"><span class="badge-new" style="margin-left:0;">NEW!</span></div>' : '';
                         const notesHtml = (res.desc && res.desc.trim()) ? `<div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1); color:var(--text-sub); font-size:0.9rem; line-height:1.4; white-space:pre-wrap;">${res.desc}</div>` : '';
                         
                         el.style.position = 'relative';
@@ -6187,11 +6187,26 @@
         } catch(e) { return dateStr + (timeStr ? ' ' + timeStr : ''); }
     }
 
+    // --- NEW badge + "Updated X ago" from auto timestamps (feature 7.2) ---
+    const NEW_BADGE_DAYS = 14;
+    function _tsOf(s) { if (!s) return 0; const t = new Date(s).getTime(); return isNaN(t) ? 0 : t; }
+    function isWeekNew(wk) { const t = _tsOf(wk && wk.createdAt); return t ? (Date.now() - t) <= NEW_BADGE_DAYS * 86400000 : false; }
+    function isResNew(r)   { const t = _tsOf(r && r.createdAt);  return t ? (Date.now() - t) <= NEW_BADGE_DAYS * 86400000 : false; }
+    function newestWeekTs(wk) {
+        let t = _tsOf(wk && wk.createdAt);
+        const res = (wk && wk.resources) || {};
+        Object.keys(res).forEach(k => {
+            const r = res[k];
+            if (r && r.vis && r.link && r.link !== '#') { const rt = _tsOf(r.createdAt); if (rt > t) t = rt; }
+        });
+        return t;
+    }
+
     // Updated X ago helper
     function getUpdatedAgoHtml(weekObj) {
-        if(!weekObj.recentDate) return '';
-        const ts = parseDate(weekObj.recentDate);
-        if(ts === 0) return '';
+        let ts = newestWeekTs(weekObj);
+        if (!ts && weekObj.recentDate) ts = parseDate(weekObj.recentDate); // fallback for old data
+        if (!ts) return '';
         const now = Date.now();
         const diff = now - ts;
         if(diff < 0) return '';
@@ -7129,6 +7144,7 @@
     let gpaCumGpa = '';
     let gpaCumHours = '';
     let gpaInitialized = false;
+    let gpaLastSemSlug = '';   // which semester the "This Semester" list is synced to
 
     function parseCreditsNumber(creditsStr) {
         if (!creditsStr) return 3;
@@ -7190,7 +7206,8 @@
                 cardMode: gpaCardMode,
                 cumulativeOn: gpaCumulativeOn,
                 cumGpa: gpaCumGpa,
-                cumHours: gpaCumHours
+                cumHours: gpaCumHours,
+                lastSemSlug: gpaLastSemSlug
             };
             localStorage.setItem(GPA_STORAGE_KEY, JSON.stringify(state));
         } catch(e) {}
@@ -7202,6 +7219,29 @@
             if (!raw) return null;
             return JSON.parse(raw);
         } catch(e) { return null; }
+    }
+
+    // When a NEWER semester becomes the default (current), refresh ONLY the
+    // "This Semester" subject list to that semester's subjects. The student's
+    // entered Current GPA / passed hours and the "All Semesters" tab are left
+    // untouched. Does nothing while the student is browsing an older semester
+    // (?sem=...), or on first run (just records a baseline), or when there's
+    // only one semester.
+    function gpaSyncToCurrentSemester() {
+        if (!gpaInitialized) return;
+        const slug = window.__ahCurrentSemSlug;
+        if (!slug) return;                         // single semester / not loaded yet
+        if (window.__ahIsCurrentSem === false) return; // viewing an archived semester
+        if (!gpaLastSemSlug) {                      // first run after this update: baseline only
+            gpaLastSemSlug = slug;
+            gpaSaveState();
+            return;
+        }
+        if (gpaLastSemSlug === slug) return;        // already on the latest default
+        // The default semester changed -> swap in the new subject list.
+        gpaSubjects = getGpaDefaultSubjects();
+        gpaLastSemSlug = slug;
+        gpaSaveState();
     }
 
     function showGpa(push = true) {
@@ -7217,6 +7257,7 @@
                 gpaCumHours = saved.cumHours || '';
                 gpaSubjects = saved.subjects || getGpaDefaultSubjects();
                 gpaSemesters = saved.semesters || [];
+                gpaLastSemSlug = saved.lastSemSlug || '';
                 if (gpaSemesters.length === 0) {
                     // Initialize groups with Prior Semesters + Current Semester
                     gpaSemesters.push({ id: 'sem_prior', name: 'Prior Semesters', mode: 'summary', summaryGpa: gpaCumGpa, summaryHours: gpaCumHours, subjects: [] });
@@ -7231,6 +7272,7 @@
             }
             gpaInitialized = true;
         }
+        gpaSyncToCurrentSemester();   // refresh "This Semester" subjects if the default semester changed
         renderGpaPage();
         
         gpaRecalc();

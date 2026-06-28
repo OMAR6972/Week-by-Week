@@ -1,10 +1,10 @@
 /* Academic Hub - admin-semester.js  (feature 7.1)
-   Adds three things to the admin topbar:
+   Adds two things to the admin topbar:
      1. A dropdown showing which semester you are EDITING. Switching reloads the
         dashboard into that semester (the browser warns first if you have
         unsaved changes - that guard already lives in admin.js).
-     2. A "+ Sem" button to create a new EMPTY semester and jump into it.
-     3. A "gear" button opening a manage panel: make-current / rename / delete.
+     2. A "gear" button opening a manage panel: add a new semester, plus
+        make-current / rename / delete on existing ones.
 
    Saving always writes to the semester shown here (admin-auth.js handles that).
    Only the OWNER can delete a semester. */
@@ -87,12 +87,8 @@
     sel.title = 'The semester you are editing';
     wrap.appendChild(sel);
 
-    var addBtn = el('button', 'background:#7b3fe4;padding:5px 10px;font-size:0.72rem;', '\uFF0B Sem');
-    addBtn.className = 'btn'; addBtn.title = 'Add a new (empty) semester';
-    wrap.appendChild(addBtn);
-
     var mgBtn = el('button', 'background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.25);padding:5px 9px;font-size:0.82rem;line-height:1;', '\u2699');
-    mgBtn.className = 'btn'; mgBtn.title = 'Manage semesters';
+    mgBtn.className = 'btn'; mgBtn.title = 'Add / manage semesters';
     wrap.appendChild(mgBtn);
 
     // Place hamburger far-left, then these controls right next to it.
@@ -109,7 +105,6 @@
     sel.addEventListener('change', function () {
       if (sel.value && sel.value !== window.__ahSemester) go(sel.value);
     });
-    addBtn.addEventListener('click', addSemester);
     mgBtn.addEventListener('click', openManage);
   };
 
@@ -139,6 +134,8 @@
       '<div style="font-size:.8rem;color:#999;margin-bottom:16px;">' +
         '\u201CCurrent\u201D is the semester students land on by default. Every semester also has its own ' +
         'shareable link: add <code style="color:#cbb;">?sem=slug</code> to the site URL.</div>' +
+      '<button id="ah-sm-add" style="width:100%;padding:11px;background:#7b3fe4;border:none;border-radius:9px;' +
+        'color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;margin-bottom:18px;">\uFF0B Add a new semester</button>' +
       '<div id="ah-sm-list" style="color:#ccc;font-size:.9rem;">Loading\u2026</div>';
     back.appendChild(box);
     document.body.appendChild(back);
@@ -146,6 +143,7 @@
     function close() { back.remove(); }
     back.addEventListener('click', function (e) { if (e.target === back) close(); });
     box.querySelector('#ah-sm-x').addEventListener('click', close);
+    box.querySelector('#ah-sm-add').addEventListener('click', addSemester);
 
     var isSuper = !!window.__ahIsSuper;
 
