@@ -1,4 +1,5 @@
-/* Academic Hub - student-data.js  (semester-aware, feature 7.1)
+/* VERSION: 2026-06-29 — semesters (7.1) + auto badges/announcements (7.2) + analytics logging (7.3). If this dated line is present, you have the current file. */
+/* Academic Hub - student-data.js  (semester-aware, feature 7.1; + 7.3 analytics appended at bottom)
    --------------------------------------------------------------------------
    What this does, in order:
      1. Works out which semester to show:
@@ -152,4 +153,126 @@
     .then(null, function (err) {
       console.warn('[AcademicHub] Live data error - using bundled data.', err);
     });
+})();
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Academic Hub — lightweight usage analytics  (feature 7.3)
+   ---------------------------------------------------------------------------
+   Logs anonymous usage events to the `click_events` table so the admin Stats
+   panel can chart them. Four event types:
+       page_view      one per page load
+       tab_view       opening a top-level page (home, schedule, gpa, …)
+       subject_open   opening a subject's weeks page   (label = subject code)
+       resource_open  opening a week/material           (label = subject code,
+                                                          detail = week title)
+   It is BEST-EFFORT ONLY. No personal data is stored — just a random session
+   id kept in localStorage. If anything fails (no DB, offline, table missing)
+   it stays completely silent and never affects the page or navigation.
+   This is a separate, self-contained block from the live-data loader above.
+   ─────────────────────────────────────────────────────────────────────────── */
+(function () {
+  var sb = window.__ahSupabase;
+  if (!sb) return;                       // bundled-data mode → nothing to log to
+
+  // 1) anonymous per-browser session id (random; not linked to any identity)
+  var SID_KEY = 'ah_sid';
+  var sid;
+  try {
+    sid = localStorage.getItem(SID_KEY);
+    if (!sid) {
+      sid = 's-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(SID_KEY, sid);
+    }
+  } catch (e) { sid = 's-' + Math.random().toString(36).slice(2, 12); }
+
+  function pagePath() {
+    try {
+      var f = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+      return f.replace(/\.html?$/, '') || 'index';
+    } catch (e) { return 'index'; }
+  }
+  // which semester is being VIEWED right now (?sem= wins, else the current one)
+  function viewedSem() {
+    try {
+      var u = new URL(location.href).searchParams.get('sem');
+      if (u) return u;
+    } catch (e) {}
+    return window.__ahCurrentSemSlug || null;   // set by the loader above once it resolves
+  }
+
+  // 2) batched, fire-and-forget queue (kind to the free tier + mobile data)
+  var queue = [];
+  var FLUSH_MS = 5000, MAX_BATCH = 12;
+  var flushTimer = null;
+
+  function flush() {
+    if (!queue.length) return;
+    var batch = queue.splice(0, queue.length);
+    try {
+      sb.from('click_events').insert(batch).then(function (r) {
+        if (r && r.error) console.warn('[AcademicHub] stats flush skipped:', r.error.message);
+      }, function () { /* network hiccup — drop it, it's only analytics */ });
+    } catch (e) { /* ignore */ }
+  }
+  function scheduleFlush() {
+    if (queue.length >= MAX_BATCH) { flush(); return; }
+    if (flushTimer) return;
+    flushTimer = setTimeout(function () { flushTimer = null; flush(); }, FLUSH_MS);
+  }
+
+  function logEvent(type, label, detail) {
+    if (!type) return;
+    try {
+      queue.push({
+        session_id: sid,
+        semester:   viewedSem(),
+        event_type: type,
+        label:  (label  != null && label  !== '') ? String(label).slice(0, 120)  : null,
+        detail: (detail != null && detail !== '') ? String(detail).slice(0, 200) : null,
+        path:   pagePath(),
+        created_at: new Date().toISOString()
+      });
+      scheduleFlush();
+    } catch (e) { /* never throw from logging */ }
+  }
+  window.__ahLogEvent = logEvent;        // exposed for any future manual events
+
+  // flush when the tab is hidden / closed (best effort)
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') flush();
+  });
+  window.addEventListener('pagehide', flush);
+
+  // 3) one page_view per load
+  logEvent('page_view', pagePath(), null);
+
+  // 4) hook the app's central navigation function (defined in student.js, which
+  //    loads BEFORE this file). Consecutive identical locations are deduped, so
+  //    live-data refreshes — which re-render the same page the student is on —
+  //    don't inflate the counts.
+  function classify(id, stateData) {
+    if (id === 'weeks')   return { type: 'subject_open',  label: stateData && stateData.subCode, detail: null };
+    if (id === 'content') return { type: 'resource_open', label: stateData && stateData.subCode,
+                                   detail: stateData && stateData.wkObj && stateData.wkObj.title };
+    return { type: 'tab_view', label: id, detail: null };
+  }
+
+  var lastKey = null;
+  function patchNav() {
+    if (typeof window.nav !== 'function' || window.__ahNavPatched) return (typeof window.nav === 'function');
+    var orig = window.nav;
+    window.nav = function (id, push, stateData) {
+      try {
+        var c = classify(id, stateData);
+        var key = c.type + '|' + (c.label || '') + '|' + (c.detail || '');
+        if (key !== lastKey) { lastKey = key; logEvent(c.type, c.label, c.detail); }
+      } catch (e) { /* never let logging break navigation */ }
+      return orig.apply(this, arguments);
+    };
+    window.__ahNavPatched = true;
+    return true;
+  }
+
+  // student.js parses before this file, so window.nav already exists; guard anyway.
+  if (!patchNav()) document.addEventListener('DOMContentLoaded', patchNav);
 })();

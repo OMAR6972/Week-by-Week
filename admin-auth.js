@@ -1,3 +1,4 @@
+/* VERSION: 2026-06-28 — semesters (7.1) + auto badges & announcements (7.2). If this dated line is present, you have the current file. */
 /* Academic Hub - admin-auth.js (Phase 4 + admin management + semesters 7.1)
    Login / sign-up gate. Only users listed in the `admins` table get into the
    dashboard. On entry it loads the LIVE data for the semester you are editing

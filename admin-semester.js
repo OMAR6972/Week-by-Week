@@ -1,3 +1,4 @@
+/* VERSION: 2026-06-28 — semesters (7.1) + auto badges & announcements (7.2). If this dated line is present, you have the current file. */
 /* Academic Hub - admin-semester.js  (feature 7.1)
    Adds two things to the admin topbar:
      1. A dropdown showing which semester you are EDITING. Switching reloads the

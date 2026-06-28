@@ -1,3 +1,4 @@
+/* VERSION: 2026-06-28 — semesters (7.1) + auto badges & announcements (7.2). If this dated line is present, you have the current file. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
