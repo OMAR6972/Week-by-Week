@@ -94,20 +94,26 @@
 
     var wrap = document.createElement('div');
     wrap.id = 'ah-sem-switcher-wrap';
-    wrap.style.cssText = 'display:flex;align-items:center;flex-shrink:0;margin-right:14px;';
+    wrap.style.cssText = 'display:flex;align-items:center;flex-shrink:0;margin-right:16px;';
+
+    var caret = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='10'%20height='6'%3E%3Cpath%20d='M1%201l4%204%204-4'%20fill='none'%20stroke='%23ff7ad1'%20stroke-width='1.6'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E";
 
     var sel = document.createElement('select');
     sel.id = 'ah-sem-switcher';
     sel.title = 'Switch semester';
     sel.style.cssText =
-      'background:rgba(10,0,18,0.6);color:#fff;border:1px solid rgba(233,30,140,0.4);' +
-      'border-radius:8px;padding:5px 8px;font-size:0.72rem;font-weight:700;font-family:inherit;' +
-      'letter-spacing:0.4px;cursor:pointer;outline:none;max-width:150px;';
+      'appearance:none;-webkit-appearance:none;-moz-appearance:none;' +
+      'background:url("' + caret + '") no-repeat right 11px center,' +
+        'linear-gradient(135deg, rgba(168,85,247,0.20), rgba(233,30,140,0.20));' +
+      'color:#fff;border:1px solid rgba(233,30,140,0.55);border-radius:999px;' +
+      'padding:6px 28px 6px 14px;font-size:0.72rem;font-weight:700;font-family:inherit;' +
+      'letter-spacing:0.4px;cursor:pointer;outline:none;max-width:170px;' +
+      'box-shadow:0 2px 10px rgba(0,0,0,0.3);text-shadow:0 1px 2px rgba(0,0,0,0.4);';
 
     list.forEach(function (s) {
       var o = document.createElement('option');
       o.value = s.slug;
-      o.textContent = (s.name || s.slug) + (s.is_current ? ' \u2022 current' : '');
+      o.textContent = s.name || s.slug;                 // clean label, no "• current"
       o.style.cssText = 'background:#0a0012;color:#fff;';
       if (s.slug === selected) o.selected = true;
       sel.appendChild(o);

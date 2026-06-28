@@ -67,26 +67,43 @@
     var bar = document.querySelector('.admin-topbar');
     if (!bar || document.getElementById('ah-sem-wrap')) return;
 
-    var wrap = el('div', 'display:flex;align-items:center;gap:6px;flex-shrink:0;');
+    var caret = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='10'%20height='6'%3E%3Cpath%20d='M1%201l4%204%204-4'%20fill='none'%20stroke='%23b9a3ff'%20stroke-width='1.6'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E";
+
+    var wrap = el('div', 'display:flex;align-items:center;gap:6px;flex-shrink:0;margin-right:auto;');
     wrap.id = 'ah-sem-wrap';
 
-    wrap.appendChild(el('span', 'font-size:0.6rem;color:#777;letter-spacing:0.5px;text-transform:uppercase;', 'Editing'));
+    var lbl = el('span', 'font-size:0.58rem;color:#8a7bb0;letter-spacing:0.6px;text-transform:uppercase;font-weight:700;', 'Editing');
+    lbl.className = 'ah-edit-label';
+    wrap.appendChild(lbl);
 
-    var sel = el('select', 'background:#0a0012;color:#fff;border:1px solid #7b3fe4;border-radius:7px;' +
-                 'padding:4px 6px;font-size:0.72rem;font-weight:700;max-width:140px;cursor:pointer;outline:none;');
+    var sel = el('select',
+      'appearance:none;-webkit-appearance:none;-moz-appearance:none;' +
+      'background:url("' + caret + '") no-repeat right 9px center,' +
+        'linear-gradient(135deg, rgba(123,63,228,0.30), rgba(123,63,228,0.14));' +
+      'color:#fff;border:1px solid rgba(123,63,228,0.7);border-radius:8px;' +
+      'padding:5px 24px 5px 10px;font-size:0.72rem;font-weight:700;font-family:inherit;' +
+      'max-width:150px;cursor:pointer;outline:none;');
     sel.id = 'ah-sem-select';
     sel.title = 'The semester you are editing';
     wrap.appendChild(sel);
 
-    var addBtn = el('button', 'background:#7b3fe4;', '\uFF0B Sem');
+    var addBtn = el('button', 'background:#7b3fe4;padding:5px 10px;font-size:0.72rem;', '\uFF0B Sem');
     addBtn.className = 'btn'; addBtn.title = 'Add a new (empty) semester';
     wrap.appendChild(addBtn);
 
-    var mgBtn = el('button', 'background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);', '\u2699');
+    var mgBtn = el('button', 'background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.25);padding:5px 9px;font-size:0.82rem;line-height:1;', '\u2699');
     mgBtn.className = 'btn'; mgBtn.title = 'Manage semesters';
     wrap.appendChild(mgBtn);
 
-    bar.insertBefore(wrap, bar.firstChild);
+    // Place hamburger far-left, then these controls right next to it.
+    var ham = bar.querySelector('.btn-hamburger');
+    if (ham) {
+      ham.style.marginRight = '4px';   // was margin-right:auto; the wrap now holds the auto
+      bar.insertBefore(wrap, ham.nextSibling);
+    } else {
+      bar.insertBefore(wrap, bar.firstChild);
+    }
+
     fillSelect(sel);
 
     sel.addEventListener('change', function () {

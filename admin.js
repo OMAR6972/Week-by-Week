@@ -2632,8 +2632,8 @@
     const _origSave = window.saveData;
     window.exportBackupFile = _origSave;   // optional "download a backup file" button
     window.saveData = async function() {
-        // Run validation first — non-blocking, just warn
-        const warnings = runSaveValidation();
+        // History was removed, so the old history-date warnings no longer apply.
+        const warnings = [];
         if (warnings.length > 0) {
             const msg = `⚠️ Save Warning (${warnings.length} issue${warnings.length > 1 ? 's' : ''}):\n\n` +
                 warnings.slice(0, 8).join('\n') +

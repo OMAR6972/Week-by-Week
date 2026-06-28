@@ -159,7 +159,17 @@
 
 /* ---- Mobile layout (phone polish) ---- */
 @media (max-width: 820px) {
-    .admin-topbar { gap: 4px; padding: 0 6px; }
+    /* one neat swipeable row instead of a pile-up */
+    .admin-topbar {
+        gap: 4px; padding: 0 6px;
+        flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+        justify-content: flex-start; -webkit-overflow-scrolling: touch;
+    }
+    .admin-topbar::-webkit-scrollbar { height: 0; }
+    .admin-topbar > * { flex: 0 0 auto; }
+    #ah-sem-wrap { margin-right: 6px !important; gap: 4px; }
+    #ah-sem-wrap .ah-edit-label { display: none; }   /* save room on phone */
+    #ah-sem-select { max-width: 116px; }
     .admin-topbar .btn, .admin-topbar .btn-save {
         font-size: 0.66rem; padding: 5px 7px; line-height: 1.1;
     }
