@@ -157,14 +157,21 @@
             height: 100%;
         }
 
-/* ---- Mobile layout (Phase: phone polish, first pass) ---- */
+/* ---- Mobile layout (phone polish) ---- */
 @media (max-width: 820px) {
     .admin-topbar { gap: 4px; padding: 0 6px; }
     .admin-topbar .btn, .admin-topbar .btn-save {
-        font-size: 0.7rem; padding: 5px 7px; line-height: 1.15;
+        font-size: 0.66rem; padding: 5px 7px; line-height: 1.1;
     }
-    #editor-pane { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    #subjects-panel { width: 150px !important; min-width: 150px !important; }
-    #editor-area { min-width: 320px; max-width: none; padding: 0 8px; }
-    .middle, #middle-col { min-width: 340px; }
+    /* turn the 3-pane desktop editor into ONE scrollable column */
+    body { height: auto; min-height: 100vh; overflow-y: auto; display: block; }
+    #editor-pane { flex-direction: column; height: auto; overflow: visible; }
+    #subjects-panel { width: 100% !important; min-width: 0 !important; max-height: 36vh;
+                      border-right: none; border-bottom: 2px solid #2a1a3e; }
+    .middle, #middle-col, .main {
+        width: 100% !important; min-width: 0 !important; height: auto !important; overflow: visible !important;
+    }
+    #editor-area { max-width: none !important; width: 100% !important; padding: 0 10px; }
+    /* stack any inner side-by-side columns (weeks list + details) vertically */
+    #editor-area > div { flex-direction: column !important; }
 }
