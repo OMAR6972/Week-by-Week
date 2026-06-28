@@ -311,7 +311,6 @@
     }
 
     function toggleConfig() { setView('config'); renderConfigEditor(); closeSidebar(); }
-    function toggleRecents() { setView('recents'); renderRecentsManager(); closeSidebar(); }
     function toggleSchedule() { setView('schedule'); schedulePanelMode = 'weeks'; renderScheduleWeeks(); renderScheduleEditor(); closeSidebar(); }
     function toggleScheduleDeadlines() { setView('schedule'); schedulePanelMode = 'deadlines'; renderScheduleWeeks(); renderDeadlineEditor(); closeSidebar(); }
     function toggleMidterms() { setView('midterms'); renderMidtermsManager(); closeSidebar(); }
@@ -745,51 +744,6 @@
                 renderEditor(); // refresh so Show checkbox reflects new state
             }
         }
-    }
-    function toggleRecentRes(key, checked) { updateRes(key, 'isRecent', checked); if(checked) { updateRes(key, 'vis', true); autoMarkNewRes(key); renderEditor(); } }
-    
-    function setNowContainer() { updateData(subViewMode, 'recentDate', getNowStr()); updateData(subViewMode, 'isRecent', true); renderEditor(); renderMiddleColumn(); }
-    function setNowRes(key) { updateRes(key, 'recentDate', getNowStr()); toggleRecentRes(key, true); renderEditor(); }
-
-    function clearHistoryContainer() {
-        updateData(subViewMode, 'recentDate', '');
-        updateData(subViewMode, 'isRecent', false);
-        updateData(subViewMode, 'isNew', false);
-        renderEditor();
-        renderMiddleColumn();
-    }
-    function clearHistoryRes(key) {
-        updateRes(key, 'recentDate', '');
-        updateRes(key, 'isRecent', false);
-        updateRes(key, 'isNew', false);
-        renderEditor();
-    }
-    
-    // Auto-mark isNew if recentDate is within 7 days of now
-    function isDateWithin7Days(dateStr) {
-        if (!dateStr) return false;
-        const d = pDate(dateStr);
-        if (!d) return false;
-        return Math.abs(new Date() - d) / 86400000 <= 7;
-    }
-    function autoMarkNewRes(key) {
-        const item = subViewMode === 'events' ? window.COURSE_DATA[cIdx].events[eIdx] : window.COURSE_DATA[cIdx].weeks[wIdx];
-        if (item && item.resources[key] && item.resources[key].recentDate) {
-            item.resources[key].isNew = isDateWithin7Days(item.resources[key].recentDate);
-        }
-    }
-    function autoMarkNewContainer() {
-        const item = subViewMode === 'events' ? window.COURSE_DATA[cIdx].events[eIdx] : window.COURSE_DATA[cIdx].weeks[wIdx];
-        if (item && item.recentDate) {
-            item.isNew = isDateWithin7Days(item.recentDate);
-            renderMiddleColumn();
-        }
-    }
-    
-    function getNowStr() {
-        const now = new Date(); const d = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
-        let h = now.getHours(); const am = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
-        const m = now.getMinutes().toString().padStart(2, '0'); return `${d} ${h}:${m} ${am}`;
     }
 
     function moveItem(e, type, idx, dir) {
@@ -1656,91 +1610,6 @@
     function delConfigTaskPreset(i) { if(confirm("Delete this preset?")) { window.CONFIG.taskPresets.splice(i, 1); renderConfigEditor(); } }
     function updateConfigTaskPreset(i, field, val) { window.CONFIG.taskPresets[i][field] = val; }
     
-    function renderRecentsManager() {
-        const container = document.getElementById('editor-area');
-        container.innerHTML = `
-            <div class="form-section" style="border-color:#4a90e2;">
-                <h3 style="color:#4a90e2;">📜 Manage History</h3>
-                <p style="color:#888; font-size:0.85rem; margin-bottom:15px;">Items marked as "History" appear on the front-end History page, sorted by date.</p>
-                <button class="btn btn-del" style="width:100%; margin-bottom:15px; background:#ff4444; padding:10px;" onclick="clearRecents()">🗑️ Clear All History</button>
-                <div id="recents-list"></div>
-            </div>
-        `;
-        const list = document.getElementById('recents-list');
-        let items = [];
-        
-        window.COURSE_DATA.forEach(sub => {
-            const combinedLists = [...(sub.weeks || []), ...(sub.events || [])];
-            combinedLists.forEach(wk => {
-                if(wk.isRecent) {
-                    items.push({ type: 'week', subCode: sub.code, subName: sub.name, title: wk.title, date: wk.recentDate || '', ref: wk });
-                }
-                if(wk.resources) {
-                    Object.entries(wk.resources).forEach(([key, r]) => {
-                        if(r.isRecent) {
-                            items.push({ type: 'res', subCode: sub.code, subName: sub.name, wkTitle: wk.title, resName: key, date: r.recentDate || '', ref: r });
-                        }
-                    });
-                }
-            });
-        });
-
-        // Sort by date, newest first
-        items.sort((a, b) => {
-            const tA = pDate(a.date); const tB = pDate(b.date);
-            return ((tB ? tB.getTime() : 0) - (tA ? tA.getTime() : 0));
-        });
-
-        if(items.length === 0) {
-            list.innerHTML = '<div style="text-align:center; color:#666; margin-top:20px; font-style:italic;">No history items found. Mark items as "History" in the week/resource editor.</div>';
-            return;
-        }
-
-        items.forEach((item, idx) => {
-            const el = document.createElement('div');
-            el.className = 'res-item';
-            el.style.borderLeft = `4px solid ${getSubjectColor(item.subCode)}`;
-            el.style.padding = '12px 15px';
-
-            if(item.type === 'week') {
-                el.innerHTML = `
-                    <div style="flex:1;">
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <span style="background:${getSubjectColorFallback(item.subCode)}22; color:${getSubjectColor(item.subCode)}; font-size:0.7rem; font-weight:bold; padding:2px 8px; border-radius:6px;">${item.subCode}</span>
-                            <strong style="color:white;">${item.title}</strong>
-                            <span style="font-size:0.65rem; background:rgba(233,30,140,0.15); color:var(--accent); padding:2px 6px; border-radius:4px; font-weight:bold;">WEEK</span>
-                        </div>
-                        <div style="font-size:0.8rem; color:#888; margin-top:4px;">${item.subName}</div>
-                        ${item.date ? `<div style="font-size:0.75rem; color:#4a90e2; margin-top:4px;">📅 ${item.date}</div>` : '<div style="font-size:0.75rem; color:#666; margin-top:4px; font-style:italic;">No date set</div>'}
-                    </div>
-                    <button class="btn btn-del">Remove</button>
-                `;
-            } else {
-                el.innerHTML = `
-                    <div style="flex:1;">
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <span style="background:${getSubjectColorFallback(item.subCode)}22; color:${getSubjectColor(item.subCode)}; font-size:0.7rem; font-weight:bold; padding:2px 8px; border-radius:6px;">${item.subCode}</span>
-                            <strong style="color:white;">${item.resName}</strong>
-                            <span style="font-size:0.65rem; background:rgba(74,144,226,0.15); color:#4a90e2; padding:2px 6px; border-radius:4px; font-weight:bold;">RESOURCE</span>
-                        </div>
-                        <div style="font-size:0.8rem; color:#888; margin-top:4px;">${item.subName} — ${item.wkTitle}</div>
-                        ${item.date ? `<div style="font-size:0.75rem; color:#4a90e2; margin-top:4px;">📅 ${item.date}</div>` : '<div style="font-size:0.75rem; color:#666; margin-top:4px; font-style:italic;">No date set</div>'}
-                    </div>
-                    <button class="btn btn-del">Remove</button>
-                `;
-            }
-            el.querySelector('.btn-del').addEventListener('click', function() {
-                item.ref.isRecent = false;
-                renderRecentsManager();
-            });
-            list.appendChild(el);
-        });
-
-        list.insertAdjacentHTML('beforeend', `<div style="text-align:center; color:#666; margin-top:15px; font-size:0.8rem;">${items.length} history item${items.length !== 1 ? 's' : ''} total</div>`);
-    }
-
-    function createRecRow(txt, fn) { const div = document.createElement('div'); div.className='recent-manager-item'; div.innerHTML = `<span>${txt}</span><button class="btn btn-del" onclick="(${fn})()">Remove</button>`; return div; }
-    function clearRecents() { if(confirm("Clear all history?")) { window.COURSE_DATA.forEach(s => { [s.weeks, s.events].forEach(list => { if(list) list.forEach(w => { w.isRecent=false; Object.values(w.resources).forEach(r => r.isRecent=false); }); }); }); renderRecentsManager(); } }
     
     function addConfigType() { window.CONFIG.resources.push({name:"New", icon:"📦", defaultDesc:""}); renderConfigEditor(); }
     function delConfigType(i) { if(confirm("Del?")) { window.CONFIG.resources.splice(i,1); renderConfigEditor(); } }
@@ -1782,21 +1651,6 @@
         const blob = new Blob([content], {type: "text/javascript"});
         const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "course_data.js"; a.click();
     };
-
-    function autoExpireBadges() {
-        const DAYS_LIMIT = 7;
-        const now = new Date(); let count = 0;
-        
-        window.COURSE_DATA.forEach(sub => {
-            const combinedLists = [...(sub.weeks || []), ...(sub.events || [])];
-            combinedLists.forEach(wk => {
-                if(wk.isNew && wk.recentDate) { const date = pDate(wk.recentDate); if(date) { const diffDays = Math.abs(now - date) / (1000 * 60 * 60 * 24); if(diffDays > DAYS_LIMIT) { wk.isNew = false; count++; } } }
-                if(wk.resources) { Object.values(wk.resources).forEach(res => { if(res.isNew && res.recentDate) { const rDate = pDate(res.recentDate); if(rDate) { const rDays = Math.abs(now - rDate) / (1000 * 60 * 60 * 24); if(rDays > DAYS_LIMIT) { res.isNew = false; count++; } } } }); }
-            });
-        });
-        if(viewMode === 'editor') { renderMiddleColumn(); renderEditor(); }
-        alert(`Expired ${count} "New" badges older than ${DAYS_LIMIT} days.`);
-    }
 
     // --- USEFUL LINKS MANAGER ---
     let ulSubIdx = 0; let ulLinkIdx = 0;
@@ -2572,62 +2426,6 @@
             return e.returnValue;
         }
     });
-
-    // Override saveData to clear dirty flag
-    // Save validation — only warn about weeks/resources touched in this session
-    function runSaveValidation() {
-        const warnings = [];
-        const DAY_MS = 24 * 60 * 60 * 1000;
-
-        // Parse the load-time snapshot to know what existed before
-        let snap;
-        try { snap = JSON.parse(dataSnapshot); } catch(e) { return warnings; }
-        const snapSubjects = snap.c || [];
-
-        (window.COURSE_DATA || []).forEach((sub, subIdx) => {
-            const snapSub = snapSubjects[subIdx];
-            ['weeks', 'events'].forEach(section => {
-                (sub[section] || []).forEach((container, cIdx) => {
-                    const snapContainer = snapSub && snapSub[section] && snapSub[section][cIdx];
-                    const resources = container.resources || {};
-
-                    // Was this week/event added this session?
-                    const isNewContainer = !snapContainer;
-                    // Did any resource in it change this session?
-                    const changedKeys = Object.keys(resources).filter(key => {
-                        const r = resources[key];
-                        if (!r.vis || !r.link || r.link === '#') return false;
-                        const snapRes = snapContainer && snapContainer.resources && snapContainer.resources[key];
-                        // New resource, or link changed to a real URL
-                        return !snapRes || (snapRes.link !== r.link);
-                    });
-
-                    if (!isNewContainer && changedKeys.length === 0) return; // nothing changed here
-
-                    const hasVisibleRes = Object.values(resources).some(r => r.vis && r.link && r.link !== '#');
-                    if (!hasVisibleRes) return;
-
-                    // Warn if no history date on a modified/new container
-                    if (!container.recentDate) {
-                        warnings.push(`[${sub.code}] "${container.title}" — visible resources added but no History date set.`);
-                        return;
-                    }
-
-                    // Warn if a newly-added visible resource has no history while the container date is old
-                    const containerTs = new Date(container.recentDate).getTime();
-                    if (!isNaN(containerTs)) {
-                        changedKeys.forEach(key => {
-                            const r = resources[key];
-                            if (!r.recentDate && (Date.now() - containerTs) > DAY_MS) {
-                                warnings.push(`[${sub.code}] "${container.title}" → "${key}" was just added but has no History date (week date is more than 1 day old).`);
-                            }
-                        });
-                    }
-                });
-            });
-        });
-        return warnings;
-    }
 
     // --- Auto timestamps + auto-announcements (feature 7.2) ---
     // On save we stamp a createdAt on any new week / new visible resource.

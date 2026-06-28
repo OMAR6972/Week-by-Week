@@ -666,52 +666,6 @@
         else if(tabId === 'updates') showUpdates();
     }
 
-    // Auto-expire "New" badges older than 7 days based on recentDate
-    function autoExpireNewBadges() {
-        const DAYS_LIMIT = 7;
-        const now = new Date();
-        const nowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        function applyNewWindow(item) {
-            if (!item || !item.recentDate) return;
-
-            let publishDate = new Date(item.recentDate);
-            if (isNaN(publishDate.getTime())) {
-                const ts = parseDate(item.recentDate);
-                if (!ts) return;
-                publishDate = new Date(ts);
-            }
-
-            const publishStart = new Date(
-                publishDate.getFullYear(),
-                publishDate.getMonth(),
-                publishDate.getDate()
-            );
-
-            // Calculate difference in milliseconds
-            const diffTime = Math.abs(nowStart - publishStart);
-            const diffDays = diffTime / (1000 * 60 * 60 * 24);
-
-            // If the difference is LESS THAN OR EQUAL TO 7 days, keep NEW badge
-            if (diffDays <= DAYS_LIMIT) {
-                item.isNew = true;
-            } else {
-                item.isNew = false;
-            }
-        }
-
-        window.COURSE_DATA.forEach(sub => {
-            [...(sub.weeks || []), ...(sub.events || [])].forEach(wk => {
-                applyNewWindow(wk);
-                if (wk.resources) {
-                    Object.values(wk.resources).forEach(res => {
-                        applyNewWindow(res);
-                    });
-                }
-            });
-        });
-    }
-
     function parseExamDateTime(exam) {
         if (!exam.date) return 0;
         const base = new Date(exam.date + 'T00:00:00').getTime();
@@ -843,9 +797,6 @@
         const grid = document.getElementById('subjects-grid');
         if (grid) grid.innerHTML = '';
         if (typeof window.COURSE_DATA === 'undefined') window.COURSE_DATA = [];
-
-        // Auto-expire "New" badges older than 7 days
-        autoExpireNewBadges();
 
         const sorted = getHomepageOrderedSubjects();
 
@@ -1162,14 +1113,14 @@
             if (isSubjectHidden(sub.code)) return;
             const combinedLists = [...(sub.weeks || []), ...(sub.events || [])];
             combinedLists.forEach(wk => {
-                if(wk.isRecent) {
-                    weekItems.push({ type: 'week', subName: sub.name, subCode: sub.code, wkObj: wk, dateStr: wk.recentDate || "", timestamp: parseDate(wk.recentDate) });
+                if(isWeekNew(wk)) {
+                    weekItems.push({ type: 'week', subName: sub.name, subCode: sub.code, wkObj: wk, dateStr: wk.createdAt || "", timestamp: _tsOf(wk.createdAt) });
                 }
                 if(wk.resources) {
                     Object.keys(wk.resources).forEach(k => {
                         const res = wk.resources[k];
-                        if(res.isRecent && res.vis) {
-                            resItems.push({ type: 'res', subName: sub.name, subCode: sub.code, wkObj: wk, wkTitle: wk.title, resName: k, dateStr: res.recentDate || "", timestamp: parseDate(res.recentDate) });
+                        if(res.vis && isResNew(res)) {
+                            resItems.push({ type: 'res', subName: sub.name, subCode: sub.code, wkObj: wk, wkTitle: wk.title, resName: k, dateStr: res.createdAt || "", timestamp: _tsOf(res.createdAt) });
                         }
                     });
                 }
@@ -1181,7 +1132,7 @@
         const BATCH_GAP_MS = 24 * 60 * 60 * 1000; // 24 hours — batch grouping window (unchanged)
         const THREE_HOURS_MS = 3 * 60 * 60 * 1000; // 3 hours — week absorption window
 
-        // Build a lookup of week isRecent timestamps so resources that fall
+        // Build a lookup of week timestamps (createdAt) so resources that fall
         // within 3h of their own week's full-update timestamp get absorbed into
         // the week card rather than appearing as separate batch/single entries.
         const weekTimestampByObj = {};
@@ -1367,7 +1318,7 @@
                     if(item.wkObj.resources) {
                         const keys = window.CONFIG && window.CONFIG.resources ? window.CONFIG.resources.map(r=>r.name) : Object.keys(item.wkObj.resources);
                         keys.forEach(k => {
-                            if(item.wkObj.resources[k] && item.wkObj.resources[k].vis && !item.wkObj.resources[k].isRecent) {
+                            if(item.wkObj.resources[k] && item.wkObj.resources[k].vis && !isResNew(item.wkObj.resources[k])) {
                                 resList += `<div style="margin-top:4px;">${iconMap[k]||'📂'} ${k}</div>`;
                             }
                         });
@@ -1475,7 +1426,7 @@
                 let resList = '';
                 if (item.wkObj.resources) {
                     const keys = window.CONFIG && window.CONFIG.resources ? window.CONFIG.resources.map(r=>r.name) : Object.keys(item.wkObj.resources);
-                    keys.forEach(k => { if(item.wkObj.resources[k] && item.wkObj.resources[k].vis && !item.wkObj.resources[k].isRecent) resList += `<div style="margin-top:4px;">${iconMap[k]||'📂'} ${k}</div>`; });
+                    keys.forEach(k => { if(item.wkObj.resources[k] && item.wkObj.resources[k].vis && !isResNew(item.wkObj.resources[k])) resList += `<div style="margin-top:4px;">${iconMap[k]||'📂'} ${k}</div>`; });
                 }
                 el.innerHTML = `<div class="recent-header"><span>${item.subName} - ${item.wkObj.title}</span><span class="recent-time">${item.dateStr}</span></div><div style="margin-top:5px; color:#888; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Full Update Includes:</div><div class="recent-sub">${resList}</div>`;
             } else if (entry.type === 'res-single') {
@@ -4232,7 +4183,7 @@
         }
         currentContentObj = weekOrEvent;
         currentContentSourceArr = (currSub && (currSub.events || []).includes(weekOrEvent)) ? currSub.events : (currSub ? currSub.weeks : null);
-        const badgeTitle = weekOrEvent.isNew ? '<span class="badge-new">NEW!</span>' : '';
+        const badgeTitle = isWeekNew(weekOrEvent) ? '<span class="badge-new">NEW!</span>' : '';
         document.getElementById('week-display-title').innerHTML = `${currSub.code} - ${weekOrEvent.title} ${badgeTitle}`;
 
         const badgeContainer = document.getElementById('content-badge-container');
@@ -4253,14 +4204,14 @@
                 const val = weekOrEvent.resources[key];
                 const icon = iconMap[key] || '📂';
                 if(val && val.vis) {
-                    const resBadgeInline = val.isNew ? '<span class="badge-new">NEW!</span>' : '';
+                    const resBadgeInline = isResNew(val) ? '<span class="badge-new">NEW!</span>' : '';
                     if(val.desc && val.desc.trim()) {
                         const row = document.createElement('div');
                         row.className = 'detail-row';
                         row.innerHTML = `<div class=\"detail-icon\">${icon}</div><div class=\"detail-content\"><h3>${key} ${resBadgeInline}</h3><p>${val.desc}</p></div>`;
                         details.appendChild(row);
                     }
-                    const resBadgeCard = val.isNew ? '<div style="margin-top:5px;"><span class="badge-new" style="margin-left:0;">NEW!</span></div>' : '';
+                    const resBadgeCard = isResNew(val) ? '<div style="margin-top:5px;"><span class="badge-new" style="margin-left:0;">NEW!</span></div>' : '';
                     const el = document.createElement('div');
                     el.className = 'card';
                     el.style.position = 'relative';
@@ -7144,7 +7095,6 @@
     let gpaCumGpa = '';
     let gpaCumHours = '';
     let gpaInitialized = false;
-    let gpaLastSemSlug = '';   // which semester the "This Semester" list is synced to
 
     function parseCreditsNumber(creditsStr) {
         if (!creditsStr) return 3;
@@ -7206,8 +7156,7 @@
                 cardMode: gpaCardMode,
                 cumulativeOn: gpaCumulativeOn,
                 cumGpa: gpaCumGpa,
-                cumHours: gpaCumHours,
-                lastSemSlug: gpaLastSemSlug
+                cumHours: gpaCumHours
             };
             localStorage.setItem(GPA_STORAGE_KEY, JSON.stringify(state));
         } catch(e) {}
@@ -7221,27 +7170,25 @@
         } catch(e) { return null; }
     }
 
-    // When a NEWER semester becomes the default (current), refresh ONLY the
-    // "This Semester" subject list to that semester's subjects. The student's
-    // entered Current GPA / passed hours and the "All Semesters" tab are left
-    // untouched. Does nothing while the student is browsing an older semester
-    // (?sem=...), or on first run (just records a baseline), or when there's
-    // only one semester.
-    function gpaSyncToCurrentSemester() {
-        if (!gpaInitialized) return;
-        const slug = window.__ahCurrentSemSlug;
-        if (!slug) return;                         // single semester / not loaded yet
-        if (window.__ahIsCurrentSem === false) return; // viewing an archived semester
-        if (!gpaLastSemSlug) {                      // first run after this update: baseline only
-            gpaLastSemSlug = slug;
-            gpaSaveState();
+    // Preset: load the viewed semester's subject list into "This Semester" on
+    // demand. Non-destructive to the student's Current GPA / passed hours and
+    // the "All Semesters" tab — it only swaps the editable subject rows, and
+    // only when the student clicks the button (with a confirm).
+    function gpaLoadSemesterPreset() {
+        const preset = getGpaDefaultSubjects();
+        if (!preset.length) {
+            if (typeof showToast === 'function') showToast('No subjects found for this semester', 'locked');
+            else alert('No subjects found for this semester.');
             return;
         }
-        if (gpaLastSemSlug === slug) return;        // already on the latest default
-        // The default semester changed -> swap in the new subject list.
-        gpaSubjects = getGpaDefaultSubjects();
-        gpaLastSemSlug = slug;
+        if (gpaSubjects.length &&
+            !confirm('Load this semester\u2019s subjects into "This Semester"? This replaces the subject rows here (and clears the grades you typed in them). Your Current GPA, passed hours, and the "All Semesters" tab are not affected.')) {
+            return;
+        }
+        gpaSubjects = preset;
         gpaSaveState();
+        renderGpaPage();
+        gpaRecalc();
     }
 
     function showGpa(push = true) {
@@ -7257,7 +7204,6 @@
                 gpaCumHours = saved.cumHours || '';
                 gpaSubjects = saved.subjects || getGpaDefaultSubjects();
                 gpaSemesters = saved.semesters || [];
-                gpaLastSemSlug = saved.lastSemSlug || '';
                 if (gpaSemesters.length === 0) {
                     // Initialize groups with Prior Semesters + Current Semester
                     gpaSemesters.push({ id: 'sem_prior', name: 'Prior Semesters', mode: 'summary', summaryGpa: gpaCumGpa, summaryHours: gpaCumHours, subjects: [] });
@@ -7272,7 +7218,6 @@
             }
             gpaInitialized = true;
         }
-        gpaSyncToCurrentSemester();   // refresh "This Semester" subjects if the default semester changed
         renderGpaPage();
         
         gpaRecalc();
@@ -7405,7 +7350,10 @@
             </div>`;
         html += `<div class="gpa-subjects-header" style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:14px; margin-bottom:16px;">
             <h3 style="margin:0; font-size:1.1rem; color:var(--accent-pink);">Subjects</h3>
-            <span id="gpa-total-credits" style="color:#888; font-size:0.8rem;">Total: ${totalCr} credits</span>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button onclick="gpaLoadSemesterPreset()" title="Replace these subjects with ${(window.__ahSemName || 'this semester').replace(/"/g,'')}'s subject list" style="background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.5); color:#c79bff; font-size:0.74rem; font-weight:700; padding:5px 11px; border-radius:999px; cursor:pointer;">\u21BA Load ${window.__ahSemName || 'current'} subjects</button>
+                <span id="gpa-total-credits" style="color:#888; font-size:0.8rem;">Total: ${totalCr} credits</span>
+            </div>
         </div>
         <div id="gpa-subj-list-normal" style="min-height:50px; padding-bottom:16px;" ondragover="gpaDragOver(event, 'normal')" ondrop="gpaDrop(event, 'normal')"></div>
         ${renderGpaAddBar('normal')}`;

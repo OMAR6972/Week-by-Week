@@ -142,6 +142,8 @@
       // Exposed for the GPA calculator: which semester is the default, and are we on it?
       window.__ahCurrentSemSlug = currentSlug;
       window.__ahIsCurrentSem = currentSlug ? (selected === currentSlug) : true;
+      // Name of the semester currently loaded (for the GPA "load preset" button label)
+      for (var n = 0; n < list.length; n++) { if (list[n].slug === selected) { window.__ahSemName = list[n].name; break; } }
       mountSwitcher(list, selected);
       return loadSemester(selected);   // selected === null -> plain load (pre-migration)
     }, function () {
