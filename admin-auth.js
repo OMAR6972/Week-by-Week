@@ -1,12 +1,23 @@
-/* Academic Hub - admin-auth.js (Phase 4 + admin management)
+/* Academic Hub - admin-auth.js (Phase 4 + admin management + semesters 7.1)
    Login / sign-up gate. Only users listed in the `admins` table get into the
-   dashboard. On entry it loads the LIVE data from the database; the Save button
-   writes back to the database. Also detects whether you are the OWNER. */
+   dashboard. On entry it loads the LIVE data for the semester you are editing
+   (?sem= in the URL, else the current semester); the Save button writes back to
+   that same semester. Also detects whether you are the OWNER. */
 
 (function () {
   var SB = window.__ahSupabase;
   var KEYS = ['CONFIG', 'COURSE_DATA', 'SUBJECT_DETAILS_DATA', 'SCHEDULE_DATA', 'MIDTERM_DATA',
               'FINAL_DATA', 'STAFF_DATA', 'TIMETABLE_DATA', 'UPDATES_DATA', 'NEWS_DATA'];
+
+  // Empty shapes so a brand-new/empty semester opens blank in the editor instead
+  // of showing the old bundled Fall data. CONFIG is left out on purpose (a new
+  // semester is always seeded with a CONFIG, and if it weren't, keeping the
+  // bundled CONFIG is safer than blanking the resource-type list).
+  var EMPTY = {
+    COURSE_DATA: [], SUBJECT_DETAILS_DATA: {}, SCHEDULE_DATA: [], MIDTERM_DATA: [],
+    FINAL_DATA: [], STAFF_DATA: [], TIMETABLE_DATA: {}, UPDATES_DATA: [], NEWS_DATA: []
+  };
+
   var mode = 'login';
 
   var ov = document.createElement('div');
@@ -58,13 +69,48 @@
     return r.data[0];
   }
 
+  // Which semester am I editing? ?sem= wins, else the current one, else the first.
+  // Returns null when there are no semesters yet (pre-migration) so the old
+  // single-row behaviour still works.
+  async function resolveAdminSemester() {
+    var wanted = null;
+    try { wanted = new URL(location.href).searchParams.get('sem'); } catch (e) {}
+    var r = await SB.from('semesters').select('slug, name, sort_order, is_current').order('sort_order', { ascending: true });
+    var list = (r && !r.error && r.data) ? r.data : [];
+    window.__ahSemesterList = list;
+    if (!list.length) return null;
+    if (wanted) { for (var i = 0; i < list.length; i++) if (list[i].slug === wanted) return wanted; }
+    for (var j = 0; j < list.length; j++) if (list[j].is_current) return list[j].slug;
+    return list[0].slug;
+  }
+
   async function loadAndBoot() {
-    var res = await SB.from('site_data').select('key, value');
+    window.__ahSemester = await resolveAdminSemester();
+
+    var sel = SB.from('site_data').select('key, value');
+    if (window.__ahSemester) sel = sel.eq('semester', window.__ahSemester);
+    var res = await sel;
+    if (res.error && window.__ahSemester) {
+      // column may not exist yet (mid-deploy) -> fall back to unfiltered
+      res = await SB.from('site_data').select('key, value');
+    }
     if (res.error) { msg('Could not load data: ' + res.error.message); busy(false); return; }
-    (res.data || []).forEach(function (r) { window[r.key] = r.value; });
+
+    var present = {};
+    (res.data || []).forEach(function (r) { window[r.key] = r.value; present[r.key] = true; });
+
+    // Blank any key this (specific) semester doesn't have, so a new/empty
+    // semester opens empty instead of inheriting the bundled Fall data.
+    if (window.__ahSemester) {
+      Object.keys(EMPTY).forEach(function (k) {
+        if (!present[k]) window[k] = (typeof EMPTY[k] === 'object') ? JSON.parse(JSON.stringify(EMPTY[k])) : EMPTY[k];
+      });
+    }
+
     removeOverlay();
     if (typeof window.__ahAdminBoot === 'function') window.__ahAdminBoot();
     if (typeof window.__ahInitAdminPanel === 'function') window.__ahInitAdminPanel();
+    if (typeof window.__ahInitSemesterUI === 'function') window.__ahInitSemesterUI();
   }
 
   async function doAuth() {
@@ -93,12 +139,17 @@
     await loadAndBoot();
   }
 
-  // ---------- Save: write all data back to the database ----------
+  // ---------- Save: write data back to the database (scoped to the semester) ----------
   window.__ahSaveToDatabase = async function () {
     if (!SB) { alert('Not connected to the database.'); return false; }
+    var sem = window.__ahSemester || null;
     var rows = KEYS.filter(function (k) { return window[k] !== undefined; })
-                   .map(function (k) { return { key: k, value: window[k], updated_at: new Date().toISOString() }; });
-    var res = await SB.from('site_data').upsert(rows, { onConflict: 'key' });
+                   .map(function (k) {
+                     var row = { key: k, value: window[k], updated_at: new Date().toISOString() };
+                     if (sem) row.semester = sem;
+                     return row;
+                   });
+    var res = await SB.from('site_data').upsert(rows, { onConflict: sem ? 'key,semester' : 'key' });
     if (res.error) { alert('Save failed: ' + res.error.message); return false; }
     return true;
   };
