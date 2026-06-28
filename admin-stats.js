@@ -1,4 +1,4 @@
-/* VERSION: 2026-06-29 — stats dashboard (7.3). If this dated line is present, you have the current file. */
+/* VERSION: 2026-06-30 — stats dashboard (7.3) + fixed chart heights (no more runaway-tall charts). If this dated line is present, you have the current file. */
 /* Academic Hub - admin-stats.js  (feature 7.3)
    ---------------------------------------------------------------------------
    Adds a "📊 Stats" item to the admin sidebar and a full-width dashboard that
@@ -99,14 +99,14 @@
         '<div id="ah-st-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;"></div>' +
 
         '<div id="ah-st-body" style="display:grid;grid-template-columns:1fr;gap:18px;">' +
-          card('Activity over time', '<canvas id="ah-st-line" height="170"></canvas>') +
+          card('Activity over time', chartBox('ah-st-line', 240)) +
           '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;">' +
-            card('Most-opened subjects', '<canvas id="ah-st-subjects" height="200"></canvas>') +
-            card('Most-viewed pages', '<canvas id="ah-st-tabs" height="200"></canvas>') +
+            card('Most-opened subjects', chartBox('ah-st-subjects', 260)) +
+            card('Most-viewed pages', chartBox('ah-st-tabs', 260)) +
           '</div>' +
           '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;">' +
-            card('Most-opened materials', '<canvas id="ah-st-res" height="200"></canvas>') +
-            card('Event mix', '<canvas id="ah-st-mix" height="200"></canvas>') +
+            card('Most-opened materials', chartBox('ah-st-res', 260)) +
+            card('Event mix', chartBox('ah-st-mix', 260)) +
           '</div>' +
         '</div>' +
 
@@ -132,6 +132,13 @@
     return '<div style="background:#1d0f33;border:1px solid #2f1d4a;border-radius:12px;padding:16px;">' +
       '<div style="font-size:0.82rem;font-weight:700;color:#cbb3ff;letter-spacing:0.4px;margin-bottom:12px;text-transform:uppercase;">' +
       title + '</div>' + inner + '</div>';
+  }
+
+  // A canvas MUST live in a relatively-positioned, fixed-HEIGHT box, otherwise
+  // Chart.js (maintainAspectRatio:false) grows it forever in a resize loop.
+  function chartBox(id, h) {
+    return '<div style="position:relative;height:' + h + 'px;width:100%;">' +
+      '<canvas id="' + id + '"></canvas></div>';
   }
 
   function kpi(value, label, color) {
@@ -261,7 +268,7 @@
 
   function baseOpts(extra) {
     var o = {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false, resizeDelay: 120,
       plugins: { legend: { display: false } },
       scales: {
         x: { grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 10 } } },
@@ -320,7 +327,7 @@
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false, resizeDelay: 120,
         plugins: { legend: { position: 'bottom', labels: { color: C.tick, font: { size: 11 }, padding: 10 } } }
       }
     });
