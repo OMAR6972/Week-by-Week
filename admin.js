@@ -2271,24 +2271,16 @@
         if(typeof window.NEWS_DATA === 'undefined') window.NEWS_DATA = [];
 
         const container = document.getElementById('editor-area');
-        const isNews = adminAnnounceTab === 'news';
+        adminAnnounceTab = 'news'; const isNews = true;
         const newsCount = (window.NEWS_DATA || []).length;
         const updatesCount = (window.UPDATES_DATA || []).length;
 
-        const tabHtml = `
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button onclick="adminAnnounceTab='news'; renderAnnouncementsManager();" style="flex:1; padding:11px; border-radius:10px; font-weight:bold; font-size:0.9rem; cursor:pointer; border:2px solid ${adminAnnounceTab==='news' ? '#e91e8c' : '#333'}; background:${adminAnnounceTab==='news' ? 'rgba(233,30,140,0.15)' : 'transparent'}; color:${adminAnnounceTab==='news' ? '#e91e8c' : '#666'}; transition:all 0.2s;">
-                    📢 Announcements <span style="font-size:0.75rem; opacity:0.7;">(${newsCount})</span>
-                </button>
-                <button onclick="adminAnnounceTab='updates'; renderAnnouncementsManager();" style="flex:1; padding:11px; border-radius:10px; font-weight:bold; font-size:0.9rem; cursor:pointer; border:2px solid ${adminAnnounceTab==='updates' ? '#af52de' : '#333'}; background:${adminAnnounceTab==='updates' ? 'rgba(175,82,222,0.15)' : 'transparent'}; color:${adminAnnounceTab==='updates' ? '#af52de' : '#666'}; transition:all 0.2s;">
-                    🚀 Updates / Changelog <span style="font-size:0.75rem; opacity:0.7;">(${updatesCount})</span>
-                </button>
-            </div>`;
+        const tabHtml = '';
 
         container.innerHTML = `
             <div class="form-section" style="border-color:${isNews ? '#e91e8c' : '#af52de'};">
                 <h3 style="color:${isNews ? '#e91e8c' : '#af52de'};">📣 Manage Announcements</h3>
-                ${makeHelpBox('announcements', 'News announcements appear in the 🔔 news panel on the site with an unread badge counter. Students see the title, body, and optional link. Updates/Changelog appear on the dedicated Updates page and show version history. Use the tabs to switch between the two.')}
+                ${makeHelpBox('announcements', 'Announcements appear in the 🔔 news panel on the site with an unread badge counter. Students see the title, body, and optional link.')}
                 ${tabHtml}
                 <div id="announce-content"></div>
             </div>`;
