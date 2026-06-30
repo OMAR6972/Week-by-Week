@@ -1,4 +1,4 @@
-/* VERSION: 2026-07-01 — stats dashboard: hourly view, most/avg/lowest, per-subject drill-down, recent-activity list (7.3b). If this dated line is present, you have the current file. */
+/* VERSION: 2026-07-01b — stats: + detailed clicks (resources/links/contacts), per-subject resource drill-down (7.3c). If this dated line is present, you have the current file. */
 /* Academic Hub - admin-stats.js  (feature 7.3)
    ---------------------------------------------------------------------------
    "📊 Stats" sidebar item + dashboard charting the anonymous usage events that
@@ -144,6 +144,10 @@
         '</div>' +
 
         '<div style="height:18px;"></div>' +
+        card('What students actually clicked — materials, links & contacts',
+          '<div id="ah-st-clicks" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;"></div>') +
+
+        '<div style="height:18px;"></div>' +
         card('Recent activity (newest first)',
           '<div id="ah-st-recent" style="max-height:300px;overflow:auto;font-size:0.8rem;"></div>') +
 
@@ -207,6 +211,7 @@
       renderKpis(lastRows);
       renderSummary(lastRows);
       renderSubjectList(lastRows);
+      renderClicks(lastRows);
       renderRecent(lastRows);
       if (!lastRows.length) {
         status('No events recorded yet for this selection. As students browse the live site, data shows up here.');
@@ -240,19 +245,21 @@
   }
 
   function renderKpis(rows) {
-    var sessions = {}, subj = 0, res = 0, pv = 0;
+    var sessions = {}, subj = 0, res = 0, pv = 0, rc = 0;
     rows.forEach(function (r) {
       if (r.session_id) sessions[r.session_id] = 1;
       if (r.event_type === 'subject_open') subj++;
       else if (r.event_type === 'resource_open') res++;
       else if (r.event_type === 'page_view') pv++;
+      else if (r.event_type === 'resource_click') rc++;
     });
     var box = document.getElementById('ah-st-kpis'); if (!box) return;
     box.innerHTML =
       kpi(Object.keys(sessions).length, 'Unique visitors', C.pink) +
       kpi(pv,   'Page loads',     C.purple) +
       kpi(subj, 'Subject opens',  C.blue) +
-      kpi(res,  'Week opens',     C.green);
+      kpi(res,  'Week opens',     C.green) +
+      kpi(rc,   'Material clicks', C.orange);
   }
 
   // Most / Average / Lowest — computed across subjects (by subject-open count)
@@ -296,54 +303,116 @@
     renderSubjectDetail(rows);
   }
 
+  function barsHtml(pairs, fromColor, toColor, countColor) {
+    var max = pairs[0][1] || 1;
+    return pairs.map(function (p) {
+      var pct = Math.round((p[1] / max) * 100);
+      return '<div style="margin-bottom:8px;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:0.78rem;color:#ddd;margin-bottom:3px;gap:10px;">' +
+          '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(p[0]) + '</span>' +
+          '<span style="color:' + countColor + ';font-weight:700;flex-shrink:0;">' + p[1] + '</span></div>' +
+        '<div style="height:8px;background:#150a25;border-radius:5px;overflow:hidden;">' +
+          '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,' + fromColor + ',' + toColor + ');"></div></div>' +
+      '</div>';
+    }).join('');
+  }
+
   function renderSubjectDetail(rows) {
     var box = document.getElementById('ah-st-subdetail'); if (!box) return;
     if (!drillSubject) { box.innerHTML = ''; return; }
-    var weekMap = {};
+
+    var weekMap = {}, resMap = {};
     rows.forEach(function (r) {
-      if (r.event_type === 'resource_open' && r.label === drillSubject) {
-        var w = r.detail || '(week)'; weekMap[w] = (weekMap[w] || 0) + 1;
-      }
+      if (r.label !== drillSubject) return;
+      if (r.event_type === 'resource_open') { var w = r.detail || '(week)'; weekMap[w] = (weekMap[w] || 0) + 1; }
+      else if (r.event_type === 'resource_click') { var m = r.detail || '(material)'; resMap[m] = (resMap[m] || 0) + 1; }
     });
     var opens = rows.filter(function (r) { return r.event_type === 'subject_open' && r.label === drillSubject; }).length;
-    var pairs = toSortedPairs(weekMap);
+    var weekPairs = toSortedPairs(weekMap);
+    var resPairs  = toSortedPairs(resMap);
+
     var head = '<div style="font-size:1.05rem;font-weight:800;color:#fff;margin-bottom:4px;">' + esc(drillSubject) + '</div>' +
       '<div style="font-size:0.78rem;color:#9a8cc0;margin-bottom:14px;">' + opens + ' subject open' + (opens === 1 ? '' : 's') +
-      ' · ' + pairs.length + ' week' + (pairs.length === 1 ? '' : 's') + ' opened</div>';
+      ' · ' + weekPairs.length + ' week' + (weekPairs.length === 1 ? '' : 's') + ' opened' +
+      ' · ' + resPairs.length + ' material' + (resPairs.length === 1 ? '' : 's') + ' clicked</div>';
 
-    if (!pairs.length) {
-      box.innerHTML = head + '<div style="color:#9a8cc0;font-size:0.82rem;background:#150a25;border:1px solid #2f1d4a;border-radius:8px;padding:12px;">No week opens recorded yet for this subject.</div>';
-      return;
+    var html = head;
+
+    // weeks
+    html += '<div style="font-size:0.72rem;color:#cbb3ff;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin:4px 0 8px;">Weeks opened</div>';
+    if (!weekPairs.length) {
+      html += '<div style="color:#9a8cc0;font-size:0.8rem;margin-bottom:14px;">No week opens recorded yet.</div>';
+    } else {
+      var stW = stats(weekPairs.map(function (p) { return p[1]; }));
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">' +
+        pill('Most', weekPairs[0][0] + ' · ' + weekPairs[0][1], C.green) +
+        pill('Avg / week', String(stW.avg), C.cyan) +
+        pill('Lowest', weekPairs[weekPairs.length - 1][0] + ' · ' + weekPairs[weekPairs.length - 1][1], C.orange) +
+        '</div>' + barsHtml(weekPairs, '#4a90e2', '#a855f7', C.blue);
     }
-    var st = stats(pairs.map(function (p) { return p[1]; }));
-    var summary = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">' +
-      pill('Most', pairs[0][0] + ' · ' + pairs[0][1], C.green) +
-      pill('Avg / week', String(st.avg), C.cyan) +
-      pill('Lowest', pairs[pairs.length - 1][0] + ' · ' + pairs[pairs.length - 1][1], C.orange) +
-      '</div>';
-    var max = pairs[0][1] || 1;
-    var bars = pairs.map(function (p) {
-      var pct = Math.round((p[1] / max) * 100);
-      return '<div style="margin-bottom:8px;">' +
-        '<div style="display:flex;justify-content:space-between;font-size:0.78rem;color:#ddd;margin-bottom:3px;">' +
-          '<span>' + esc(p[0]) + '</span><span style="color:' + C.blue + ';font-weight:700;">' + p[1] + '</span></div>' +
-        '<div style="height:8px;background:#150a25;border-radius:5px;overflow:hidden;">' +
-          '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#4a90e2,#a855f7);"></div></div>' +
-      '</div>';
-    }).join('');
-    box.innerHTML = head + summary + bars;
+
+    // materials inside the weeks
+    html += '<div style="font-size:0.72rem;color:#cbb3ff;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin:16px 0 8px;">Materials clicked (inside weeks)</div>';
+    if (!resPairs.length) {
+      html += '<div style="color:#9a8cc0;font-size:0.8rem;">No materials clicked yet — this fills in as students open lectures, slides, etc.</div>';
+    } else {
+      var stR = stats(resPairs.map(function (p) { return p[1]; }));
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">' +
+        pill('Most', resPairs[0][1] + '×', C.green) +
+        pill('Avg / material', String(stR.avg), C.cyan) +
+        pill('Lowest', resPairs[resPairs.length - 1][1] + '×', C.orange) +
+        '</div>' + barsHtml(resPairs, '#00c853', '#00E5FF', C.green);
+    }
+
+    box.innerHTML = html;
   }
   function pill(label, value, color) {
-    return '<div style="background:#150a25;border:1px solid #2f1d4a;border-radius:9px;padding:8px 11px;min-width:120px;">' +
+    return '<div style="background:#150a25;border:1px solid #2f1d4a;border-radius:9px;padding:8px 11px;min-width:110px;">' +
       '<div style="font-size:0.62rem;color:#9a8cc0;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">' + label + '</div>' +
       '<div style="font-size:0.9rem;color:' + color + ';font-weight:800;margin-top:3px;">' + esc(value) + '</div></div>';
+  }
+
+  // ── what students actually clicked: materials, useful links, contacts ──
+  function renderClicks(rows) {
+    var box = document.getElementById('ah-st-clicks'); if (!box) return;
+    var resources = toSortedPairs(countBy(rows, 'resource_click', function (r) {
+      return (r.label ? r.label + ' · ' : '') + (r.detail || '(material)'); }), 10);
+    var links    = toSortedPairs(countBy(rows, 'link_click',  function (r) { return r.label; }), 10);
+    var contacts = toSortedPairs(countBy(rows, 'staff_click', function (r) { return r.label; }), 10);
+    var outbound = toSortedPairs(countBy(rows, 'outbound_click', function (r) { return r.detail || 'other page'; }), 10);
+
+    box.innerHTML =
+      clickList('🎓 Top materials', resources, C.green, 'No materials clicked yet.') +
+      clickList('🔗 Top useful links', links, C.cyan, 'No useful-link clicks yet.') +
+      clickList('👥 Contacts opened', contacts, C.pink, 'No staff contacts opened yet.') +
+      clickList('↗ Other outbound (by page)', outbound, C.orange, 'No other outbound clicks yet.');
+  }
+  function clickList(title, pairs, color, emptyMsg) {
+    var inner;
+    if (!pairs.length) {
+      inner = '<div style="color:#9a8cc0;font-size:0.8rem;">' + emptyMsg + '</div>';
+    } else {
+      var max = pairs[0][1] || 1;
+      inner = pairs.map(function (p) {
+        var pct = Math.round((p[1] / max) * 100);
+        return '<div style="margin-bottom:7px;">' +
+          '<div style="display:flex;justify-content:space-between;gap:10px;font-size:0.76rem;color:#ddd;margin-bottom:3px;">' +
+            '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(p[0]) + '</span>' +
+            '<span style="color:' + color + ';font-weight:700;flex-shrink:0;">' + p[1] + '</span></div>' +
+          '<div style="height:6px;background:#150a25;border-radius:4px;overflow:hidden;">' +
+            '<div style="height:100%;width:' + pct + '%;background:' + color + ';"></div></div></div>';
+      }).join('');
+    }
+    return '<div><div style="font-size:0.78rem;font-weight:700;color:#cbb3ff;margin-bottom:10px;">' + title + '</div>' + inner + '</div>';
   }
 
   // ── recent activity list (exact timestamps → the hours & minutes you wanted) ──
   function renderRecent(rows) {
     var box = document.getElementById('ah-st-recent'); if (!box) return;
-    var TYPE = { page_view:'Page load', tab_view:'Tab', subject_open:'Subject', resource_open:'Week' };
-    var COLOR = { page_view:C.purple, tab_view:C.cyan, subject_open:C.blue, resource_open:C.green };
+    var TYPE = { page_view:'Page load', tab_view:'Tab', subject_open:'Subject', resource_open:'Week',
+                 resource_click:'Material', link_click:'Link', staff_click:'Contact', outbound_click:'Outbound' };
+    var COLOR = { page_view:C.purple, tab_view:C.cyan, subject_open:C.blue, resource_open:C.green,
+                  resource_click:C.orange, link_click:C.cyan, staff_click:C.pink, outbound_click:C.orange };
     var recent = rows.slice().sort(function (a, b) { return (b.created_at || '').localeCompare(a.created_at || ''); }).slice(0, 40);
     if (!recent.length) { box.innerHTML = '<div style="color:#9a8cc0;">Nothing yet.</div>'; return; }
     box.innerHTML = recent.map(function (r) {

@@ -1,4 +1,4 @@
-/* VERSION: 2026-06-29 — semesters (7.1) + auto badges/announcements (7.2) + analytics logging (7.3). If this dated line is present, you have the current file. */
+/* VERSION: 2026-07-01 — semesters (7.1) + auto badges/announcements (7.2) + analytics (7.3) + detailed click tracking (7.3c). If this dated line is present, you have the current file. */
 /* Academic Hub - student-data.js  (semester-aware, feature 7.1; + 7.3 analytics appended at bottom)
    --------------------------------------------------------------------------
    What this does, in order:
@@ -275,4 +275,77 @@
 
   // student.js parses before this file, so window.nav already exists; guard anyway.
   if (!patchNav()) document.addEventListener('DOMContentLoaded', patchNav);
+})();
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Academic Hub — DETAILED click tracking  (feature 7.3c)
+   ---------------------------------------------------------------------------
+   Captures the granular interactions the basic logger above doesn't:
+       resource_click   a material opened inside a week  (label=subject,
+                        detail="<resource> · <week>")
+       link_click       a Useful Link opened             (label=link title)
+       staff_click      a staff contact opened           (label=contact)
+       outbound_click   any other external link          (detail=page)
+   It's a single capture-phase click listener — it only LISTENS, never alters
+   navigation or rendering, so it can't break the live site. It reads the app's
+   current subject/week/page state (globals defined in student.js) defensively;
+   if anything is missing it just logs less, never throws.
+   ─────────────────────────────────────────────────────────────────────────── */
+(function () {
+  if (!window.__ahSupabase || typeof window.__ahLogEvent !== 'function') return;
+  var log = window.__ahLogEvent;
+
+  // read student.js globals safely (they live in the shared global scope)
+  function G(fn) { try { return fn(); } catch (e) { return undefined; } }
+  function subCode()   { return G(function () { return currSub && currSub.code; }) || null; }
+  function weekTitle() { return G(function () { return currentContentObj && currentContentObj.title; }) || null; }
+  function curPage()   { return G(function () { return currentPageId; }) ||
+                                G(function () { return window.getActivePageId && window.getActivePageId(); }) || null; }
+
+  function cleanLabel(elem, fallback) {
+    try {
+      var strong = elem.querySelector('span[style*="font-weight:6"], span[style*="font-weight:7"], h3, strong, b');
+      var txt = (strong ? strong.textContent : elem.textContent) || '';
+      txt = txt.replace(/\s+/g, ' ').replace(/NEW!?/g, '').replace(/[→›▼]/g, '').trim();
+      return txt.slice(0, 90) || fallback || null;
+    } catch (e) { return fallback || null; }
+  }
+
+  document.addEventListener('click', function (ev) {
+    try {
+      var t = ev.target; if (!t || !t.closest) return;
+
+      // 1) a material card inside a week's content grid → precise attribution
+      var card = t.closest('#resources-grid .card');
+      if (card) {
+        var name = '';
+        var divs = card.querySelectorAll('div');
+        for (var i = 0; i < divs.length; i++) {
+          var s = divs[i].getAttribute('style') || '';
+          if (s.indexOf('uppercase') > -1) { name = (divs[i].textContent || '').replace(/NEW!?/g, '').trim(); break; }
+        }
+        if (!name) name = cleanLabel(card, 'resource');
+        var wk = weekTitle();
+        log('resource_click', subCode(), name + (wk ? ' · ' + wk : ''));
+        return;
+      }
+
+      // 2) external links / link-rows (ignore internal #hash navigations)
+      var a = t.closest('a[href]');
+      var el = a || t.closest('[data-link]');
+      if (!el) return;
+      var href = a ? el.getAttribute('href') : el.getAttribute('data-link');
+      if (!href || href === '#' || href.charAt(0) === '#') return;
+      if (!/^(https?:|mailto:|tel:)/i.test(href)) return;
+
+      var page = curPage();
+      var isContact = /^(mailto:|tel:)/i.test(href) ||
+                      /(wa\.me|whatsapp|t\.me|telegram|messenger|facebook\.com\/|instagram\.com\/)/i.test(href);
+      var label = cleanLabel(el, href);
+
+      if (page === 'useful-links')            log('link_click',  label, null);
+      else if (page === 'directory' || isContact) log('staff_click',  label, page || null);
+      else                                    log('outbound_click', label, page || null);
+    } catch (e) { /* never let tracking break a click */ }
+  }, true);
 })();
