@@ -1,4 +1,4 @@
-/* VERSION: 2026-07-02 (7.4 icons) — emoji picker converted to Font Awesome icon picker (icons now stored as fa-* class names; legacy emoji still render via ahIcon). Admin previews + news/update/resource icons render through ahIcon. If this dated line is present, you have the current file. */
+/* VERSION: 2026-07-02 (7.4 icons b) — FA icon picker: each icon field is a single click-to-pick button showing the rendered icon (fixed duplicate raw-value display); picker icons given light color; selected announcement icon highlighted. Icons stored as fa-* class names; legacy emoji still render via ahIcon. */
 /* Academic Hub - admin.js (extracted from admin.html, Phase 1) */
     let cIdx = 0; let wIdx = 0; let eIdx = 0; let pIdx = 0; let schWIdx = 0; 
     let schedulePanelMode = 'weeks';
@@ -623,7 +623,7 @@
                 <div class="form-section" style="border-color:#4a90e2;">
                     <h3 style="color:#4a90e2;">Link Details</h3>
                     <div style="display:grid; grid-template-columns: 60px 1fr; gap:10px;">
-                        <div><label>Icon</label><div style="position:relative;display:flex;align-items:center;gap:5px;"><span class="ah-pick-preview" style="font-size:1.1rem;width:20px;text-align:center;flex:0 0 20px;">${ahIcon(p.icon||'🔗')}</span><input type="text" style="text-align:center;flex:1;min-width:0;" value="${p.icon || '🔗'}" oninput="updateData('playlists', 'icon', this.value); renderMiddleColumn()" onfocus="showEmojiPicker(this)"><div class="emoji-picker-dropdown" style="display:none;"></div></div></div>
+                        <div><label>Icon</label><div style="position:relative;"><button type="button" class="ah-icon-btn" onclick="showEmojiPicker(this)" style="width:100%;min-height:38px;background:#0a0012;border:1px solid #444;border-radius:6px;color:#ddd;font-size:1.25rem;line-height:1;cursor:pointer;">${ahIcon(p.icon||'🔗') || '+'}</button><input type="hidden" value="${p.icon || '🔗'}" oninput="updateData('playlists', 'icon', this.value); renderMiddleColumn()"><div class="emoji-picker-dropdown" style="display:none;"></div></div></div>
                         <div><label>Title</label><input type="text" value="${p.title || ''}" oninput="updateData('playlists', 'title', this.value); renderMiddleColumn()"></div>
                     </div>
                     <label>Link (URL)</label><input type="text" placeholder="https://..." value="${p.link || ''}" oninput="updateData('playlists', 'link', this.value)">
@@ -1616,7 +1616,7 @@
             el.innerHTML = `
                 <div class="drag-handle">☰</div>
                 <div style="flex:1; display:flex; gap:10px;">
-                    <div style="flex:0 0 84px;position:relative;display:flex;align-items:center;gap:5px;"><span class="ah-pick-preview" style="font-size:1.1rem;width:20px;text-align:center;">${ahIcon(res.icon)}</span><input type="text" value="${res.icon}" style="text-align:center;width:52px;" onfocus="showEmojiPicker(this)" oninput="window.CONFIG.resources[${i}].icon=this.value"><div class="emoji-picker-dropdown" style="display:none;"></div></div>
+                    <div style="flex:0 0 56px;position:relative;"><button type="button" class="ah-icon-btn" onclick="showEmojiPicker(this)" style="width:52px;height:40px;background:#0a0012;border:1px solid #444;border-radius:6px;color:#ddd;font-size:1.3rem;line-height:1;cursor:pointer;">${ahIcon(res.icon) || '+'}</button><input type="hidden" value="${res.icon}" oninput="window.CONFIG.resources[${i}].icon=this.value"><div class="emoji-picker-dropdown" style="display:none;"></div></div>
                     <div style="flex:1;"><input type="text" value="${res.name}" onchange="updateConfigName(${i}, this.value)"></div>
                 </div>
                 <button class="btn btn-del" onclick="delConfigType(${i})">✕</button>
@@ -1783,7 +1783,7 @@
         
         let html = `<div class="form-section" style="border-color:#b519d6;"><h3 style="color:#b519d6;">🔗 Edit Link #${ulLinkIdx+1} in ${sub.code}</h3>`;
         html += `<div style="display:grid; grid-template-columns: 60px 1fr; gap:10px;">`;
-        html += `<div><label>Icon</label><div style="position:relative;display:flex;align-items:center;gap:5px;"><span class="ah-pick-preview" style="font-size:1.1rem;width:20px;text-align:center;flex:0 0 20px;">${ahIcon(p.icon||'🔗')}</span><input type="text" style="text-align:center;flex:1;min-width:0;" value="${p.icon || '🔗'}" oninput="window.COURSE_DATA[ulSubIdx].playlists[ulLinkIdx].icon=this.value; markDirty(); renderUsefulLinksManager({ preserveScroll: true, skipEditor: true });" onfocus="showEmojiPicker(this)"><div class="emoji-picker-dropdown" style="display:none;"></div></div></div>`;
+        html += `<div><label>Icon</label><div style="position:relative;"><button type="button" class="ah-icon-btn" onclick="showEmojiPicker(this)" style="width:100%;min-height:38px;background:#0a0012;border:1px solid #444;border-radius:6px;color:#ddd;font-size:1.25rem;line-height:1;cursor:pointer;">${ahIcon(p.icon||'🔗') || '+'}</button><input type="hidden" value="${p.icon || '🔗'}" oninput="window.COURSE_DATA[ulSubIdx].playlists[ulLinkIdx].icon=this.value; markDirty(); renderUsefulLinksManager({ preserveScroll: true, skipEditor: true });"><div class="emoji-picker-dropdown" style="display:none;"></div></div></div>`;
         html += `<div><label>Title</label><input type="text" value="${p.title || ''}" oninput="window.COURSE_DATA[ulSubIdx].playlists[ulLinkIdx].title=this.value; markDirty(); renderUsefulLinksManager({ preserveScroll: true, skipEditor: true });"></div></div>`;
         html += `<label>Link (URL)</label><input type="text" placeholder="https://..." value="${p.link || ''}" oninput="window.COURSE_DATA[ulSubIdx].playlists[ulLinkIdx].link=this.value; markDirty();">`;
         html += `<label>Group <span style="font-size:0.75rem; color:#888; font-weight:normal;">(playlists with the same group name appear together)</span></label><input type="text" placeholder="e.g. Dr. Manal Morad" value="${p.group || ''}" oninput="window.COURSE_DATA[ulSubIdx].playlists[ulLinkIdx].group=this.value; markDirty(); renderUsefulLinksManager({ preserveScroll: true, skipEditor: true });">`;
@@ -2200,7 +2200,7 @@
                 el.className = 'res-item';
                 el.style.cssText = 'flex-direction:column; border-left:4px solid #e91e8c; margin-bottom:18px;';
                 const subOptions = (window.COURSE_DATA || []).map(s => `<option value="${s.code}" ${item.sub === s.code ? 'selected' : ''}>${s.code}</option>`).join('');
-                const emojiOpts = NEWS_ICONS.map(ic => `<button title="${ic}" onclick="window.NEWS_DATA[${i}].emoji='${ic}';markDirty();renderAnnouncementsManager();" style="background:none;border:none;cursor:pointer;font-size:1.1rem;padding:5px 7px;border-radius:5px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='none'"><i class="fa-solid ${ic}"></i></button>`).join('');
+                const emojiOpts = NEWS_ICONS.map(ic => { const _s = (item.emoji === ic); return `<button title="${ic}" onclick="window.NEWS_DATA[${i}].emoji='${ic}';markDirty();renderAnnouncementsManager();" style="background:${_s?'rgba(233,30,140,0.25)':'none'};border:1px solid ${_s?'#e91e8c':'transparent'};cursor:pointer;font-size:1.15rem;padding:5px 7px;border-radius:5px;color:#e6e6e6;" onmouseover="this.style.background='rgba(255,255,255,0.14)'" onmouseout="this.style.background='${_s?'rgba(233,30,140,0.25)':'none'}'"><i class="fa-solid ${ic}"></i></button>`; }).join('');
                 const publishedHint = getNewsPcDeltaLabel(item.publishedAt);
                 el.innerHTML = `
                     <div style="display:flex;justify-content:space-between;width:100%;align-items:center;margin-bottom:12px;">
@@ -2250,7 +2250,7 @@
                         <button class="btn btn-del" onclick="if(confirm('Remove this update?')){window.UPDATES_DATA.splice(${i},1);markDirty();renderAnnouncementsManager();}">✕ Remove</button>
                     </div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
-                        <div style="position:relative; flex:0 0 60px;"><label>Icon</label><input type="text" value="${item.icon||''}" style="width:100%;text-align:center;cursor:pointer;padding:8px 4px;" onfocus="showEmojiPicker(this)" oninput="window.UPDATES_DATA[${i}].icon=this.value;markDirty();"><span class="ah-pick-preview" style="font-size:1.1rem;display:block;text-align:center;margin-top:3px;">${ahIcon(item.icon)}</span><div class="emoji-picker-dropdown" style="display:none;"></div></div>
+                        <div style="position:relative; flex:0 0 60px;"><label>Icon</label><button type="button" class="ah-icon-btn" onclick="showEmojiPicker(this)" style="width:100%;height:40px;background:#0a0012;border:1px solid #444;border-radius:6px;color:#ddd;font-size:1.3rem;line-height:1;cursor:pointer;">${ahIcon(item.icon) || '+'}</button><input type="hidden" value="${item.icon||''}" oninput="window.UPDATES_DATA[${i}].icon=this.value;markDirty();"><div class="emoji-picker-dropdown" style="display:none;"></div></div>
                         <div style="flex:1;min-width:160px;"><label>Title</label><input type="text" value="${escAttr(item.title||'')}" oninput="window.UPDATES_DATA[${i}].title=this.value;markDirty();"></div>
                         <div style="flex:0 0 190px;"><label>Date</label><input type="date" value="${normalizeDateInputValue(item.date)}" style="padding:8px 10px;color-scheme:dark;" oninput="window.UPDATES_DATA[${i}].date=this.value||'';markDirty();"></div>
                     </div>
@@ -2404,19 +2404,17 @@
         'fa-seedling','fa-sun','fa-leaf','fa-snowflake'
     ];
 
-    function showEmojiPicker(inputEl) {
-        // Close any other open picker
+    function showEmojiPicker(el) {
         document.querySelectorAll('.emoji-picker-dropdown').forEach(d => d.style.display = 'none');
-        const dropdown = inputEl.parentElement.querySelector('.emoji-picker-dropdown');
+        const dropdown = el.parentElement.querySelector('.emoji-picker-dropdown');
         if(!dropdown) return;
         dropdown.innerHTML = SUGGESTED_ICONS.map(ic =>
-            `<button class="emoji-opt" type="button" title="${ic}" onmousedown="event.preventDefault(); pickEmoji(this, '${ic}')"><i class="fa-solid ${ic}"></i></button>`
+            `<button class="emoji-opt" type="button" title="${ic}" style="color:#eee;" onmousedown="event.preventDefault(); pickEmoji(this, '${ic}')"><i class="fa-solid ${ic}"></i></button>`
         ).join('');
         dropdown.style.display = 'grid';
-        // Close on outside click
         setTimeout(() => {
             const handler = (ev) => {
-                if(!dropdown.contains(ev.target) && ev.target !== inputEl) {
+                if(!dropdown.contains(ev.target) && !el.contains(ev.target) && ev.target !== el) {
                     dropdown.style.display = 'none';
                     document.removeEventListener('click', handler);
                 }
@@ -2424,15 +2422,15 @@
             document.addEventListener('click', handler);
         }, 0);
     }
-
-    function pickEmoji(btn, emoji) {
-        const dropdown = btn.closest('.emoji-picker-dropdown');
+    function pickEmoji(optBtn, ic) {
+        const dropdown = optBtn.closest('.emoji-picker-dropdown');
         const wrap = dropdown.parentElement;
-        const input = wrap.querySelector('input');
-        input.value = emoji;
+        const trig = wrap.querySelector('.ah-icon-btn');
+        if (trig) trig.innerHTML = ahIcon(ic);
         const prev = wrap.querySelector('.ah-pick-preview');
-        if (prev) prev.innerHTML = ahIcon(emoji);
-        input.dispatchEvent(new Event('input', { bubbles: true }));
+        if (prev) prev.innerHTML = ahIcon(ic);
+        const input = wrap.querySelector('input');
+        if (input) { input.value = ic; input.dispatchEvent(new Event('input', { bubbles: true })); }
         dropdown.style.display = 'none';
     }
 
