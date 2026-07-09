@@ -1,4 +1,4 @@
-/* VERSION: 2026-07-02 (7.4 icons b) — FA icon picker: each icon field is a single click-to-pick button showing the rendered icon (fixed duplicate raw-value display); picker icons given light color; selected announcement icon highlighted. Icons stored as fa-* class names; legacy emoji still render via ahIcon. */
+/* VERSION: 2026-07-03 (7.4 icons d) — FA icon picker (click-to-pick buttons); Maintenance > Clear all NEW badges; removed redundant per-subject Semester field (semester comes from the topbar selector; student cards read it live). Icons stored as fa-* ; legacy emoji via ahIcon. */
 /* Academic Hub - admin.js (extracted from admin.html, Phase 1) */
     let cIdx = 0; let wIdx = 0; let eIdx = 0; let pIdx = 0; let schWIdx = 0; 
     let schedulePanelMode = 'weeks';
@@ -546,10 +546,9 @@
                     <div><label>Code</label><input type="text" value="${sub.code}" oninput="setSubjectCode(this.value)" onblur="renderSubjects()"></div>
                     <div><label>Name</label><input type="text" value="${sub.name}" oninput="updateData('sub', 'name', this.value)"></div>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 2fr; gap:10px; margin-top:10px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 2fr; gap:10px; margin-top:10px;">
                     <div><label>Subject Code</label><input type="text" placeholder="e.g. CSE331S" value="${sub.subCode || ''}" oninput="updateData('sub', 'subCode', this.value)"></div>
                     <div><label>Credits</label><input type="text" value="${sub.credits}" oninput="updateData('sub', 'credits', this.value)"></div>
-                    <div><label>Semester</label><input type="text" value="${sub.semester}" oninput="updateData('sub', 'semester', this.value)"></div>
                     <div><label>Color</label><input type="color" value="${sub.color || getSubjectColorFallback(sub.code)}" oninput="updateData('sub', 'color', this.value)"></div>
                     <div><label>Drive Link</label><input type="text" placeholder="https://drive..." value="${sub.driveLink || ''}" oninput="updateData('sub', 'driveLink', this.value)"></div>
                 </div>
@@ -1677,7 +1676,7 @@
     }
     
     function addSubject() { 
-        const newSubject = {code:"NEW", name:"New", credits:"3 Credits", semester:"Spring 2026", color: "#e91e8c", subCode: "", weeks:[], events:[], playlists:[]};
+        const newSubject = {code:"NEW", name:"New", credits:"3 Credits", semester:"", color: "#e91e8c", subCode: "", weeks:[], events:[], playlists:[]};
         window.COURSE_DATA.push(newSubject);
         if(typeof window.SUBJECT_DETAILS_DATA === 'undefined' || !window.SUBJECT_DETAILS_DATA) window.SUBJECT_DETAILS_DATA = {};
         window.SUBJECT_DETAILS_DATA[newSubject.code] = { gradeDistribution: '', examTypes: '', generalNotes: '' };

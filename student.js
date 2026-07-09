@@ -1,4 +1,4 @@
-/* VERSION: 2026-07-03 (7.4 icons + polish) — season icon on subject cards; ahIcon FA-class passthrough + full picker vocabulary; "Updated X ago" now hidden for content older than 30 days (was showing stale month-old labels). If this dated line is present, you have the current file. */
+/* VERSION: 2026-07-03 (7.4 icons + polish b) — subject cards now show the ACTUAL loaded semester (window.__ahSemName) with its season icon, not the stale per-subject field; ahIcon FA-class passthrough; stale "Updated X ago" hidden after 30 days. If this dated line is present, you have the current file. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -862,7 +862,7 @@
                 <div style="font-family:'Orbitron'; font-size:2.5rem; color:var(--accent-pink); margin-bottom:10px">${s.code}</div>
                 <div style="color:#eee; font-size:1.1rem; margin-bottom:20px">${s.name}</div>
                 <div style="display:flex; justify-content:space-between; align-items:center; color:#bbb; font-size:0.9rem; border-top:1px solid rgba(233,30,140,0.3); padding-top:15px">
-                    <span>${s.credits}</span>${s.subCode ? `<span class="subject-code-label">${s.subCode}</span>` : ''}${s.semester ? `<span>${ahSeasonIcon(s.semester)}${s.semester}</span>` : ''}
+                    <span>${s.credits}</span>${s.subCode ? `<span class="subject-code-label">${s.subCode}</span>` : ''}${(window.__ahSemName || s.semester) ? `<span>${ahSeasonIcon(window.__ahSemName || s.semester)}${window.__ahSemName || s.semester}</span>` : ''}
                 </div>`;
             const hideBtn = document.createElement('button');
             hideBtn.className = 'subject-hide-btn';
