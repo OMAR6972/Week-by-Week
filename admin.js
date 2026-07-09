@@ -1592,6 +1592,11 @@
                 <p style="color:#888; font-size:0.8rem; margin-bottom:10px;">Used by the "Jump to Current Week" feature on the student view.</p>
                 <input type="date" value="${window.CONFIG.semesterStart || ''}" style="max-width:250px;" onchange="window.CONFIG.semesterStart = this.value;">
             </div>
+            <div class="form-section" style="border-color:#ff9500;">
+                <h3 style="color:#ff9500;">Maintenance</h3>
+                <p style="color:#888; font-size:0.8rem; margin-bottom:10px;">The student site shows a <strong style="color:#ff9500;">NEW!</strong> badge on weeks/resources for 14 days after their created-date. Saving stamps a created-date on any item that lacks one, so the first save on older content can flag everything as new. This backdates all current content so only genuinely new items you add later will show the badge.</p>
+                <button class="btn" style="background:rgba(255,149,0,0.15);border:1px solid #ff9500;color:#ff9500;" onclick="clearNewBadges()">Clear all NEW badges</button>
+            </div>
             <div class="form-section">
                 <h3>Manage Resources</h3>
                 <div id="config-list"></div>
@@ -1653,6 +1658,23 @@
     function addConfigType() { window.CONFIG.resources.push({name:"New", icon:"📦", defaultDesc:""}); renderConfigEditor(); }
     function delConfigType(i) { if(confirm("Del?")) { window.CONFIG.resources.splice(i,1); renderConfigEditor(); } }
     function updateConfigName(i, name) { window.CONFIG.resources[i].name = name; }
+
+    function clearNewBadges() {
+        if (!confirm('Backdate the created-date of ALL current weeks & resources so none show the NEW badge?\n\nGenuinely new items you add later will still show NEW normally.')) return;
+        const old = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+        let n = 0;
+        (window.COURSE_DATA || []).forEach(sub => {
+            ['weeks', 'events'].forEach(section => {
+                (sub[section] || []).forEach(wk => {
+                    if (wk.createdAt) { wk.createdAt = old; n++; }
+                    const res = wk.resources || {};
+                    Object.keys(res).forEach(k => { if (res[k] && res[k].createdAt) { res[k].createdAt = old; n++; } });
+                });
+            });
+        });
+        markDirty();
+        alert('Backdated ' + n + ' item(s). Click Save to apply \u2014 the NEW badges will disappear on the student site.');
+    }
     
     function addSubject() { 
         const newSubject = {code:"NEW", name:"New", credits:"3 Credits", semester:"Spring 2026", color: "#e91e8c", subCode: "", weeks:[], events:[], playlists:[]};

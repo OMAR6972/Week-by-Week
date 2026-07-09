@@ -1,4 +1,4 @@
-/* VERSION: 2026-07-02 (7.4 icons pass 3c) — ahIcon() now covers the full admin emoji-picker vocabulary (news + general pickers), so no admin icon pick renders as raw emoji on the student side (colored status dots kept intentionally). Non-destructive; Supabase data untouched. If this dated line is present, you have the current file. */
+/* VERSION: 2026-07-03 (7.4 icons + polish) — season icon on subject cards; ahIcon FA-class passthrough + full picker vocabulary; "Updated X ago" now hidden for content older than 30 days (was showing stale month-old labels). If this dated line is present, you have the current file. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -6205,6 +6205,7 @@
         const mins = Math.floor(diff / 60000);
         const hrs = Math.floor(diff / 3600000);
         const days = Math.floor(diff / 86400000);
+        if (days >= 30) return ''; // don't show stale 'updated' labels for old content
         let label = '';
         if(mins < 1) label = 'just now';
         else if(mins < 60) label = mins + ' min' + (mins > 1 ? 's' : '') + ' ago';
