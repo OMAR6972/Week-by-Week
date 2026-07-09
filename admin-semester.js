@@ -1,4 +1,4 @@
-/* VERSION: 2026-06-28 — semesters (7.1) + auto badges & announcements (7.2). If this dated line is present, you have the current file. */
+/* VERSION: 2026-07-02 (7.4 icons) — season Font Awesome icon (spring/summer/fall/winter) shown next to each semester in the manage panel. If this dated line is present, you have the current file. */
 /* Academic Hub - admin-semester.js  (feature 7.1)
    Adds two things to the admin topbar:
      1. A dropdown showing which semester you are EDITING. Switching reloads the
@@ -18,6 +18,15 @@
     if (css) e.style.cssText = css;
     if (html != null) e.innerHTML = html;
     return e;
+  }
+
+  function seasonIcon(name) {
+    var s = String(name || '').toLowerCase();
+    var f = /spring/.test(s) ? 'fa-seedling'
+          : /summer/.test(s) ? 'fa-sun'
+          : /(fall|autumn)/.test(s) ? 'fa-leaf'
+          : /winter/.test(s) ? 'fa-snowflake' : '';
+    return f ? '<i class="fa-solid ' + f + '" style="margin-right:6px;opacity:.9;"></i>' : '';
   }
 
   function go(slug) {
@@ -162,7 +171,7 @@
           ? '<span style="font-size:.6rem;background:#00c853;color:#031;padding:2px 7px;border-radius:10px;margin-left:6px;font-weight:800;letter-spacing:.5px;">CURRENT</span>'
           : '';
         row.appendChild(el('span', 'color:#fff;flex:1;min-width:130px;word-break:break-word;',
-          (s.name || s.slug) + tag +
+          seasonIcon(s.name || s.slug) + (s.name || s.slug) + tag +
           '<div style="font-size:.64rem;color:#888;margin-top:2px;">?sem=' + s.slug + '</div>'));
 
         if (!s.is_current) {

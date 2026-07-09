@@ -15,7 +15,9 @@
        falls back to rendering the original emoji, so nothing can blank out. */
     function ahIcon(v){
         if (v == null || v === '') return '';
-        var key = String(v).replace(/[\uFE0F\u200D]/g, '');
+        var s = String(v);
+        if (/^fa-[a-z0-9-]+$/i.test(s)) return '<i class="fa-solid ' + s + '"></i>';
+        var key = s.replace(/[\uFE0F\u200D]/g, '');
         var M = {
             '\u{1F393}':'graduation-cap','\u{1F465}':'users','\u{1F4DD}':'file-pen','\u{1F4D8}':'book',
             '\u{1F9E0}':'brain','\u{1F527}':'wrench','\u{1F9EA}':'flask','\u2714':'check',
@@ -37,6 +39,15 @@
         };
         var fa = M[key];
         return fa ? '<i class="fa-solid fa-' + fa + '"></i>' : v;
+    }
+    /* Season -> Font Awesome icon for semesters (spring/summer/fall/winter). */
+    function ahSeasonIcon(name){
+        var s = String(name || '').toLowerCase();
+        var f = /spring/.test(s) ? 'fa-seedling'
+              : /summer/.test(s) ? 'fa-sun'
+              : /(fall|autumn)/.test(s) ? 'fa-leaf'
+              : /winter/.test(s) ? 'fa-snowflake' : '';
+        return f ? '<i class="fa-solid ' + f + '"></i> ' : '';
     }
 
     
@@ -851,7 +862,7 @@
                 <div style="font-family:'Orbitron'; font-size:2.5rem; color:var(--accent-pink); margin-bottom:10px">${s.code}</div>
                 <div style="color:#eee; font-size:1.1rem; margin-bottom:20px">${s.name}</div>
                 <div style="display:flex; justify-content:space-between; align-items:center; color:#bbb; font-size:0.9rem; border-top:1px solid rgba(233,30,140,0.3); padding-top:15px">
-                    <span>${s.credits}</span>${s.subCode ? `<span class="subject-code-label">${s.subCode}</span>` : ''}<span>${s.semester}</span>
+                    <span>${s.credits}</span>${s.subCode ? `<span class="subject-code-label">${s.subCode}</span>` : ''}${s.semester ? `<span>${ahSeasonIcon(s.semester)}${s.semester}</span>` : ''}
                 </div>`;
             const hideBtn = document.createElement('button');
             hideBtn.className = 'subject-hide-btn';
