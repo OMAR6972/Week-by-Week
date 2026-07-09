@@ -1,4 +1,5 @@
 ﻿<!DOCTYPE html>
+<!-- VERSION: 2026-07-01 (7.4 icons pass 2) — Font Awesome navbar + all static page content icons converted from emoji to FA. If this dated line is present, you have the current file. -->
 <html lang="en">
 <head>
     <script>if(!location.hash){location.hash='directory';}</script>
@@ -7,6 +8,7 @@
     <title>Staff Contacts</title>
     <link rel="icon" type="image/png" href="logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css">
     <link rel="stylesheet" href="student.css">
 </head>
 <body>
@@ -17,56 +19,56 @@
     <div class="nav-links" id="nav-links">
         <div class="nav-item" id="nav-item-home">
             <div class="nav-link active" data-nav="home" data-link="#home" onclick="navFromBar('home')">
-                <span class="nav-icon">🏠</span> Subjects <span class="nav-chevron">▼</span>
+                <span class="nav-icon"><i class="fa-solid fa-house"></i></span> Subjects <span class="nav-chevron"><i class="fa-solid fa-chevron-down"></i></span>
             </div>
             <div class="nav-dropdown" id="dd-subjects"></div>
         </div>
         <div class="nav-item" id="nav-item-schedule">
             <div class="nav-link nav-link-schedule" data-nav="schedule" data-link="#schedule" onclick="navFromBar('schedule')">
-                <span class="nav-icon">🗓️</span> Semester Map <span class="nav-chevron">▼</span>
+                <span class="nav-icon"><i class="fa-solid fa-calendar-days"></i></span> Semester Map <span class="nav-chevron"><i class="fa-solid fa-chevron-down"></i></span>
             </div>
             <div class="nav-dropdown" id="dd-schedule"></div>
         </div>
         <div class="nav-item" id="nav-item-deadlines">
             <div class="nav-link nav-link-deadlines" data-nav="deadlines" data-link="#deadlines" onclick="navFromBar('deadlines')">
-                <span class="nav-icon">⏳</span> Deadlines <span class="dd-badge" id="dd-deadline-count" style="background:rgba(0,229,255,0.2); color:#00E5FF; display:none;"></span> <span class="nav-chevron">▼</span>
+                <span class="nav-icon"><i class="fa-solid fa-hourglass-half"></i></span> Deadlines <span class="dd-badge" id="dd-deadline-count" style="background:rgba(0,229,255,0.2); color:#00E5FF; display:none;"></span> <span class="nav-chevron"><i class="fa-solid fa-chevron-down"></i></span>
             </div>
             <div class="nav-dropdown" id="dd-deadlines"></div>
         </div>
         <div class="nav-item" id="nav-item-midterms">
             <div class="nav-link nav-link-midterms" data-nav="midterm" data-link="#midterm" onclick="navFromBar('midterm')">
-                <span class="nav-icon">📝</span> Midterms / Finals
+                <span class="nav-icon"><i class="fa-solid fa-file-pen"></i></span> Midterms / Finals
             </div>
         </div>
         <div class="nav-item" id="nav-item-useful">
             <div class="nav-link nav-link-useful" data-nav="useful-links" data-link="#useful-links" onclick="navFromBar('useful-links')">
-                <span class="nav-icon">🔗</span> Useful Links <span class="nav-chevron">▼</span>
+                <span class="nav-icon"><i class="fa-solid fa-link"></i></span> Useful Links <span class="nav-chevron"><i class="fa-solid fa-chevron-down"></i></span>
             </div>
             <div class="nav-dropdown" id="dd-useful"></div>
         </div>
         <div class="nav-item" id="nav-item-timetable">
             <div class="nav-link nav-link-timetable" data-nav="timetable" data-link="#timetable" onclick="navFromBar('timetable')">
-                <span class="nav-icon">🗓️</span> Timetable
+                <span class="nav-icon"><i class="fa-solid fa-table-cells"></i></span> Timetable
             </div>
         </div>
         <div class="nav-item" id="nav-item-directory">
             <div class="nav-link nav-link-directory" data-nav="directory" data-link="#directory" onclick="navFromBar('directory')">
-                <span class="nav-icon">👥</span> Staff Contacts <span class="nav-chevron">▼</span>
+                <span class="nav-icon"><i class="fa-solid fa-users"></i></span> Staff Contacts <span class="nav-chevron"><i class="fa-solid fa-chevron-down"></i></span>
             </div>
             <div class="nav-dropdown" id="dd-directory"></div>
         </div>
         <div class="nav-item" id="nav-item-gpa">
             <div class="nav-link nav-link-gpa" data-nav="gpa" data-link="#gpa" onclick="navFromBar('gpa')">
-                <span class="nav-icon">🎓</span> GPA Calc
+                <span class="nav-icon"><i class="fa-solid fa-graduation-cap"></i></span> GPA Calc
             </div>
         </div>
         <div class="nav-item" id="nav-item-updates" style="display:none;">
             <div class="nav-link nav-link-updates" data-nav="updates" data-link="#updates" onclick="navFromBar('updates')">
-                <span class="nav-icon">🚀</span> Updates
+                <span class="nav-icon"><i class="fa-solid fa-rocket"></i></span> Updates
             </div>
         </div>
     </div>
-    <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavMenu()" aria-label="Toggle navigation">☰</button>
+    <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavMenu()" aria-label="Toggle navigation"><i class="fa-solid fa-bars"></i></button>
 </nav>
 
 <div class="nav-overlay" id="nav-overlay" onclick="closeNavOverlay()"></div>
@@ -78,22 +80,22 @@
             <p class="subtitle">Select a subject to begin</p>
         </header>
         <div class="header-actions">
-            <button class="schedule-btn" data-link="#schedule" onclick="showSchedule()">🗓️ Semester Map</button>
-            <button class="deadline-btn" data-link="#deadlines" onclick="showDeadlines()">⏳ Deadlines</button>
-            <button class="midterm-btn" id="home-exam-btn" style="display:none;" onclick="showMidterms()">📝 Midterms / Finals</button>
+            <button class="schedule-btn" data-link="#schedule" onclick="showSchedule()"><i class="fa-solid fa-calendar-days"></i> Semester Map</button>
+            <button class="deadline-btn" data-link="#deadlines" onclick="showDeadlines()"><i class="fa-solid fa-hourglass-half"></i> Deadlines</button>
+            <button class="midterm-btn" id="home-exam-btn" style="display:none;" onclick="showMidterms()"><i class="fa-solid fa-file-pen"></i> Midterms / Finals</button>
         </div>
         <div class="grid subjects-grid" id="subjects-grid"></div>
         <div id="hidden-subject-controls" style="text-align:center; margin-top:14px;"></div>
     </div>
 
     <div id="recent-page" class="page">
-        <button class="back-btn" onclick="smartBack()">← Back</button>
+        <button class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <h1 style="color:var(--accent-blue)">HISTORY</h1>
         <div class="grid recent-grid" id="recent-list"></div>
     </div>
 
     <div id="schedule-page" class="page">
-        <button id="schedule-back-btn" class="back-btn" onclick="smartBack()">← Back</button>
+        <button id="schedule-back-btn" class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <h1 style="color:#ff9500; text-align:center;">SEMESTER MAP</h1>
         <p class="subtitle" style="margin-bottom: 10px;">Your overview of assignments, quizzes, and projects</p>
         <div id="schedule-view-toggle" style="display:flex; justify-content:center; gap:8px; margin-bottom:8px;"></div>
@@ -103,33 +105,33 @@
     </div>
 
     <div id="deadlines-page" class="page">
-        <button class="back-btn" onclick="smartBack()">← Back</button>
+        <button class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <h1 style="color:#00E5FF; text-align:center;">DEADLINES</h1>
         <p class="subtitle" style="margin-bottom: 12px;">Track your upcoming tasks and quizzes</p>
         <div id="deadlines-filter-bar" style="max-width:800px; margin:0 auto 14px; text-align:center;"></div>
         
         <div style="max-width: 800px; margin: 0 auto;">
             <div id="ongoing-container" style="display:none; margin-bottom:35px;">
-                <div class="deadline-section" style="border-color:#af52de; color:#af52de;">🔄 ONGOING</div>
+                <div class="deadline-section" style="border-color:#af52de; color:#af52de;"><i class="fa-solid fa-arrows-rotate"></i> ONGOING</div>
                 <div id="ongoing-list"></div>
             </div>
 
-            <div class="deadline-section" style="border-color:#00E5FF; color:#00E5FF;">🚨 UPCOMING</div>
+            <div class="deadline-section" style="border-color:#00E5FF; color:#00E5FF;"><i class="fa-solid fa-triangle-exclamation"></i> UPCOMING</div>
             <div id="upcoming-list"></div>
 
             <div id="unscheduled-container" style="margin-top:40px; display:none;">
                 <div style="height:1px; background:rgba(255,149,0,0.3); margin-bottom:20px;"></div>
-                <div style="font-family:'Orbitron',sans-serif; font-size:0.85rem; letter-spacing:2px; color:#ff9500; text-transform:uppercase; margin-bottom:12px; padding-left:2px; opacity:0.8;">🕐 Date TBD</div>
+                <div style="font-family:'Orbitron',sans-serif; font-size:0.85rem; letter-spacing:2px; color:#ff9500; text-transform:uppercase; margin-bottom:12px; padding-left:2px; opacity:0.8;"><i class="fa-solid fa-clock"></i> Date TBD</div>
                 <div id="unscheduled-list"></div>
             </div>
 
-            <div class="deadline-section" style="border-color:#555; color:#888; margin-top:50px;">✅ PREVIOUS DEADLINES</div>
+            <div class="deadline-section" style="border-color:#555; color:#888; margin-top:50px;"><i class="fa-solid fa-circle-check"></i> PREVIOUS DEADLINES</div>
             <div id="completed-list"></div>
         </div>
     </div>
 
     <div id="midterm-page" class="page">
-        <button id="midterm-back-btn" class="back-btn" onclick="smartBack()">← Back</button>
+        <button id="midterm-back-btn" class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
 
         <!-- Big toggle buttons -->
         <div class="exam-view-toggle" id="exam-view-toggle"></div>
@@ -142,7 +144,7 @@
                 <div id="midterm-list" style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column;"></div>
             </div>
             <div id="midterm-export-bar" style="display:flex; justify-content:center; margin-top:30px;">
-                <button class="midterm-export-btn" onclick="exportMidtermImage()">📸 Save as Image</button>
+                <button class="midterm-export-btn" onclick="exportMidtermImage()"><i class="fa-solid fa-image"></i> Save as Image</button>
             </div>
         </div>
 
@@ -154,7 +156,7 @@
                 <div id="finals-list" style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column;"></div>
             </div>
             <div id="finals-export-bar" style="display:flex; justify-content:center; margin-top:30px;">
-                <button class="midterm-export-btn" style="background:rgba(217,119,6,0.15); border-color:#d97706; color:#d97706;" onclick="exportFinalsImage()">📸 Save as Image</button>
+                <button class="midterm-export-btn" style="background:rgba(217,119,6,0.15); border-color:#d97706; color:#d97706;" onclick="exportFinalsImage()"><i class="fa-solid fa-image"></i> Save as Image</button>
             </div>
         </div>
     </div>
@@ -162,7 +164,7 @@
     <div id="todo-page" class="page" style="display:none;"></div>
 
     <div id="useful-links-page" class="page">
-        <button class="back-btn" onclick="smartBack()">← Back</button>
+        <button class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <h1 style="color:var(--accent-purple)">USEFUL LINKS</h1>
         <p class="subtitle" style="margin-bottom: 14px;">Important resources across all subjects</p>
         <div id="useful-links-filter-bar" style="max-width:900px; margin:0 auto 8px; display:flex; flex-direction:column; gap:0;"></div>
@@ -170,7 +172,7 @@
     </div>
 
     <div id="timetable-page" class="page">
-        <button class="back-btn" onclick="smartBack()">← Back</button>
+        <button class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <div id="timetable-capture-wrap">
             <h1 style="color:#ff375f">TIMETABLE</h1>
             <p class="subtitle" style="margin-bottom: 20px;">Your weekly class schedule</p>
@@ -179,13 +181,13 @@
             <div class="tt-grid-wrap"><table class="tt-grid" id="timetable-grid"></table></div>
         </div>
         <div id="timetable-export-bar" style="display:flex; justify-content:center; gap:10px; margin-top:30px; flex-wrap:wrap;">
-            <button class="timetable-export-btn" onclick="exportTimetableImage()">📸 Screenshot Timetable</button>
-            <button class="timetable-export-btn" onclick="openScreenshotModeModal()">📅 Screenshot Day</button>
+            <button class="timetable-export-btn" onclick="exportTimetableImage()"><i class="fa-solid fa-image"></i> Screenshot Timetable</button>
+            <button class="timetable-export-btn" onclick="openScreenshotModeModal()"><i class="fa-solid fa-calendar-days"></i> Screenshot Day</button>
         </div>
     </div>
 
     <div id="directory-page" class="page">
-        <button class="back-btn" onclick="smartBack()">← Back</button>
+        <button class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <h1 style="color:#34c759">STAFF CONTACTS</h1>
         <p class="subtitle" style="margin-bottom: 30px;">Instructors &amp; Teaching Assistants</p>
         <div id="directory-filter-bar" style="text-align:center; margin-bottom:6px;"></div>
@@ -193,42 +195,42 @@
     </div>
 
     <div id="gpa-page" class="page">
-        <button class="back-btn" onclick="smartBack()">← Back</button>
+        <button class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <h1 style="background: linear-gradient(to right, var(--accent-pink), var(--accent-purple)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(233, 30, 140, 0.3);">GPA CALCULATOR</h1>
         <p class="subtitle" style="margin-bottom: 20px;">Calculate your semester or cumulative GPA live</p>
         <div class="gpa-wrap" id="gpa-capture-wrap">
             <!-- Tab navigation: always visible, both modes clearly labelled -->
             <nav class="gpa-tab-nav" id="gpa-mode-toggles">
-                <button class="gpa-tab active" id="gpa-tab-single" onclick="gpaSelectTab('single')">📊 This Semester</button>
-                <button class="gpa-tab" id="gpa-tab-group" onclick="gpaSelectTab('group')">🗂️ All Semesters</button>
+                <button class="gpa-tab active" id="gpa-tab-single" onclick="gpaSelectTab('single')"><i class="fa-solid fa-chart-simple"></i> This Semester</button>
+                <button class="gpa-tab" id="gpa-tab-group" onclick="gpaSelectTab('group')"><i class="fa-solid fa-layer-group"></i> All Semesters</button>
             </nav>
             <div id="gpa-content-area" style="min-height:200px;"></div>
             <div id="gpa-result-area"></div>
             <div class="gpa-export-bar" id="gpa-export-bar" style="display:flex !important; opacity:1 !important; visibility:visible !important; min-height:40px; margin-top:30px;">
-                <button class="gpa-export-btn" id="gpa-export-img-btn" onclick="exportGpaImage()" style="display:none;">📸 Save as Image</button>
-                <button class="gpa-export-btn" onclick="openGpaDataModal()">📋 Import / Export</button>
+                <button class="gpa-export-btn" id="gpa-export-img-btn" onclick="exportGpaImage()" style="display:none;"><i class="fa-solid fa-image"></i> Save as Image</button>
+                <button class="gpa-export-btn" onclick="openGpaDataModal()"><i class="fa-solid fa-right-left"></i> Import / Export</button>
             </div>
         </div>
     </div>
 
     <div id="updates-page" class="page">
-        <button class="back-btn" onclick="smartBack()">← Back</button>
+        <button class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <h1 style="color:#af52de">UPDATES &amp; CHANGELOG</h1>
         <p class="subtitle" style="margin-bottom: 30px;">All features and improvements</p>
         <div class="grid weeks-grid" id="updates-list" style="gap:15px;"></div>
     </div>
 
     <div id="weeks-page" class="page">
-        <button class="back-btn" onclick="smartBack()">← Back</button>
+        <button class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <div style="text-align:center; margin-bottom:6px;">
             <h1 id="subject-title" style="margin-bottom:0; display:inline;"></h1>
         </div>
         
         <div id="subject-tabs" class="subject-tabs" style="margin-bottom:12px;">
-            <button id="tab-weeks" class="sub-tab active" data-link="#weeks" onclick="renderSubjectView('weeks')">📚 Weeks</button>
-            <button id="tab-events" class="sub-tab" data-link="#weeks" onclick="renderSubjectView('events')">🎯 Exam Materials</button>
-            <button id="tab-playlists" class="sub-tab" data-link="#weeks" onclick="renderSubjectView('playlists')">🔗 Useful Links</button>
-            <button id="tab-details" class="sub-tab" data-link="#weeks" onclick="renderSubjectView('details')">📋 Details</button>
+            <button id="tab-weeks" class="sub-tab active" data-link="#weeks" onclick="renderSubjectView('weeks')"><i class="fa-solid fa-book"></i> Weeks</button>
+            <button id="tab-events" class="sub-tab" data-link="#weeks" onclick="renderSubjectView('events')"><i class="fa-solid fa-bullseye"></i> Exam Materials</button>
+            <button id="tab-playlists" class="sub-tab" data-link="#weeks" onclick="renderSubjectView('playlists')"><i class="fa-solid fa-link"></i> Useful Links</button>
+            <button id="tab-details" class="sub-tab" data-link="#weeks" onclick="renderSubjectView('details')"><i class="fa-solid fa-list"></i> Details</button>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px; min-height:36px;">
@@ -243,7 +245,7 @@
     </div>
 
     <div id="content-page" class="page">
-        <button id="content-back-btn" class="back-btn" onclick="smartBack()">← Back</button>
+        <button id="content-back-btn" class="back-btn" onclick="smartBack()"><i class="fa-solid fa-arrow-left"></i> Back</button>
         <div class="info-box">
             <div class="info-title" id="week-display-title"></div>
             <div id="content-badge-container"></div>
@@ -257,8 +259,8 @@
 
 <div id="task-modal" class="modal-overlay" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="modal-close" onclick="closeModal(null, true)">✕</div>
-        <div class="modal-title" id="m-title">🧠 Quiz</div>
+        <div class="modal-close" onclick="closeModal(null, true)"><i class="fa-solid fa-xmark"></i></div>
+        <div class="modal-title" id="m-title"><i class="fa-solid fa-brain"></i> Quiz</div>
         <div class="modal-subtitle" id="m-sub">Computer Networks - Week 5</div>
         <div id="m-fields-container"></div>
     </div>
@@ -266,11 +268,11 @@
 
 <div id="screenshot-studio-modal" class="modal-overlay" style="z-index:10000;" onclick="closeScreenshotStudioModal(event)">
     <div style="position:relative; background:#0a0012; border:1px solid rgba(233,30,140,0.4); border-radius:16px; padding:20px 24px; box-shadow:0 0 40px rgba(233,30,140,0.2); width:min(920px,92vw); max-height:86vh; overflow:auto;" onclick="event.stopPropagation()">
-        <div class="modal-close" style="top:10px; right:14px;" onclick="closeScreenshotStudioModal(null, true)">✕</div>
-        <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--accent-pink);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;text-align:center;">📸 Screenshot Studio</div>
+        <div class="modal-close" style="top:10px; right:14px;" onclick="closeScreenshotStudioModal(null, true)"><i class="fa-solid fa-xmark"></i></div>
+        <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--accent-pink);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;text-align:center;"><i class="fa-solid fa-image"></i> Screenshot Studio</div>
         <div id="studio-customizer" style="display:block; border-top:1px solid rgba(255,255,255,0.1); padding-top:14px; margin-top:12px;">
             <div style="display:flex; justify-content:center; margin-bottom:10px;">
-                <button onclick="studioGoBack()" style="background:none;border:1px solid #555;color:#888;padding:6px 12px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.78rem;transition:0.2s;">← Back to Days</button>
+                <button onclick="studioGoBack()" style="background:none;border:1px solid #555;color:#888;padding:6px 12px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.78rem;transition:0.2s;"><i class="fa-solid fa-arrow-left"></i> Back to Days</button>
             </div>
             <div id="studio-day-label" style="font-family:'Orbitron',sans-serif; font-size:0.75rem; letter-spacing:2px; color:#ff375f; text-transform:uppercase; margin-bottom:10px; text-align:center;">Editing: --</div>
             <div id="studio-day-events" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow:auto; padding-right:4px; margin-bottom:12px;"></div>
@@ -287,10 +289,10 @@
                 <datalist id="studio-places"></datalist>
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; justify-content:center;">
-                <button onclick="studioAddTempEvent()" style="background:rgba(233,30,140,0.1);border:1px solid rgba(233,30,140,0.4);color:#e91e8c;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.8rem;transition:0.2s;">➕ Add Temporary Event</button>
-                <button onclick="studioResetTempEvents()" style="background:rgba(255,59,48,0.1);border:1px solid rgba(255,59,48,0.4);color:#ff3b30;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.8rem;transition:0.2s;">↺ Reset</button>
+                <button onclick="studioAddTempEvent()" style="background:rgba(233,30,140,0.1);border:1px solid rgba(233,30,140,0.4);color:#e91e8c;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.8rem;transition:0.2s;"><i class="fa-solid fa-plus"></i> Add Temporary Event</button>
+                <button onclick="studioResetTempEvents()" style="background:rgba(255,59,48,0.1);border:1px solid rgba(255,59,48,0.4);color:#ff3b30;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.8rem;transition:0.2s;"><i class="fa-solid fa-arrow-rotate-left"></i> Reset</button>
             </div>
-            <button onclick="studioCaptureCustomTimetable()" style="display:block; margin:12px auto 0; background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.4);color:#00e5ff;padding:9px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.84rem;transition:0.2s;">📸 Capture Custom Timetable</button>
+            <button onclick="studioCaptureCustomTimetable()" style="display:block; margin:12px auto 0; background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.4);color:#00e5ff;padding:9px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.84rem;transition:0.2s;"><i class="fa-solid fa-image"></i> Capture Custom Timetable</button>
         </div>
     </div>
 </div>
@@ -299,8 +301,8 @@
     <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#0a0012;border:1px solid rgba(233,30,140,0.4);border-radius:16px;padding:20px 24px;z-index:3000;box-shadow:0 0 40px rgba(233,30,140,0.2);min-width:320px;" onclick="event.stopPropagation()">
         <div style="font-family:'Orbitron',sans-serif;font-size:0.75rem;color:var(--accent-pink);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;text-align:center;">Screenshot Mode</div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
-            <button onclick="openStandardDaySelector()" style="background:rgba(233,30,140,0.1);border:1px solid rgba(233,30,140,0.4);color:#e91e8c;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;">📷 Default (Quick Capture)</button>
-            <button onclick="openStudioDaySelector()" style="background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.4);color:#00e5ff;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;">🛠️ Customize Events</button>
+            <button onclick="openStandardDaySelector()" style="background:rgba(233,30,140,0.1);border:1px solid rgba(233,30,140,0.4);color:#e91e8c;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;"><i class="fa-solid fa-camera"></i> Default (Quick Capture)</button>
+            <button onclick="openStudioDaySelector()" style="background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.4);color:#00e5ff;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;"><i class="fa-solid fa-screwdriver-wrench"></i> Customize Events</button>
         </div>
         <button onclick="closeScreenshotModeModal(null, true)" style="display:block;margin:14px auto 0;background:none;border:1px solid #555;color:#888;padding:4px 16px;border-radius:8px;cursor:pointer;font-size:0.78rem;">Cancel</button>
     </div>
@@ -315,13 +317,13 @@
 
 <div id="gpa-data-modal" class="modal-overlay" onclick="closeGpaDataModal(event)">
     <div class="modal-content" style="max-width:400px; padding:24px;" onclick="event.stopPropagation()">
-        <div class="modal-close" onclick="closeGpaDataModal(null, true)">✕</div>
-        <div class="modal-title" style="color:var(--accent-pink);">📋 Import / Export Data</div>
+        <div class="modal-close" onclick="closeGpaDataModal(null, true)"><i class="fa-solid fa-xmark"></i></div>
+        <div class="modal-title" style="color:var(--accent-pink);"><i class="fa-solid fa-right-left"></i> Import / Export Data</div>
         <div class="modal-subtitle" style="margin-bottom:15px; color:#aaa;">Transfer your GPA data between devices</div>
         
         <!-- Export Section -->
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid rgba(255,255,255,0.1);">
-            <label style="font-size:0.8rem; color:#fff; display:block; margin-bottom:8px;">📤 Export Your Data</label>
+            <label style="font-size:0.8rem; color:#fff; display:block; margin-bottom:8px;"><i class="fa-solid fa-upload"></i> Export Your Data</label>
             <p style="font-size:0.7rem; color:#aaa; margin-bottom:8px; line-height:1.4;">Copy this code to transfer your current GPA setup to another device.</p>
             <div style="display:flex; gap:8px;">
                 <input type="text" id="gpa-export-text" class="gpa-input" style="flex:1; font-family:monospace; font-size:0.75rem; color:#888;" readonly onclick="this.select()">
@@ -331,7 +333,7 @@
 
         <!-- Import Section -->
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
-            <label style="font-size:0.8rem; color:#fff; display:block; margin-bottom:8px;">📥 Import Data</label>
+            <label style="font-size:0.8rem; color:#fff; display:block; margin-bottom:8px;"><i class="fa-solid fa-download"></i> Import Data</label>
             <p style="font-size:0.7rem; color:#aaa; margin-bottom:8px; line-height:1.4;">Paste a code from another device here to overwrite your current GPA.</p>
             <textarea id="gpa-import-text" class="gpa-input" style="width:100%; height:60px; resize:none; font-family:monospace; font-size:0.75rem; margin-bottom:10px;" placeholder="Paste data code here..."></textarea>
             <button class="gpa-btn" style="width:100%; padding:10px; font-size:0.8rem; border-color:#34c759; color:#34c759;" onclick="importGpaData()">Import Data</button>
@@ -355,21 +357,21 @@
 
 <!-- Toast Notifications -->
 <div id="toast-container"></div>
-<div class="swipe-flash left"  id="swipe-flash-left"><span class="swipe-flash-arrow">←</span><span class="swipe-flash-label" id="swipe-flash-left-label">PREV</span></div>
-<div class="swipe-flash right" id="swipe-flash-right"><span class="swipe-flash-label" id="swipe-flash-right-label">NEXT</span><span class="swipe-flash-arrow">→</span></div>
+<div class="swipe-flash left"  id="swipe-flash-left"><span class="swipe-flash-arrow"><i class="fa-solid fa-arrow-left"></i></span><span class="swipe-flash-label" id="swipe-flash-left-label">PREV</span></div>
+<div class="swipe-flash right" id="swipe-flash-right"><span class="swipe-flash-label" id="swipe-flash-right-label">NEXT</span><span class="swipe-flash-arrow"><i class="fa-solid fa-arrow-right"></i></span></div>
 
 <!-- Scroll Buttons -->
-<button class="scroll-btn scroll-to-bottom" id="scroll-to-bottom" onclick="window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'})" title="Scroll to bottom">↓</button>
-<button class="scroll-btn back-to-top" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+<button class="scroll-btn scroll-to-bottom" id="scroll-to-bottom" onclick="window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'})" title="Scroll to bottom"><i class="fa-solid fa-arrow-down"></i></button>
+<button class="scroll-btn back-to-top" id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
 <div id="quick-actions" class="quick-actions"></div>
 
 <!-- News FAB -->
 <button class="news-fab" id="news-fab" onclick="openNewsPanel()" title="News & Announcements"></button>
 <div id="news-toast" class="news-toast">
-    <div class="news-toast-title">📬 Announcements</div>
+    <div class="news-toast-title"><i class="fa-solid fa-envelope"></i> Announcements</div>
     <div class="news-toast-body" id="news-toast-body"></div>
     <div class="news-toast-actions">
-        <button class="news-toast-btn primary" onclick="dismissNewsToast(); openNewsPanel();">Go check them →</button>
+        <button class="news-toast-btn primary" onclick="dismissNewsToast(); openNewsPanel();">Go check them <i class="fa-solid fa-arrow-right"></i></button>
         <button class="news-toast-btn secondary" onclick="dismissNewsToast();">Dismiss</button>
     </div>
     <div class="news-toast-timer"><div class="news-toast-timer-bar" id="news-toast-timer-bar"></div></div>
@@ -379,8 +381,8 @@
 <div id="news-panel" class="news-panel" onclick="closeNewsPanel(event)">
     <div class="news-panel-card" onclick="event.stopPropagation()">
         <div class="news-panel-header">
-            <div class="news-panel-title">📢 ANNOUNCEMENTS</div>
-            <button class="news-panel-close" onclick="closeNewsPanel(null,true)">✕</button>
+            <div class="news-panel-title"><i class="fa-solid fa-bullhorn"></i> ANNOUNCEMENTS</div>
+            <button class="news-panel-close" onclick="closeNewsPanel(null,true)"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="news-items-list" class="news-items-list"></div>
     </div>
@@ -388,7 +390,7 @@
 
 <div id="hidden-subjects-modal" class="modal-overlay" onclick="closeHiddenSubjectsModal(event)">
     <div class="modal-content" style="max-width:430px; padding:22px 20px;" onclick="event.stopPropagation()">
-        <div class="modal-close" onclick="closeHiddenSubjectsModal(null,true)">✕</div>
+        <div class="modal-close" onclick="closeHiddenSubjectsModal(null,true)"><i class="fa-solid fa-xmark"></i></div>
         <div class="modal-title" style="color:#bbb;">Hidden Subjects</div>
         <div class="modal-subtitle" style="margin-bottom:12px;">Select which subjects to restore</div>
         <div id="hidden-subjects-list"></div>
@@ -397,7 +399,7 @@
 
 <div id="hidden-weeks-modal" class="modal-overlay" onclick="closeHiddenWeeksModal(event)">
     <div class="modal-content" style="max-width:430px; padding:22px 20px;" onclick="event.stopPropagation()">
-        <div class="modal-close" onclick="closeHiddenWeeksModal(null,true)">✕</div>
+        <div class="modal-close" onclick="closeHiddenWeeksModal(null,true)"><i class="fa-solid fa-xmark"></i></div>
         <div class="modal-title" style="color:#bbb;">Hidden Weeks</div>
         <div class="modal-subtitle" style="margin-bottom:12px;">Select which weeks to restore</div>
         <div id="hidden-weeks-list"></div>
@@ -405,7 +407,7 @@
 </div>
 
 <!-- Hotkeys FAB -->
-<button class="hotkeys-fab" id="hotkeys-fab" onclick="toggleHotkeysPanel()" title="Keyboard shortcuts">⌨</button>
+<button class="hotkeys-fab" id="hotkeys-fab" onclick="toggleHotkeysPanel()" title="Keyboard shortcuts"><i class="fa-solid fa-keyboard"></i></button>
 <div class="hotkeys-panel" id="hotkeys-panel">
     <div class="hotkeys-panel-title">Keyboard Shortcuts</div>
     <div class="hotkey-row"><span class="hotkey-key">S</span> Subjects (Home)</div>

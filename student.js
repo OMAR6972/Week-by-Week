@@ -1,4 +1,4 @@
-/* VERSION: 2026-06-28 — semesters (7.1) + auto badges & announcements (7.2). If this dated line is present, you have the current file. */
+/* VERSION: 2026-07-02 (7.4 icons pass 3c) — ahIcon() now covers the full admin emoji-picker vocabulary (news + general pickers), so no admin icon pick renders as raw emoji on the student side (colored status dots kept intentionally). Non-destructive; Supabase data untouched. If this dated line is present, you have the current file. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -10,6 +10,35 @@
     });
 
     let iconMap = {};
+    /* Font Awesome render-time icon map. NON-DESTRUCTIVE: converts known emoji to FA at
+       display time only; saved Supabase values are never changed, and any unmapped emoji
+       falls back to rendering the original emoji, so nothing can blank out. */
+    function ahIcon(v){
+        if (v == null || v === '') return '';
+        var key = String(v).replace(/[\uFE0F\u200D]/g, '');
+        var M = {
+            '\u{1F393}':'graduation-cap','\u{1F465}':'users','\u{1F4DD}':'file-pen','\u{1F4D8}':'book',
+            '\u{1F9E0}':'brain','\u{1F527}':'wrench','\u{1F9EA}':'flask','\u2714':'check',
+            '\u{1F4BB}':'laptop-code','\u261D':'hand-point-up','\u{1F4CA}':'chart-simple','\u{1F4AC}':'comment',
+            '\u{1F31F}':'star','\u{1F4FD}':'film','\u{1F4C4}':'file','\u{1F4CB}':'clipboard',
+            '\u2753':'circle-question','\u{1F517}':'link','\u{1F4C5}':'calendar-days','\u{1F4E6}':'box',
+            '\u{1F399}':'microphone','\u{1F4A1}':'lightbulb','\u2705':'circle-check','\u270F':'pen',
+            '\u{1F389}':'champagne-glasses','\u{1F310}':'globe','\u{1F52C}':'microscope','\u{1F480}':'skull',
+            '\u{1F5D3}':'calendar','\u23F3':'hourglass-half','\u{1F4DC}':'scroll','\u2328':'keyboard',
+            '\u{1F4C2}':'folder-open','\u{1F4EC}':'envelope','\u{1F4E4}':'upload','\u{1F4F8}':'image',
+            '\u{1F501}':'repeat','\u{1F4F1}':'mobile-screen','\u{1F441}':'eye','\u{1F5B1}':'computer-mouse',
+            '\u23F0':'clock','\u{1F4E2}':'bullhorn','\u{1F680}':'rocket','\u{1F3AF}':'bullseye',
+            '\u{1F4E5}':'download','\u{1F504}':'arrows-rotate','\u{1F4CD}':'location-dot','\u{1F550}':'clock',
+            '\u{1F551}':'clock','\u{1F4CC}':'thumbtack','\u{1F3C1}':'flag-checkered','\u262A':'moon',
+            '\u{1F525}':'fire','\u2B50':'star','\u2764':'heart','\u{1F4C8}':'chart-line',
+            '\u{1F4C9}':'chart-line','\u{1F512}':'lock','\u{1F513}':'lock-open','\u{1F3C6}':'trophy',
+            '\u{1F4CB}':'clipboard','\u{1F4F7}':'camera','\u{25B6}':'play',
+            '\u{1F4C1}':'folder','\u{274C}':'circle-xmark','\u{26A0}':'triangle-exclamation','\u{2139}':'circle-info','\u{1F4AD}':'comment-dots','\u{1F4F0}':'newspaper','\u{1F916}':'robot','\u{1F4BE}':'floppy-disk','\u{1F4BF}':'compact-disc','\u{1F4E3}':'bullhorn','\u{1F6AB}':'ban','\u{1F514}':'bell','\u{1F5D2}':'note-sticky','\u{1F4AF}':'medal','\u{1F3EB}':'school','\u{2757}':'exclamation','\u{1F6D1}':'hand','\u{1F516}':'bookmark'
+        };
+        var fa = M[key];
+        return fa ? '<i class="fa-solid fa-' + fa + '"></i>' : v;
+    }
+
     
     // Safety check in case CONFIG is missing in JS
     if(typeof window.CONFIG !== 'undefined' && window.CONFIG.resources) {
@@ -642,7 +671,7 @@
         const backBtns = activePage.querySelectorAll('.back-btn');
         if (!backBtns.length) return;
         const label = getPageLabel(previousPageId);
-        backBtns.forEach(btn => { btn.textContent = `← Back to ${label}`; });
+        backBtns.forEach(btn => { btn.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Back to ${label}`; });
     }
 
     function smartBack() {
@@ -826,7 +855,7 @@
                 </div>`;
             const hideBtn = document.createElement('button');
             hideBtn.className = 'subject-hide-btn';
-            hideBtn.innerHTML = '<span class="eye-icon">👁</span>';
+            hideBtn.innerHTML = '<span class="eye-icon"><i class="fa-solid fa-eye"></i></span>';
             hideBtn.title = 'Hide subject';
             hideBtn.onclick = (ev) => {
                 ev.stopPropagation();
@@ -847,12 +876,12 @@
             const finalsOn   = isExamPeriodActive(window.FINAL_DATA,   FINALS_MS);
             const midtermsOn = isExamPeriodActive(window.MIDTERM_DATA, MIDTERM_MS);
             if (finalsOn) {
-                examBtn.textContent = '🏁 Final Exams';
+                examBtn.innerHTML = '<i class="fa-solid fa-flag-checkered"></i> Final Exams';
                 examBtn.style.cssText = 'background:rgba(217,119,6,0.2); border:2px solid #d97706; color:#d97706; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold; text-transform:uppercase; letter-spacing:2px; transition:0.3s;';
                 examBtn.onclick = () => showMidterms();
                 examBtn.style.display = '';
             } else if (midtermsOn) {
-                examBtn.textContent = '📝 Midterms / Finals';
+                examBtn.innerHTML = '<i class="fa-solid fa-file-pen"></i> Midterms / Finals';
                 examBtn.style.cssText = '';  // use .midterm-btn class default
                 examBtn.onclick = () => showMidterms();
                 examBtn.style.display = '';
@@ -1196,15 +1225,15 @@
             if (anyFilter) {
                 if (historySubFilter.size === 1) {
                     const col = getSubjectColor([...historySubFilter][0]);
-                    togBtn.innerHTML = `Subject: <span class="fp-active-label">${[...historySubFilter][0]}</span> <span class="fp-arrow">▲</span>`;
+                    togBtn.innerHTML = `Subject: <span class="fp-active-label">${[...historySubFilter][0]}</span> <span class="fp-arrow"><i class="fa-solid fa-caret-up"></i></span>`;
                     togBtn.style.cssText = `border-color:${col}; color:${col}; background:${col}22; box-shadow:0 0 12px ${col}44;`;
                 } else {
                     const names = [...historySubFilter].join(', ');
-                    togBtn.innerHTML = `Subject: <span class="fp-active-label">${names}</span> <span class="fp-arrow">▲</span>`;
+                    togBtn.innerHTML = `Subject: <span class="fp-active-label">${names}</span> <span class="fp-arrow"><i class="fa-solid fa-caret-up"></i></span>`;
                     togBtn.style.cssText = `border-color:#c4b5db; color:#c4b5db; background:rgba(196,181,219,0.12); box-shadow:0 0 12px rgba(196,181,219,0.3);`;
                 }
             } else {
-                togBtn.innerHTML = `Subject <span class="fp-arrow">▼</span>`;
+                togBtn.innerHTML = `Subject <span class="fp-arrow"><i class="fa-solid fa-caret-down"></i></span>`;
             }
 
             const bar = document.createElement('div');
@@ -1212,7 +1241,7 @@
 
             const refreshHistoryTog = () => {
                 const open = bar.classList.contains('open');
-                const arrow = open ? '▲' : '▼';
+                const arrow = open ? '<i class="fa-solid fa-caret-up"></i>' : '<i class="fa-solid fa-caret-down"></i>';
                 if (historySubFilter.size === 0) {
                     togBtn.className = 'fp-toggle' + (open ? ' open' : '');
                     togBtn.innerHTML = `Subject <span class="fp-arrow">${arrow}</span>`;
@@ -1320,7 +1349,7 @@
                         const keys = window.CONFIG && window.CONFIG.resources ? window.CONFIG.resources.map(r=>r.name) : Object.keys(item.wkObj.resources);
                         keys.forEach(k => {
                             if(item.wkObj.resources[k] && item.wkObj.resources[k].vis && !isResNew(item.wkObj.resources[k])) {
-                                resList += `<div style="margin-top:4px;">${iconMap[k]||'📂'} ${k}</div>`;
+                                resList += `<div style="margin-top:4px;">${ahIcon(iconMap[k]||'📂')} ${k}</div>`;
                             }
                         });
                     }
@@ -1336,7 +1365,7 @@
                     el.innerHTML = `
                         <div class="recent-header"><span>${item.subName} - ${item.wkObj.title}</span><span class="recent-time">${item.dateStr}</span></div>
                         <div class="recent-sub" style="margin-top:10px;">New Upload: <strong style="color:white">${item.resName}</strong></div>
-                        <div class="recent-icons">${iconMap[item.resName] || "📂"}</div>
+                        <div class="recent-icons">${ahIcon(iconMap[item.resName] || "📂")}</div>
                     `;
                 } else if(entry.type === 'res-batch') {
                     const items = entry.items;
@@ -1346,7 +1375,7 @@
                     const batchRangeText = formatBatchRange(oldestTs, newestTs);
                     const header = document.createElement('div');
                     header.innerHTML = `
-                        <div class="recent-header"><span>📦 Batch Update — ${items.length} Resources</span><span class="recent-time">${entry.dateStr}</span></div>
+                        <div class="recent-header"><span><i class="fa-solid fa-box"></i> Batch Update — ${items.length} Resources</span><span class="recent-time">${entry.dateStr}</span></div>
                         ${batchRangeText ? `<div style="margin-top:4px; color:#9fb8dc; font-size:0.78rem; line-height:1.35;">${batchRangeText}</div>` : ''}
                         <div style="margin-top:8px; color:#888; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Includes:</div>
                     `;
@@ -1358,7 +1387,7 @@
                         const row = document.createElement('div');
                         row.style.cssText = `display:flex; align-items:center; gap:10px; margin-top:8px; padding:8px 12px; border-radius:10px; background:rgba(0,0,0,0.2); cursor:pointer; transition:0.2s; border-left:3px solid ${subColor};`;
                         row.innerHTML = `
-                            <span style="font-size:1.2rem;">${iconMap[r.resName] || '📂'}</span>
+                            <span style="font-size:1.2rem;">${ahIcon(iconMap[r.resName] || '📂')}</span>
                             <span style="background:${subBg}; color:${subColor}; font-size:0.7rem; font-weight:bold; padding:2px 8px; border-radius:6px;">${r.subCode}</span>
                             <span style="color:#aaa; font-size:0.85rem;">${r.wkTitle}</span>
                             <span style="color:white; font-weight:600; font-size:0.9rem; flex:1;">${r.resName}</span>
@@ -1427,14 +1456,14 @@
                 let resList = '';
                 if (item.wkObj.resources) {
                     const keys = window.CONFIG && window.CONFIG.resources ? window.CONFIG.resources.map(r=>r.name) : Object.keys(item.wkObj.resources);
-                    keys.forEach(k => { if(item.wkObj.resources[k] && item.wkObj.resources[k].vis && !isResNew(item.wkObj.resources[k])) resList += `<div style="margin-top:4px;">${iconMap[k]||'📂'} ${k}</div>`; });
+                    keys.forEach(k => { if(item.wkObj.resources[k] && item.wkObj.resources[k].vis && !isResNew(item.wkObj.resources[k])) resList += `<div style="margin-top:4px;">${ahIcon(iconMap[k]||'📂')} ${k}</div>`; });
                 }
                 el.innerHTML = `<div class="recent-header"><span>${item.subName} - ${item.wkObj.title}</span><span class="recent-time">${item.dateStr}</span></div><div style="margin-top:5px; color:#888; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Full Update Includes:</div><div class="recent-sub">${resList}</div>`;
             } else if (entry.type === 'res-single') {
                 const item = entry.item;
                 el.dataset.link = buildWeekHash(item.subCode, item.wkObj, false);
                 el.onclick = () => { currSub = window.COURSE_DATA.find(s => s.code === item.subCode); showContentByObj(item.wkObj, true, 'recent'); };
-                el.innerHTML = `<div class="recent-header"><span>${item.subName} - ${item.wkObj.title}</span><span class="recent-time">${item.dateStr}</span></div><div class="recent-sub" style="margin-top:10px;">New Upload: <strong style="color:white">${item.resName}</strong></div><div class="recent-icons">${iconMap[item.resName] || "📂"}</div>`;
+                el.innerHTML = `<div class="recent-header"><span>${item.subName} - ${item.wkObj.title}</span><span class="recent-time">${item.dateStr}</span></div><div class="recent-sub" style="margin-top:10px;">New Upload: <strong style="color:white">${item.resName}</strong></div><div class="recent-icons">${ahIcon(iconMap[item.resName] || "📂")}</div>`;
             } else if (entry.type === 'res-batch') {
                 const items = entry.items;
                 el.style.cursor = 'default';
@@ -1442,14 +1471,14 @@
                 const oldestTs = items.length > 0 ? items[items.length-1].timestamp : 0;
                 const batchRangeText = formatBatchRange(oldestTs, newestTs);
                 const header = document.createElement('div');
-                header.innerHTML = `<div class="recent-header"><span>📦 Batch Update — ${items.length} Resources</span><span class="recent-time">${entry.dateStr}</span></div>${batchRangeText?`<div style="margin-top:4px; color:#9fb8dc; font-size:0.78rem; line-height:1.35;">${batchRangeText}</div>`:''}<div style="margin-top:8px; color:#888; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Includes:</div>`;
+                header.innerHTML = `<div class="recent-header"><span><i class="fa-solid fa-box"></i> Batch Update — ${items.length} Resources</span><span class="recent-time">${entry.dateStr}</span></div>${batchRangeText?`<div style="margin-top:4px; color:#9fb8dc; font-size:0.78rem; line-height:1.35;">${batchRangeText}</div>`:''}<div style="margin-top:8px; color:#888; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Includes:</div>`;
                 el.appendChild(header);
                 items.forEach(r => {
                     const subColor = getSubjectColor(r.subCode), subBg = getSubjectBg(r.subCode);
                     const singleEditTime = formatRecentDateTime(r.timestamp) || r.dateStr || '';
                     const row = document.createElement('div');
                     row.style.cssText = `display:flex; align-items:center; gap:10px; margin-top:8px; padding:8px 12px; border-radius:10px; background:rgba(0,0,0,0.2); cursor:pointer; transition:0.2s; border-left:3px solid ${subColor};`;
-                    row.innerHTML = `<span style="font-size:1.2rem;">${iconMap[r.resName]||'📂'}</span><span style="background:${subBg}; color:${subColor}; font-size:0.7rem; font-weight:bold; padding:2px 8px; border-radius:6px;">${r.subCode}</span><span style="color:#aaa; font-size:0.85rem;">${r.wkTitle}</span><span style="color:white; font-weight:600; font-size:0.9rem; flex:1;">${r.resName}</span><span style="color:#9fb8dc; font-size:0.73rem; white-space:nowrap;">${singleEditTime}</span>`;
+                    row.innerHTML = `<span style="font-size:1.2rem;">${ahIcon(iconMap[r.resName]||'📂')}</span><span style="background:${subBg}; color:${subColor}; font-size:0.7rem; font-weight:bold; padding:2px 8px; border-radius:6px;">${r.subCode}</span><span style="color:#aaa; font-size:0.85rem;">${r.wkTitle}</span><span style="color:white; font-weight:600; font-size:0.9rem; flex:1;">${r.resName}</span><span style="color:#9fb8dc; font-size:0.73rem; white-space:nowrap;">${singleEditTime}</span>`;
                     row.dataset.link = buildWeekHash(r.subCode, r.wkObj, false);
                     row.addEventListener('click', e => { e.stopPropagation(); currSub = window.COURSE_DATA.find(s => s.code === r.subCode); showContentByObj(r.wkObj, true, 'recent'); });
                     row.addEventListener('mouseenter', () => { row.style.background = 'rgba(255,255,255,0.06)'; row.style.transform = 'translateX(4px)'; });
@@ -1622,10 +1651,10 @@
             filterBarEl.innerHTML = '';
 
             const typeChips = [
-                { key: 'quiz',       label: '🧠 Quizzes',    color: '#af52de' },
-                { key: 'assignment', label: '📝 Assignments', color: '#007aff' },
-                { key: 'project',    label: '🚀 Projects',    color: '#34c759' },
-                { key: 'news',       label: '📢 News',        color: '#e91e8c' }
+                { key: 'quiz',       fa: 'brain', label: 'Quizzes',    color: '#af52de' },
+                { key: 'assignment', fa: 'file-pen', label: 'Assignments', color: '#007aff' },
+                { key: 'project',    fa: 'rocket', label: 'Projects',    color: '#34c759' },
+                { key: 'news',       fa: 'bullhorn', label: 'News',        color: '#e91e8c' }
             ];
 
             const subCodesSet = new Set();
@@ -1644,9 +1673,9 @@
                     const parts = [];
                     deadlineTypeFilter.forEach(k => { const c = typeChips.find(t=>t.key===k); if(c) parts.push(c.label.replace(/^\S+\s/,'')); });
                     deadlineSubFilter.forEach(s => parts.push(s));
-                    return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+                    return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '<i class="fa-solid fa-caret-up"></i>' : '<i class="fa-solid fa-caret-down"></i>'}</span>`;
                 }
-                return `Filter <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+                return `Filter <span class="fp-arrow">${open ? '<i class="fa-solid fa-caret-up"></i>' : '<i class="fa-solid fa-caret-down"></i>'}</span>`;
             };
             togBtn.className = 'fp-toggle' + (anyActive ? ' has-filter' : '') + (isOpen ? ' open' : '');
             togBtn.innerHTML = getTogLabel(isOpen);
@@ -1686,7 +1715,7 @@
             typeChips.forEach(chip => {
                 const btn = document.createElement('button');
                 btn.className = 'fp-chip' + (deadlineTypeFilter.has(chip.key) ? ' active' : '');
-                btn.textContent = chip.label;
+                btn.innerHTML = (chip.fa ? '<i class="fa-solid fa-' + chip.fa + '"></i> ' : '') + chip.label;
                 btn.dataset.key = chip.key;
                 if (deadlineTypeFilter.has(chip.key)) btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
                 btn.addEventListener('click', () => {
@@ -1785,7 +1814,7 @@
             dlClearRow.style.cssText = 'display:flex; justify-content:center;';
             const dlClearBtn = document.createElement('button');
             dlClearBtn.className = 'fp-clear-btn';
-            dlClearBtn.innerHTML = '✕ Clear all filters';
+            dlClearBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Clear all filters';
             dlClearBtn.addEventListener('click', () => {
                 deadlineTypeFilter.clear();
                 deadlineSubFilter.clear();
@@ -1912,9 +1941,9 @@
                             const daysRounded = remainHours >= 16 ? fullDays + 1 : fullDays;
                             timeRemaining = `${daysRounded} day${daysRounded !== 1 ? 's' : ''}`;
                         }
-                        countdownHtml = `<div style="font-size: 0.75rem; color: #00E5FF; font-weight: bold; background: rgba(0, 229, 255, 0.1); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-top: 6px; border: 1px solid rgba(0, 229, 255, 0.2);">⏳ ${timeRemaining} left</div>`;
+                        countdownHtml = `<div style="font-size: 0.75rem; color: #00E5FF; font-weight: bold; background: rgba(0, 229, 255, 0.1); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-top: 6px; border: 1px solid rgba(0, 229, 255, 0.2);"><i class="fa-solid fa-hourglass-half"></i> ${timeRemaining} left</div>`;
                     } else {
-                        countdownHtml = `<div style="font-size: 0.75rem; color: #ff3b30; font-weight: bold; background: rgba(255, 59, 48, 0.1); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-top: 6px; border: 1px solid rgba(255, 59, 48, 0.2);">⚠️ Overdue</div>`;
+                        countdownHtml = `<div style="font-size: 0.75rem; color: #ff3b30; font-weight: bold; background: rgba(255, 59, 48, 0.1); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-top: 6px; border: 1px solid rgba(255, 59, 48, 0.2);"><i class="fa-solid fa-triangle-exclamation"></i> Overdue</div>`;
                     }
                 }
 
@@ -1930,7 +1959,7 @@
                     <div class="card deadline-action-card ${isComp ? 'completed' : ''}" ${cardAttrs} style="border-left: 4px solid ${accentColor}; flex-direction: row; cursor: ${isComp ? 'default' : 'pointer'}; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center;" onclick="${onClick}">
                         <span class="sub-badge" style="background: ${bgColor}; color: ${badgeTextColor}; min-width: 52px; font-size: 0.72rem; padding: 5px 10px; border-radius:8px;">${item.task.sub}</span>
                         <div style="flex: 1; margin-left: 15px;">
-                            <div class="dl-text" style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${item.task.icon} ${item.task.name}</div>
+                            <div class="dl-text" style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${ahIcon(item.task.icon)} ${item.task.name}</div>
                             <div class="dl-text" style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">${subName}${item.source === 'news' ? '' : ` • Week ${item.week}`}</div>
                         </div>
                         <div style="display:flex; flex-direction:column; align-items:flex-end;">
@@ -1994,11 +2023,11 @@
                     <div class="card deadline-action-card" ${buildDeadlineCardAttrs(item, false)} style="border-left: 4px solid #af52de; flex-direction: row; cursor: pointer; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center; background: linear-gradient(135deg, rgba(175,82,222,0.15), var(--card-bg)); box-shadow: 0 0 20px rgba(175,82,222,0.1);" onclick="goToScheduleTask(${item.wIndex}, ${item.tIndex})">
                         <span class="sub-badge" style="background: ${bgColor}; color: ${accentColor}; min-width: 52px; font-size: 0.72rem; padding: 5px 10px; border-radius:8px;">${item.task.sub}</span>
                         <div style="flex: 1; margin-left: 15px;">
-                            <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${item.task.icon} ${item.task.name}</div>
+                            <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${ahIcon(item.task.icon)} ${item.task.name}</div>
                             <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">${subName} • Week ${item.week}</div>
                         </div>
                         <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                            <div style="font-size: 0.75rem; color: #af52de; font-weight: bold; background: rgba(175,82,222,0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(175,82,222,0.3); white-space:nowrap;">🔄 ONGOING</div>
+                            <div style="font-size: 0.75rem; color: #af52de; font-weight: bold; background: rgba(175,82,222,0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(175,82,222,0.3); white-space:nowrap;"><i class="fa-solid fa-arrows-rotate"></i> ONGOING</div>
                             <div style="font-size: 0.7rem; color: #aaa; margin-top: 4px; white-space:nowrap;">Until ${endsStr} · ${daysLabel}</div>
                         </div>
                     </div>
@@ -2026,7 +2055,7 @@
                     <div class="card deadline-action-card" ${buildDeadlineCardAttrs(item, false)} style="border-left: 4px solid ${accentColor}; flex-direction: row; cursor: pointer; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center; opacity:0.75;" onclick="${onClick}">
                         <span class="sub-badge" style="background: ${bgColor}; color: ${accentColor}; min-width: 52px; font-size: 0.72rem; padding: 5px 10px; border-radius:8px;">${item.task.sub}</span>
                         <div style="flex: 1; margin-left: 15px;">
-                            <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${item.task.icon} ${item.task.name}</div>
+                            <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${ahIcon(item.task.icon)} ${item.task.name}</div>
                             <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">${subName}${item.source === 'news' ? '' : ` • Week ${item.week}`}</div>
                         </div>
                         <div style="font-size: 0.75rem; color: #ff9500; font-weight: bold; background: rgba(255,149,0,0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,149,0,0.25); white-space:nowrap;">TBD</div>
@@ -2220,9 +2249,9 @@
                 if (currentUsefulSubject.size === 1) parts.push([...currentUsefulSubject][0]);
                 else if (currentUsefulSubject.size > 1) parts.push(`${currentUsefulSubject.size} subjects`);
                 if (currentUsefulBadgeFilters.size > 0) parts.push(`${currentUsefulBadgeFilters.size} badge${currentUsefulBadgeFilters.size>1?'s':''}`);
-                return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+                return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '<i class="fa-solid fa-caret-up"></i>' : '<i class="fa-solid fa-caret-down"></i>'}</span>`;
             }
-            return `Filter <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+            return `Filter <span class="fp-arrow">${open ? '<i class="fa-solid fa-caret-up"></i>' : '<i class="fa-solid fa-caret-down"></i>'}</span>`;
         };
         ulTogBtn.className = 'fp-toggle' + (anyUlActive ? ' has-filter' : '') + (fpOpenState.usefulBadges ? ' open' : '');
         ulTogBtn.innerHTML = getUlTogLabel(fpOpenState.usefulBadges);
@@ -2361,7 +2390,7 @@
         ulClearRow.style.cssText = 'display:' + (anyUlActive ? 'flex' : 'none') + '; justify-content:center;';
         const ulClearBtn = document.createElement('button');
         ulClearBtn.className = 'fp-clear-btn';
-        ulClearBtn.innerHTML = '✕ Clear all filters';
+        ulClearBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Clear all filters';
         ulClearBtn.addEventListener('click', () => {
             currentUsefulBadgeFilters = new Set();
             currentUsefulSubject = new Set();
@@ -2444,7 +2473,7 @@
                     const lbadges = p.badges || (p.badgeText ? [{text:p.badgeText, color:p.badgeColor||'#e91e8c'}] : []);
                     const badgeHtml = lbadges.filter(b=>b.text).map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.65rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px; flex-shrink:0;">${b.text}</span>`).join('');
                     const noteHtml = p.note ? `<div style="color:var(--text-sub); font-size:0.8rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:500px;">${p.note.split('\n')[0]}</div>` : '';
-                    row.innerHTML = `<span style="font-size:1.5rem; flex-shrink:0;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.95rem;">${p.title || 'Link'}</span>${badgeHtml}</div>${noteHtml}</div><span style="color:${color}; font-size:1rem; flex-shrink:0; opacity:0.6;">→</span>`;
+                    row.innerHTML = `<span style="font-size:1.5rem; flex-shrink:0;">${ahIcon(p.icon || '🔗')}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.95rem;">${p.title || 'Link'}</span>${badgeHtml}</div>${noteHtml}</div><span style="color:${color}; font-size:1rem; flex-shrink:0; opacity:0.6;"><i class="fa-solid fa-arrow-right"></i></span>`;
                     row.onclick = () => { if(p.link && p.link !== '#' && p.link.trim() !== '') window.open(p.link, '_blank'); else alert('No link assigned.'); };
                     if (p.link && p.link !== '#') row.dataset.link = p.link;
                     section.appendChild(row);
@@ -2459,7 +2488,7 @@
                     gHeader.style.cssText = `display:flex; align-items:center; gap:10px; padding:10px 16px; cursor:pointer; transition:background 0.2s;`;
                     gHeader.onmouseenter = () => { gHeader.style.background = 'rgba(255,255,255,0.04)'; };
                     gHeader.onmouseleave = () => { gHeader.style.background = 'transparent'; };
-                    gHeader.innerHTML = `<span style="font-size:1.3rem;">${item.items[0].icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-weight:700; color:white; font-size:0.95rem;">${item.name}</span>${gBadgeHtml}<span style="font-size:0.65rem; color:#888; background:rgba(255,255,255,0.08); padding:2px 8px; border-radius:10px;">${item.items.length} links</span></div></div><span class="ul-group-arrow" style="color:${color}; font-size:0.8rem; transition:transform 0.2s;">▼</span>`;
+                    gHeader.innerHTML = `<span style="font-size:1.3rem;">${ahIcon(item.items[0].icon || '🔗')}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-weight:700; color:white; font-size:0.95rem;">${item.name}</span>${gBadgeHtml}<span style="font-size:0.65rem; color:#888; background:rgba(255,255,255,0.08); padding:2px 8px; border-radius:10px;">${item.items.length} links</span></div></div><span class="ul-group-arrow" style="color:${color}; font-size:0.8rem; transition:transform 0.2s;"><i class="fa-solid fa-caret-down"></i></span>`;
                     gWrap.appendChild(gHeader);
                     const gBody = document.createElement('div');
                     gBody.style.cssText = 'padding:0 8px 8px 8px; display:none;';
@@ -2472,7 +2501,7 @@
                         const pBadges = (p.badges||[]).filter(b=>b.text);
                         const pBadgeHtml = pBadges.map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.55rem; padding:1px 6px; border-radius:6px; font-weight:800;">${b.text}</span>`).join('');
                         const noteSnip = p.note ? `<div style="color:var(--text-sub); font-size:0.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.note.split('\n')[0]}</div>` : '';
-                        subRow.innerHTML = `<span style="font-size:1rem;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.85rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnip}</div><span style="color:${color}; opacity:0.4; font-size:0.8rem;">→</span>`;
+                        subRow.innerHTML = `<span style="font-size:1rem;">${ahIcon(p.icon || '🔗')}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.85rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnip}</div><span style="color:${color}; opacity:0.4; font-size:0.8rem;"><i class="fa-solid fa-arrow-right"></i></span>`;
                         subRow.onclick = () => { if(p.link && p.link !== '#' && p.link.trim() !== '') window.open(p.link, '_blank'); else alert('No link assigned.'); };
                         if (p.link && p.link !== '#') subRow.dataset.link = p.link;
                         gBody.appendChild(subRow);
@@ -2589,7 +2618,7 @@
         if (!filterContainer || !viewToggleContainer) return;
 
         viewToggleContainer.innerHTML = '';
-        ['📋 List','📅 Calendar'].forEach((label, i) => {
+        ['<i class="fa-solid fa-list"></i> List','<i class="fa-solid fa-calendar-days"></i> Calendar'].forEach((label, i) => {
             const mode = i === 0 ? 'list' : 'calendar';
             const btn = document.createElement('button');
             btn.className = 'cal-view-btn' + (scheduleViewMode === mode ? ' active' : '');
@@ -2605,9 +2634,9 @@
         filterContainer.innerHTML = '';
 
         const typeChipsData = [
-            { key: 'quiz',       label: '🧠 Quizzes',    color: '#af52de' },
-            { key: 'assignment', label: '📝 Assignments', color: '#007aff' },
-            { key: 'project',    label: '🚀 Projects',    color: '#34c759' }
+            { key: 'quiz',       fa: 'brain', label: 'Quizzes',    color: '#af52de' },
+            { key: 'assignment', fa: 'file-pen', label: 'Assignments', color: '#007aff' },
+            { key: 'project',    fa: 'rocket', label: 'Projects',    color: '#34c759' }
         ];
 
         const anyActive = scheduleTaskFilter.size > 0 || scheduleSubFilter.size > 0;
@@ -2622,9 +2651,9 @@
                     scheduleTaskFilter.forEach(k => { const c = typeChipsData.find(t=>t.key===k); if(c) parts.push(c.label.replace(/^\S+\s/,'')); });
                 }
                 if (scheduleSubFilter.size > 0) { scheduleSubFilter.forEach(s => parts.push(s)); }
-                return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+                return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open ? '<i class="fa-solid fa-caret-up"></i>' : '<i class="fa-solid fa-caret-down"></i>'}</span>`;
             }
-            return `Filter <span class="fp-arrow">${open ? '▲' : '▼'}</span>`;
+            return `Filter <span class="fp-arrow">${open ? '<i class="fa-solid fa-caret-up"></i>' : '<i class="fa-solid fa-caret-down"></i>'}</span>`;
         };
         togBtn.className = 'fp-toggle' + (anyActive ? ' has-filter' : '') + (isOpen ? ' open' : '');
         togBtn.innerHTML = getTogLabel(isOpen);
@@ -2664,7 +2693,7 @@
         typeChipsData.forEach(chip => {
             const btn = document.createElement('button');
             btn.className = 'fp-chip' + (scheduleTaskFilter.has(chip.key) ? ' active' : '');
-            btn.textContent = chip.label;
+            btn.innerHTML = (chip.fa ? '<i class="fa-solid fa-' + chip.fa + '"></i> ' : '') + chip.label;
             btn.dataset.key = chip.key;
             if (scheduleTaskFilter.has(chip.key)) btn.style.cssText = `background:${chip.color}22; border-color:${chip.color}; color:${chip.color}; box-shadow:0 0 10px ${chip.color}55;`;
             btn.addEventListener('click', () => {
@@ -2750,7 +2779,7 @@
         scClearRow.style.cssText = 'display:flex; justify-content:center;';
         const scClearBtn = document.createElement('button');
         scClearBtn.className = 'fp-clear-btn';
-        scClearBtn.innerHTML = '✕ Clear all filters';
+        scClearBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Clear all filters';
         scClearBtn.addEventListener('click', () => {
             scheduleTaskFilter.clear();
             scheduleSubFilter.clear();
@@ -2874,7 +2903,7 @@
                     tasksHtml += `
                         <div class="task-item" style="border-left-color:${getSubjectColor(task.sub)};${isWhiteText?'background:rgba(0,0,0,0.4);':''}" onclick="event.stopPropagation();openModal(${wIndex},${entry.origIdx})">
                             <span class="sub-badge" style="background:${getSubjectBg(task.sub)};color:${getSubjectColor(task.sub)}">${task.sub}</span>
-                            <span class="task-icon">${task.icon}</span>
+                            <span class="task-icon">${ahIcon(task.icon)}</span>
                             <span class="task-name" style="${isWhiteText?'color:#fff;':''}">${task.name}</span>
                         </div>`;
                 });
@@ -2895,7 +2924,7 @@
 
             const periodLabel = (data.currentLabel && data.currentLabel.trim()) ? data.currentLabel.trim().toUpperCase() : 'CURRENT WEEK';
             const currentWeekBadge = isCurrentWeek
-                ? `<div style="font-size:0.65rem;font-weight:800;color:#ff3b30;background:rgba(255,59,48,0.15);border:1px solid rgba(255,59,48,0.3);padding:3px 10px;border-radius:8px;letter-spacing:1.5px;margin-top:6px;display:inline-block;">📍 ${periodLabel}</div>` : '';
+                ? `<div style="font-size:0.65rem;font-weight:800;color:#ff3b30;background:rgba(255,59,48,0.15);border:1px solid rgba(255,59,48,0.3);padding:3px 10px;border-radius:8px;letter-spacing:1.5px;margin-top:6px;display:inline-block;"><i class="fa-solid fa-location-dot"></i> ${periodLabel}</div>` : '';
 
             const weekTitle = (data.weekName && data.weekName.trim()) ? data.weekName.trim().toUpperCase() : 'WEEK ' + data.week;
             const h2Color = isCurrentWeek && !isSpecialWk ? '#ff3b30' : (isWhiteText ? '#fff' : 'var(--accent-purple)');
@@ -2996,9 +3025,9 @@
             const [yr, mo] = calendarMonth.split('-').map(Number);
 
             let navHtml = `<div class="cal-month-nav">`;
-            navHtml += curIdx > 0 ? `<button onclick="calendarMonth='${availableMonths[curIdx-1]}'; renderScheduleContent();">← Prev</button>` : `<button style="visibility:hidden;">←</button>`;
+            navHtml += curIdx > 0 ? `<button onclick="calendarMonth='${availableMonths[curIdx-1]}'; renderScheduleContent();"><i class="fa-solid fa-arrow-left"></i> Prev</button>` : `<button style="visibility:hidden;"><i class="fa-solid fa-arrow-left"></i></button>`;
             navHtml += `<div class="cal-month-label">${monthNames[mo-1]} ${yr}</div>`;
-            navHtml += curIdx < availableMonths.length-1 ? `<button onclick="calendarMonth='${availableMonths[curIdx+1]}'; renderScheduleContent();">Next →</button>` : `<button style="visibility:hidden;">→</button>`;
+            navHtml += curIdx < availableMonths.length-1 ? `<button onclick="calendarMonth='${availableMonths[curIdx+1]}'; renderScheduleContent();">Next <i class="fa-solid fa-arrow-right"></i></button>` : `<button style="visibility:hidden;"><i class="fa-solid fa-arrow-right"></i></button>`;
             navHtml += `</div>`;
 
             const firstDay = new Date(yr, mo-1, 1).getDay();
@@ -3037,9 +3066,9 @@
                         const color = getSubjectColor(item.task.sub);
                         const bg = getSubjectBg(item.task.sub);
                         const timeStr = extractTimeFromWhen(item.task.when);
-                        const timeHtml = timeStr ? `<div style="font-size:0.55rem; opacity:0.85; margin-top:1px;">🕒 ${timeStr}</div>` : '';
+                        const timeHtml = timeStr ? `<div style="font-size:0.55rem; opacity:0.85; margin-top:1px;"><i class="fa-solid fa-clock"></i> ${timeStr}</div>` : '';
                         const subLabel = `<span style="font-size:0.5rem; font-weight:900; opacity:0.75; letter-spacing:0.3px; margin-right:2px;">[${item.task.sub}]</span>`;
-                        calHtml += `<div class="cal-task" style="background:${bg}; color:${color}; border-left:2px solid ${color};" onclick="openModal(${item.wIndex}, ${item.tIndex})" title="${item.task.sub}: ${item.task.name}${timeStr ? ' — '+timeStr : ''}">${subLabel}${item.task.icon} ${item.task.name}${timeHtml}</div>`;
+                        calHtml += `<div class="cal-task" style="background:${bg}; color:${color}; border-left:2px solid ${color};" onclick="openModal(${item.wIndex}, ${item.tIndex})" title="${item.task.sub}: ${item.task.name}${timeStr ? ' — '+timeStr : ''}">${subLabel}${ahIcon(item.task.icon)} ${item.task.name}${timeHtml}</div>`;
                     });
                 }
                 calHtml += `</div>`;
@@ -3060,7 +3089,7 @@
             });
             if(weekIndices.length > 0) {
                 let tbdHtml = `<div class="cal-tbd-section">`;
-                tbdHtml += `<div class="cal-tbd-title">📌 To Be Determined (date not set)</div>`;
+                tbdHtml += `<div class="cal-tbd-title"><i class="fa-solid fa-thumbtack"></i> To Be Determined (date not set)</div>`;
                 weekIndices.forEach(wIdx => {
                     const wk = window.SCHEDULE_DATA[wIdx];
                     tbdHtml += `<div class="cal-tbd-week">`;
@@ -3069,7 +3098,7 @@
                     tbdTasksByWeek[wIdx].forEach(item => {
                         const color = getSubjectColor(item.task.sub);
                         const bg = getSubjectBg(item.task.sub);
-                        tbdHtml += `<div class="cal-task" style="background:${bg}; color:${color}; border-left:2px solid ${color}; white-space:normal;" onclick="openModal(${item.wIndex}, ${item.tIndex})" title="${item.task.sub}: ${item.task.name}">${item.task.icon} ${item.task.sub} — ${item.task.name}</div>`;
+                        tbdHtml += `<div class="cal-task" style="background:${bg}; color:${color}; border-left:2px solid ${color}; white-space:normal;" onclick="openModal(${item.wIndex}, ${item.tIndex})" title="${item.task.sub}: ${item.task.name}">${ahIcon(item.task.icon)} ${item.task.sub} — ${item.task.name}</div>`;
                     });
                     tbdHtml += `</div></div>`;
                 });
@@ -3132,7 +3161,7 @@
         if (hiddenCount > 0) {
             const hiddenBtn = document.createElement('button');
             hiddenBtn.className = hiddenBtnClass;
-            hiddenBtn.textContent = '🔒 Hidden (' + hiddenCount + ') — tap to manage';
+            hiddenBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Hidden (' + hiddenCount + ') — tap to manage';
             hiddenBtn.addEventListener('click', openHiddenPanelFn);
             container.appendChild(hiddenBtn);
             const slot = document.createElement('div');
@@ -3352,7 +3381,7 @@
         if (!hasFinals) {
             container.innerHTML = `
                 <div style="text-align:center; padding:60px 20px; max-width:500px; margin:0 auto;">
-                    <div style="font-size:3.5rem; margin-bottom:20px; opacity:0.4;">🏁</div>
+                    <div style="font-size:3.5rem; margin-bottom:20px; opacity:0.4;"><i class="fa-solid fa-flag-checkered"></i></div>
                     <div style="font-family:'Orbitron',sans-serif; font-size:1rem; letter-spacing:3px; color:#d97706; opacity:0.5; text-transform:uppercase; margin-bottom:14px;">Finals Schedule</div>
                     <div style="color:#666; font-size:0.95rem; line-height:1.7;">Not published yet.<br>Check back here once finals details are announced.</div>
                 </div>`;
@@ -3416,8 +3445,8 @@
             if(sObj) subName = sObj.name;
         }
 
-        const titlePrefix = task.isCompleted ? '✅ ' : '';
-        document.getElementById('m-title').innerHTML = `${titlePrefix}${task.icon} ${task.name}`;
+        const titlePrefix = task.isCompleted ? '<i class="fa-solid fa-circle-check"></i> ' : '';
+        document.getElementById('m-title').innerHTML = `${titlePrefix}${ahIcon(task.icon)} ${task.name}`;
         document.getElementById('m-sub').innerText = `${subName} - Week ${weekData.week}`;
         
         const container = document.getElementById('m-fields-container');
@@ -3429,43 +3458,43 @@
         let whenHtml = task.when || '';
         if(task.whenLink && task.whenLink.trim() !== '') {
             const whenNote = task.whenNote || 'Check your time here';
-            whenHtml = (task.when ? task.when + ' ' : '') + `<a href="${task.whenLink}" target="_blank" rel="noopener" class="modal-url-badge">🔗 ${whenNote}</a>`;
+            whenHtml = (task.when ? task.when + ' ' : '') + `<a href="${task.whenLink}" target="_blank" rel="noopener" class="modal-url-badge"><i class="fa-solid fa-link"></i> ${whenNote}</a>`;
         }
         
         // Where field with URL icon
         let whereHtml = task.where || '';
         if(task.whereLink && task.whereLink.trim() !== '') {
             const whereNote = task.whereNote || 'Check your place here';
-            whereHtml = (task.where ? task.where + ' ' : '') + `<a href="${task.whereLink}" target="_blank" rel="noopener" class="modal-url-badge">🔗 ${whereNote}</a>`;
+            whereHtml = (task.where ? task.where + ' ' : '') + `<a href="${task.whereLink}" target="_blank" rel="noopener" class="modal-url-badge"><i class="fa-solid fa-link"></i> ${whereNote}</a>`;
         }
 
         // Coverage field with URL icon
         let coverageHtml = task.coverage || '';
         if(task.coverageLink && task.coverageLink.trim() !== '') {
             const coverageNote = task.coverageNote || 'Check coverage here';
-            coverageHtml = (task.coverage ? task.coverage + ' ' : '') + `<a href="${task.coverageLink}" target="_blank" rel="noopener" class="modal-url-badge">🔗 ${coverageNote}</a>`;
+            coverageHtml = (task.coverage ? task.coverage + ' ' : '') + `<a href="${task.coverageLink}" target="_blank" rel="noopener" class="modal-url-badge"><i class="fa-solid fa-link"></i> ${coverageNote}</a>`;
         }
 
         // Submit field with URL
         let submitHtml = task.submitText || '';
         if(task.submitLink && task.submitLink.trim() !== '') {
             const submitNote = task.submitNote || 'Submit here';
-            submitHtml = (task.submitText ? task.submitText + ' ' : '') + `<a href="${task.submitLink}" target="_blank" rel="noopener" class="modal-url-badge">🔗 ${submitNote}</a>`;
+            submitHtml = (task.submitText ? task.submitText + ' ' : '') + `<a href="${task.submitLink}" target="_blank" rel="noopener" class="modal-url-badge"><i class="fa-solid fa-link"></i> ${submitNote}</a>`;
         }
 
         // Notes field with optional URL
         let noteHtml = task.note || '';
         if (task.noteLink && task.noteLink.trim() !== '') {
             const noteNote = task.noteNote || 'Read more';
-            noteHtml = (task.note ? task.note + ' ' : '') + `<a href="${task.noteLink}" target="_blank" rel="noopener" class="modal-url-badge">🔗 ${noteNote}</a>`;
+            noteHtml = (task.note ? task.note + ' ' : '') + `<a href="${task.noteLink}" target="_blank" rel="noopener" class="modal-url-badge"><i class="fa-solid fa-link"></i> ${noteNote}</a>`;
         }
 
         const fields = [
-            { label: '🕒 When', val: whenHtml },
-            { label: '📍 Where', val: whereHtml },
-            { label: '📚 Coverage', val: coverageHtml },
-            { label: '📤 Submit', val: submitHtml },
-            { label: '📝 Extra Notes', val: noteHtml }
+            { label: '<i class="fa-solid fa-clock"></i> When', val: whenHtml },
+            { label: '<i class="fa-solid fa-location-dot"></i> Where', val: whereHtml },
+            { label: '<i class="fa-solid fa-book"></i> Coverage', val: coverageHtml },
+            { label: '<i class="fa-solid fa-upload"></i> Submit', val: submitHtml },
+            { label: '<i class="fa-solid fa-file-lines"></i> Extra Notes', val: noteHtml }
         ];
 
         fields.forEach(f => {
@@ -3499,7 +3528,7 @@
             }
         }
 
-        document.getElementById('m-title').innerHTML = `🎓 Midterm Exam`;
+        document.getElementById('m-title').innerHTML = `<i class="fa-solid fa-graduation-cap"></i> Midterm Exam`;
         document.getElementById('m-sub').innerText = `${subName} (${exam.examCode})`;
         
         const container = document.getElementById('m-fields-container');
@@ -3509,13 +3538,13 @@
         
         let whereHtml = exam.where || '';
         if(exam.whereLink && exam.whereLink.trim() !== '') {
-            whereHtml = (exam.where ? exam.where + ' ' : '') + `<a href="${exam.whereLink}" target="_blank" rel="noopener" class="modal-url-badge">🔗 Check your place here</a>`;
+            whereHtml = (exam.where ? exam.where + ' ' : '') + `<a href="${exam.whereLink}" target="_blank" rel="noopener" class="modal-url-badge"><i class="fa-solid fa-link"></i> Check your place here</a>`;
         }
 
         const fields = [
-            { label: '📍 Where', val: whereHtml },
-            { label: '📚 Coverage', val: exam.coverage },
-            { label: '📝 Extra Notes', val: exam.note }
+            { label: '<i class="fa-solid fa-location-dot"></i> Where', val: whereHtml },
+            { label: '<i class="fa-solid fa-book"></i> Coverage', val: exam.coverage },
+            { label: '<i class="fa-solid fa-file-lines"></i> Extra Notes', val: exam.note }
         ];
 
         fields.forEach(f => {
@@ -3533,7 +3562,7 @@
                 onmouseover="this.style.background='var(--accent-purple)'; this.style.color='white';" 
                 onmouseout="this.style.background='rgba(181,25,214,0.2)'; this.style.color='var(--accent-purple)';"
                 onclick="goToExamSubject('${safeSubCode}')">
-                    📚 GO TO SUBJECT
+                    <i class="fa-solid fa-book"></i> GO TO SUBJECT
                 </button>
             `;
         }
@@ -3548,7 +3577,7 @@
                 onmouseover="this.style.background='#007aff'; this.style.color='white';" 
                 onmouseout="this.style.background='rgba(0,122,255,0.2)'; this.style.color='#007aff';"
                 onclick="goToExamSubject('${safeSubCode}'); if (currSub && currSub.events && currSub.events[${evIdx}]) { renderSubjectView('events', false); showContentByObj(currSub.events[${evIdx}], true, 'midterm'); }">
-                    📝 GO TO MIDTERM MATERIAL
+                    <i class="fa-solid fa-file-pen"></i> GO TO MIDTERM MATERIAL
                 </button>
             `;
         }
@@ -3569,7 +3598,7 @@
             if (sObj) { subName = sObj.name; targetSub = sObj; }
         }
 
-        document.getElementById('m-title').innerHTML = `🏁 Final Exam`;
+        document.getElementById('m-title').innerHTML = `<i class="fa-solid fa-flag-checkered"></i> Final Exam`;
         document.getElementById('m-sub').innerText = `${subName} (${exam.examCode || ''})`;
 
         const container = document.getElementById('m-fields-container');
@@ -3579,13 +3608,13 @@
         let whereHtml = exam.where || '';
         if (exam.whereLink && exam.whereLink.trim() !== '') {
             const wn = exam.whereNote || 'Check your place here';
-            whereHtml = (exam.where ? exam.where + ' ' : '') + `<a href="${exam.whereLink}" target="_blank" rel="noopener" class="modal-url-badge">🔗 ${wn}</a>`;
+            whereHtml = (exam.where ? exam.where + ' ' : '') + `<a href="${exam.whereLink}" target="_blank" rel="noopener" class="modal-url-badge"><i class="fa-solid fa-link"></i> ${wn}</a>`;
         }
 
         const fields = [
-            { label: '📍 Where', val: whereHtml },
-            { label: '📚 Coverage', val: exam.coverage },
-            { label: '📝 Extra Notes', val: exam.note }
+            { label: '<i class="fa-solid fa-location-dot"></i> Where', val: whereHtml },
+            { label: '<i class="fa-solid fa-book"></i> Coverage', val: exam.coverage },
+            { label: '<i class="fa-solid fa-file-lines"></i> Extra Notes', val: exam.note }
         ];
 
         fields.forEach(f => {
@@ -3602,7 +3631,7 @@
                 onmouseover="this.style.background='var(--accent-purple)'; this.style.color='white';"
                 onmouseout="this.style.background='rgba(181,25,214,0.2)'; this.style.color='var(--accent-purple)';"
                 onclick="goToExamSubject('${safeSubCode}')">
-                    📚 GO TO SUBJECT
+                    <i class="fa-solid fa-book"></i> GO TO SUBJECT
                 </button>`;
         }
 
@@ -3633,7 +3662,7 @@
             a.className = 'drive-btn-inline';
             a.href = sub.driveLink;
             a.target = "_blank";
-            a.innerHTML = "📂 Course Drive";
+            a.innerHTML = "<i class='fa-solid fa-folder-open'></i> Course Drive";
             dContainer.appendChild(a);
         }
 
@@ -3718,9 +3747,9 @@
         card.style.textAlign = 'left';
         card.innerHTML = `
             <div style="font-family:'Orbitron'; font-size:1.25rem; color:var(--accent-purple); margin-bottom:14px;">${currSub.code} Subject Details</div>
-            <div class="detail-row" style="margin-bottom:12px;"><div class="detail-icon">📊</div><div class="detail-content"><h3>Grade Distribution</h3><p>${details.gradeDistribution ? details.gradeDistribution.replace(/\n/g, '<br>') : 'No grade distribution added yet.'}</p></div></div>
-            <div class="detail-row" style="margin-bottom:12px;"><div class="detail-icon">📝</div><div class="detail-content"><h3>Exam Types</h3><p>${details.examTypes ? details.examTypes.replace(/\n/g, '<br>') : 'No exam type notes added yet.'}</p></div></div>
-            <div class="detail-row"><div class="detail-icon"><span style="display:inline-flex; align-items:center; justify-content:center; font-size:1.35rem; line-height:1;">💡</span></div><div class="detail-content"><h3>General Notes</h3><p>${details.generalNotes ? details.generalNotes.replace(/\n/g, '<br>') : 'No general notes added yet.'}</p></div></div>
+            <div class="detail-row" style="margin-bottom:12px;"><div class="detail-icon"><i class="fa-solid fa-chart-simple"></i></div><div class="detail-content"><h3>Grade Distribution</h3><p>${details.gradeDistribution ? details.gradeDistribution.replace(/\n/g, '<br>') : 'No grade distribution added yet.'}</p></div></div>
+            <div class="detail-row" style="margin-bottom:12px;"><div class="detail-icon"><i class="fa-solid fa-file-pen"></i></div><div class="detail-content"><h3>Exam Types</h3><p>${details.examTypes ? details.examTypes.replace(/\n/g, '<br>') : 'No exam type notes added yet.'}</p></div></div>
+            <div class="detail-row"><div class="detail-icon"><span style="display:inline-flex; align-items:center; justify-content:center; font-size:1.35rem; line-height:1;"><i class="fa-solid fa-lightbulb"></i></span></div><div class="detail-content"><h3>General Notes</h3><p>${details.generalNotes ? details.generalNotes.replace(/\n/g, '<br>') : 'No general notes added yet.'}</p></div></div>
         `;
         grid.innerHTML = '';
         grid.appendChild(card);
@@ -3763,7 +3792,7 @@
             plClearRow.style.cssText = 'display:' + (playlistBadgeFilters.size > 0 ? 'flex' : 'none') + '; justify-content:center; margin-top:6px;';
             const plClearBtn = document.createElement('button');
             plClearBtn.className = 'fp-clear-btn';
-            plClearBtn.innerHTML = '✕ Clear all filters';
+            plClearBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Clear all filters';
             plClearBtn.onclick = () => { playlistBadgeFilters.clear(); renderPlaylistGrid(); };
             plClearRow.appendChild(plClearBtn);
 
@@ -3845,7 +3874,7 @@
                 const badgeHtml = badges.filter(b=>b.text).map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${b.text}</span>`).join('');
                 const badgeWrap = badgeHtml ? `<div style="position:absolute; top:12px; right:12px; display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; max-width:70%;">${badgeHtml}</div>` : '';
                 const noteHtml = (p.note) ? `<div style="color:var(--text-sub); margin-top:15px; font-size:0.9rem; line-height:1.4; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px; white-space:pre-wrap;">${p.note}</div>` : '';
-                el.innerHTML = `${badgeWrap}<div style="font-size:2.5rem; margin-bottom:10px">${p.icon || '🔗'}</div><div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${p.title || 'Link'}</div>${noteHtml}`;
+                el.innerHTML = `${badgeWrap}<div style="font-size:2.5rem; margin-bottom:10px">${ahIcon(p.icon || '🔗')}</div><div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${p.title || 'Link'}</div>${noteHtml}`;
                 el.onclick = () => { if(p.link && p.link !== "#" && p.link.trim() !== "") window.open(p.link, "_blank"); else alert("No link assigned."); };
                 if (p.link && p.link !== '#') el.dataset.link = p.link;
                 grid.appendChild(el);
@@ -3857,13 +3886,13 @@
                 const allGroupBadgeMap = new Map();
                 item.items.forEach(p => { (p.badges||[]).filter(b=>b.text).forEach(b => { if(!allGroupBadgeMap.has(b.text)) allGroupBadgeMap.set(b.text, b.color||'#e91e8c'); }); });
                 const hBadgeHtml = [...allGroupBadgeMap.entries()].map(([txt,col]) => `<span style="background:${col}; color:#fff; font-size:0.6rem; padding:2px 7px; border-radius:8px; font-weight:800; letter-spacing:0.5px;">${txt}</span>`).join('');
-                let innerHtml = `<div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);"><span style="font-size:1.8rem;">${firstItem.icon || '🔗'}</span><div style="flex:1;"><div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${item.name}</div></div><div style="display:flex; gap:4px; flex-wrap:wrap;">${hBadgeHtml}</div><span style="color:var(--text-sub); font-size:0.8rem; white-space:nowrap;">${item.items.length} links</span></div>`;
+                let innerHtml = `<div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);"><span style="font-size:1.8rem;">${ahIcon(firstItem.icon || '🔗')}</span><div style="flex:1;"><div style="font-weight:bold; font-size:1.1rem; text-transform:uppercase; color:white;">${item.name}</div></div><div style="display:flex; gap:4px; flex-wrap:wrap;">${hBadgeHtml}</div><span style="color:var(--text-sub); font-size:0.8rem; white-space:nowrap;">${item.items.length} links</span></div>`;
                 item.items.forEach(p => {
                     const pBadges = (p.badges || []).filter(b=>b.text);
                     const pBadgeHtml = pBadges.map(b => `<span style="background:${b.color||'#e91e8c'}; color:#fff; font-size:0.55rem; padding:1px 6px; border-radius:6px; font-weight:800;">${b.text}</span>`).join('');
                     const noteSnippet = p.note ? `<div style="color:var(--text-sub); font-size:0.78rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.note.split('\n')[0]}</div>` : '';
                     const safeLink = (p.link || '').replace(/'/g, "\\'");
-                    innerHtml += `<div class="group-link-row" onclick="window.open('${safeLink}','_blank')" data-link="${safeLink}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; transition:all 0.2s; margin-bottom:4px;"><span style="font-size:1.2rem;">${p.icon || '🔗'}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.9rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnippet}</div><span style="color:${color}; opacity:0.5; font-size:0.9rem;">→</span></div>`;
+                    innerHtml += `<div class="group-link-row" onclick="window.open('${safeLink}','_blank')" data-link="${safeLink}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; transition:all 0.2s; margin-bottom:4px;"><span style="font-size:1.2rem;">${ahIcon(p.icon || '🔗')}</span><div style="flex:1; min-width:0;"><div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"><span style="font-weight:600; color:white; font-size:0.9rem;">${p.title || 'Link'}</span>${pBadgeHtml}</div>${noteSnippet}</div><span style="color:${color}; opacity:0.5; font-size:0.9rem;"><i class="fa-solid fa-arrow-right"></i></span></div>`;
                 });
                 groupEl.innerHTML = innerHtml;
                 grid.appendChild(groupEl);
@@ -3909,9 +3938,9 @@
         const toggle = document.createElement('button');
         toggle.className = 'fp-toggle' + (anyActive ? ' has-filter' : '') + (shouldBeOpen ? ' open' : '');
         if (anyActive) {
-            toggle.innerHTML = `Filter: <span class="fp-active-label">${summaryParts.join(', ')}</span> <span class="fp-arrow">▼</span>`;
+            toggle.innerHTML = `Filter: <span class="fp-active-label">${summaryParts.join(', ')}</span> <span class="fp-arrow"><i class="fa-solid fa-caret-down"></i></span>`;
         } else {
-            toggle.innerHTML = `Filter <span class="fp-arrow">▼</span>`;
+            toggle.innerHTML = `Filter <span class="fp-arrow"><i class="fa-solid fa-caret-down"></i></span>`;
         }
 
         const panel = document.createElement('div');
@@ -3930,7 +3959,7 @@
             row.chips.forEach(chip => {
                 const btn = document.createElement('button');
                 btn.className = 'fp-chip';
-                btn.textContent = chip.label;
+                btn.innerHTML = (chip.fa ? '<i class="fa-solid fa-' + chip.fa + '"></i> ' : '') + chip.label;
                 const isActive = (active[ri] || allKey) === chip.key;
                 if (isActive) {
                     btn.classList.add('active');
@@ -3968,7 +3997,7 @@
         clearRow.style.cssText = 'display:flex; justify-content:center; margin-top:10px;';
         const clearBtn = document.createElement('button');
         clearBtn.className = 'fp-clear-btn';
-        clearBtn.innerHTML = '✕ Clear all filters';
+        clearBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Clear all filters';
         clearBtn.style.display = anyActive ? 'inline-flex' : 'none';
         clearBtn.addEventListener('click', () => {
             if (openStateKey) fpOpenState[openStateKey] = true;
@@ -4055,10 +4084,10 @@
                 if (tog) {
                     if (key !== 'ALL') {
                         tog.classList.add('has-filter');
-                        tog.innerHTML = `Filter: <span class="fp-active-label">${key}</span> <span class="fp-arrow ${tog.classList.contains('open')?'open':''}">▼</span>`;
+                        tog.innerHTML = `Filter: <span class="fp-active-label">${key}</span> <span class="fp-arrow ${tog.classList.contains('open')?'open':''}"><i class="fa-solid fa-caret-down"></i></span>`;
                     } else {
                         tog.classList.remove('has-filter');
-                        tog.innerHTML = `Filter <span class="fp-arrow ${tog.classList.contains('open')?'open':''}">▼</span>`;
+                        tog.innerHTML = `Filter <span class="fp-arrow ${tog.classList.contains('open')?'open':''}"><i class="fa-solid fa-caret-down"></i></span>`;
                     }
                 }
                 renderWeekGrid(key, viewType === 'events');
@@ -4097,7 +4126,7 @@
                 
                 if(isEvent) el.style.borderLeft = `4px solid var(--accent-blue)`;
 
-                const lockIcon = w.locked ? '<div class="week-lock-icon" style="font-size:2rem; margin-bottom:10px">🔒</div>' : '';
+                const lockIcon = w.locked ? '<div class="week-lock-icon" style="font-size:2rem; margin-bottom:10px"><i class="fa-solid fa-lock"></i></div>' : '';
                 const status = w.locked ? 'UNAVAILABLE' : 'CLICK TO VIEW';
                 const badge = isWeekNew(w) ? '<span class="badge-new">NEW!</span>' : '';
                 let customBadge = '';
@@ -4109,12 +4138,12 @@
                 el.innerHTML = `${customBadge}${lockIcon}<div style="font-family:'Orbitron'; font-size:1.5rem; color:${isEvent?'var(--accent-blue)':'var(--accent-purple)'}; margin-bottom:5px; padding-top:10px;">${w.title}${badge}</div><div style="color:#888; font-size:0.8rem">${status}</div>${getUpdatedAgoHtml(w)}`;
                 const hideBtn = document.createElement('button');
                 hideBtn.className = 'week-hide-btn';
-                hideBtn.innerHTML = '<span class="eye-icon">👁</span>';
+                hideBtn.innerHTML = '<span class="eye-icon"><i class="fa-solid fa-eye"></i></span>';
                 hideBtn.title = 'Hide this week from this view';
                 hideBtn.onclick = (ev) => { ev.stopPropagation(); hideWeek(currSub.code, w, isEvent ? 'events' : 'weeks'); };
                 el.appendChild(hideBtn);
                 if(!w.locked) el.onclick = () => showContentByObj(w);
-                else el.onclick = () => showToast('🔒 This week is currently locked', 'locked');
+                else el.onclick = () => showToast('<i class="fa-solid fa-lock"></i> This week is currently locked', 'locked');
                 grid.appendChild(el);
             });
             if (visibleCount === 0) {
@@ -4144,7 +4173,7 @@
                         el.style.position = 'relative';
                         el.innerHTML = `
                             ${customBadge}
-                            <div style="font-size:2.5rem; margin-bottom:10px">${iconMap[filterType] || '📂'}</div>
+                            <div style="font-size:2.5rem; margin-bottom:10px">${ahIcon(iconMap[filterType] || '📂')}</div>
                             <div style="font-weight:bold; text-transform:uppercase;">${filterType}</div>
                             ${resBadgeCard}
                             <div style="color:#aaa; font-size:0.9rem; margin-top:5px;">${w.title}</div>
@@ -4152,7 +4181,7 @@
                         `;
                         const hideBtn = document.createElement('button');
                         hideBtn.className = 'week-hide-btn';
-                        hideBtn.innerHTML = '<span class="eye-icon">👁</span>';
+                        hideBtn.innerHTML = '<span class="eye-icon"><i class="fa-solid fa-eye"></i></span>';
                         hideBtn.title = 'Hide this week from this view';
                         hideBtn.onclick = (ev) => { ev.stopPropagation(); hideWeek(currSub.code, w, isEvent ? 'events' : 'weeks'); };
                         el.appendChild(hideBtn);
@@ -4203,7 +4232,7 @@
             window.CONFIG.resources.forEach(conf => {
                 const key = conf.name;
                 const val = weekOrEvent.resources[key];
-                const icon = iconMap[key] || '📂';
+                const icon = ahIcon(iconMap[key] || '📂');
                 if(val && val.vis) {
                     const resBadgeInline = isResNew(val) ? '<span class="badge-new">NEW!</span>' : '';
                     if(val.desc && val.desc.trim()) {
@@ -4242,7 +4271,7 @@
             if (weekNavPrev) {
                 const btn = document.createElement('button');
                 btn.className = 'week-nav-btn';
-                btn.innerHTML = `← ${weekNavPrev.title}`;
+                btn.innerHTML = `<i class="fa-solid fa-arrow-left"></i> ${weekNavPrev.title}`;
                 btn.onclick = () => showContentByObj(weekNavPrev, false, from);
                 weekNav.appendChild(btn);
             } else {
@@ -4254,7 +4283,7 @@
             if (weekNavNext) {
                 const btn = document.createElement('button');
                 btn.className = 'week-nav-btn';
-                btn.innerHTML = `${weekNavNext.title} →`;
+                btn.innerHTML = `${weekNavNext.title} <i class="fa-solid fa-arrow-right"></i>`;
                 btn.onclick = () => showContentByObj(weekNavNext, false, from);
                 weekNav.appendChild(btn);
             }
@@ -4594,7 +4623,7 @@
         const overlay = document.getElementById('nav-overlay');
         links.classList.toggle('open');
         const isOpen = links.classList.contains('open');
-        btn.innerHTML = isOpen ? '✕' : '☰';
+        btn.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
         if (overlay) overlay.classList.toggle('active', isOpen);
         if (!isOpen) closeAllDropdowns();
         _setMobileUtilsVisibility(!isOpen);
@@ -4616,7 +4645,7 @@
         const links = document.getElementById('nav-links');
         if (links) links.classList.remove('open');
         const btn = document.getElementById('nav-hamburger');
-        if (btn) btn.innerHTML = '☰';
+        if (btn) btn.innerHTML = '<i class="fa-solid fa-bars"></i>';
         const overlay = document.getElementById('nav-overlay');
         if (overlay) overlay.classList.remove('active');
         _setMobileUtilsVisibility(true);
@@ -4743,17 +4772,17 @@
                 const color = getSubjectColor(t.sub);
                 const realIdx = (targetWeek.tasks || []).indexOf(t);
                 html += `<div class="dd-item" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showSchedule(); setTimeout(()=>openModal(${window.SCHEDULE_DATA.indexOf(targetWeek)},${realIdx}),150);">`;
-                html += `<span class="dd-icon">${t.icon}</span>`;
+                html += `<span class="dd-icon">${ahIcon(t.icon)}</span>`;
                 html += `<span class="dd-dot" style="background:${color}; width:6px; height:6px;"></span>`;
                 html += `<span class="dd-label">${t.name}</span>`;
                 html += `<span class="dd-meta">${t.sub}</span>`;
                 html += `</div>`;
             });
             if(getVisibleScheduleTasks(targetWeek.tasks).length > 5) {
-                html += `<div class="dd-footer"><div class="dd-item" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showSchedule();">View all (Week ${targetWeek.week}) →</div></div>`;
+                html += `<div class="dd-footer"><div class="dd-item" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showSchedule();">View all (Week ${targetWeek.week}) <i class="fa-solid fa-arrow-right"></i></div></div>`;
             }
         }
-        html += `<div class="dd-footer"><div class="dd-item" style="color:#ff9500;" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showSchedule();">Open full schedule →</div></div>`;
+        html += `<div class="dd-footer"><div class="dd-item" style="color:#ff9500;" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showSchedule();">Open full schedule <i class="fa-solid fa-arrow-right"></i></div></div>`;
         dd.innerHTML = html;
     }
 
@@ -4841,7 +4870,7 @@
 
         let html = '<div class="dd-header">Upcoming deadlines</div>';
         if(upcoming.length === 0) {
-            html += '<div class="dd-empty">🎉 All clear!</div>';
+            html += '<div class="dd-empty"><i class="fa-solid fa-circle-check"></i> All clear!</div>';
         } else {
             upcoming.slice(0, 4).forEach(item => {
                 const d = new Date(item.ts);
@@ -4866,13 +4895,13 @@
                     ? `event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); openNewsPanel();`
                     : `event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); goToScheduleTask(${item.wIndex},${item.tIndex});`;
                 html += `<div class="dd-item ${urgency}" onclick="${clickAction}">`;
-                html += `<span class="dd-icon">${item.task.icon}</span>`;
+                html += `<span class="dd-icon">${ahIcon(item.task.icon)}</span>`;
                 html += `<span class="dd-label">${item.task.name} <span style='color:#888; font-size:0.75rem;'>${item.task.sub}</span></span>`;
                 html += `<span class="dd-meta" style="${daysLeft<=1?'color:#ff3b30; font-weight:700;':daysLeft<=3?'color:#ff9500;':''}">${timeLabel}</span>`;
                 html += `</div>`;
             });
             if(upcoming.length > 4) {
-                html += `<div class="dd-footer"><div class="dd-item" style="color:#00E5FF;" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showDeadlines();">See all ${upcoming.length} deadlines →</div></div>`;
+                html += `<div class="dd-footer"><div class="dd-item" style="color:#00E5FF;" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showDeadlines();">See all ${upcoming.length} deadlines <i class="fa-solid fa-arrow-right"></i></div></div>`;
             }
         }
         dd.innerHTML = html;
@@ -4903,7 +4932,7 @@
                 html += `</div>`;
             });
             if(window.MIDTERM_DATA.length > 6) {
-                html += `<div class="dd-footer"><div class="dd-item" style="color:#007aff;" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showMidterms(true,'home');">View all ${window.MIDTERM_DATA.length} exams →</div></div>`;
+                html += `<div class="dd-footer"><div class="dd-item" style="color:#007aff;" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showMidterms(true,'home');">View all ${window.MIDTERM_DATA.length} exams <i class="fa-solid fa-arrow-right"></i></div></div>`;
             }
         }
         dd.innerHTML = html;
@@ -4927,7 +4956,7 @@
         if (usefulSubjects.length === 0) {
             html += '<div class="dd-empty">No links added yet</div>';
         } else {
-            html += `<div class="dd-footer"><div class="dd-item" style="color:var(--accent-purple);" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showUsefulLinks(true, 'All Links', 'All Subjects');">View all subjects →</div></div>`;
+            html += `<div class="dd-footer"><div class="dd-item" style="color:var(--accent-purple);" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showUsefulLinks(true, 'All Links', 'All Subjects');">View all subjects <i class="fa-solid fa-arrow-right"></i></div></div>`;
         }
         dd.innerHTML = html;
     }
@@ -4965,7 +4994,7 @@
         if (count === 0) {
             html += '<div class="dd-empty">No staff added yet</div>';
         } else {
-            html += `<div class="dd-footer"><div class="dd-item" style="color:#34c759;" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showDirectory(true);">View all staff →</div></div>`;
+            html += `<div class="dd-footer"><div class="dd-item" style="color:#34c759;" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showDirectory(true);">View all staff <i class="fa-solid fa-arrow-right"></i></div></div>`;
         }
         dd.innerHTML = html;
     }
@@ -5351,10 +5380,10 @@
         const active = getActivePageId();
         const policy = getActionPolicy(active);
         const actions = [];
-        if (policy.pdf)        actions.push({ icon: '📄', label: '📄 Save PDF',    fn: 'downloadContextPdf()' });
-        if (policy.word)       actions.push({ icon: '📝', label: '📝 Save Word',   fn: 'downloadContextWord()' });
-        if (policy.screenshot) actions.push({ icon: '📸', label: '📸 Screenshot',  fn: 'downloadContextScreenshot()' });
-        if (policy.share)      actions.push({ icon: '🔗', label: '🔗 Share',        fn: 'openShareMenu()' });
+        if (policy.pdf)        actions.push({ icon: '<i class="fa-solid fa-file-pdf"></i>', label: 'Save PDF',    fn: 'downloadContextPdf()' });
+        if (policy.word)       actions.push({ icon: '<i class="fa-solid fa-file-word"></i>', label: 'Save Word',   fn: 'downloadContextWord()' });
+        if (policy.screenshot) actions.push({ icon: '<i class="fa-solid fa-image"></i>', label: 'Screenshot',  fn: 'downloadContextScreenshot()' });
+        if (policy.share)      actions.push({ icon: '<i class="fa-solid fa-share-nodes"></i>', label: 'Share',        fn: 'openShareMenu()' });
 
         if (!actions.length) {
             qa.innerHTML = '';
@@ -5364,13 +5393,13 @@
 
         if (actions.length === 1) {
             const a = actions[0];
-            const titleLabel = a.label.substring(a.label.indexOf(' ') + 1);
+            const titleLabel = a.label;
             qa.innerHTML = `<button class="qa-btn" title="${titleLabel}" onclick="${a.fn}">${a.icon}</button>`;
         } else {
             const submenuItems = actions.map(a =>
-                `<button class="qa-submenu-btn" onclick="closeUtilsMenu();${a.fn}">${a.label}</button>`
+                `<button class="qa-submenu-btn" onclick="closeUtilsMenu();${a.fn}">${a.icon} ${a.label}</button>`
             ).join('');
-            qa.innerHTML = `<div class="qa-utils-wrap"><button class="qa-btn" title="Utilities" onclick="toggleUtilsMenu(event)">⚙️</button><div class="qa-submenu" id="qa-submenu-popup">${submenuItems}</div></div>`;
+            qa.innerHTML = `<div class="qa-utils-wrap"><button class="qa-btn" title="Utilities" onclick="toggleUtilsMenu(event)"><i class="fa-solid fa-gear"></i></button><div class="qa-submenu" id="qa-submenu-popup">${submenuItems}</div></div>`;
         }
         qa.classList.add('visible');
     }
@@ -5579,8 +5608,8 @@
         if (!body) return;
         body.innerHTML = `
             <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:10px;">
-                <button onclick="downloadContextScreenshot({ mode: 'full' }); closeSemesterCaptureModal(null, true);" style="background:rgba(233,30,140,0.1);border:1px solid rgba(233,30,140,0.4);color:#e91e8c;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;">🗺️ Capture Full Map</button>
-                <button onclick="showSemesterCaptureWeekInput()" style="background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.4);color:#00e5ff;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;">📅 Capture Specific Week</button>
+                <button onclick="downloadContextScreenshot({ mode: 'full' }); closeSemesterCaptureModal(null, true);" style="background:rgba(233,30,140,0.1);border:1px solid rgba(233,30,140,0.4);color:#e91e8c;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;"><i class="fa-solid fa-map"></i> Capture Full Map</button>
+                <button onclick="showSemesterCaptureWeekInput()" style="background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.4);color:#00e5ff;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;"><i class="fa-solid fa-calendar-days"></i> Capture Specific Week</button>
             </div>
             <button onclick="closeSemesterCaptureModal(null, true)" style="display:block;margin:8px auto 0;background:none;border:1px solid #555;color:#888;padding:4px 16px;border-radius:8px;cursor:pointer;font-size:0.78rem;">Cancel</button>
         `;
@@ -5593,8 +5622,8 @@
             <div style="font-size:0.76rem; color:#999; text-align:center; margin-bottom:9px; letter-spacing:0.3px;">Enter week number</div>
             <input id="semester-capture-week-input" type="number" min="1" step="1" placeholder="Week #" style="display:block; width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(233,30,140,0.35); color:#fff; border-radius:10px; padding:10px 12px; outline:none; font-size:0.9rem; margin-bottom:10px;">
             <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-                <button onclick="runSemesterSpecificWeekCapture()" style="background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.4);color:#00e5ff;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;">📸 Capture</button>
-                <button onclick="showSemesterCaptureModeChoices()" style="background:none;border:1px solid #555;color:#888;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;">← Back</button>
+                <button onclick="runSemesterSpecificWeekCapture()" style="background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.4);color:#00e5ff;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;"><i class="fa-solid fa-image"></i> Capture</button>
+                <button onclick="showSemesterCaptureModeChoices()" style="background:none;border:1px solid #555;color:#888;padding:7px 16px;border-radius:10px;cursor:pointer;font-weight:700;font-size:0.82rem;transition:0.2s;"><i class="fa-solid fa-arrow-left"></i> Back</button>
             </div>
         `;
         const input = document.getElementById('semester-capture-week-input');
@@ -5626,7 +5655,7 @@
 
         // Deferred load — retry until html2canvas is available
         if (!window.html2canvas) {
-            showToast('⏳ Loading screenshot library...');
+            showToast('<i class="fa-solid fa-hourglass-half"></i> Loading screenshot library...');
             const poll = setInterval(() => {
                 if (window.html2canvas) { clearInterval(poll); downloadContextScreenshot(scheduleCaptureOptions); }
             }, 200);
@@ -5991,7 +6020,7 @@
         const btn = document.getElementById('news-fab');
         if (!btn) return;
         const count = getNewsUnreadCount();
-        btn.innerHTML = `📬${count > 0 ? `<span class="news-fab-badge">${count > 9 ? '9+' : count}</span>` : ''}`;
+        btn.innerHTML = `<i class="fa-solid fa-envelope"></i>${count > 0 ? `<span class="news-fab-badge">${count > 9 ? '9+' : count}</span>` : ''}`;
     }
 
     function openNewsPanel() {
@@ -6072,23 +6101,23 @@
             let dlHtml = '';
             if (item.hasDeadline && item.deadlineDate) {
                 const dlabel = formatNewsDeadline(item.deadlineDate, item.deadlineTime);
-                dlHtml = `<span class="ni-dl">⏰ ${eHtml(dlabel)}</span>`;
+                dlHtml = `<span class="ni-dl"><i class="fa-solid fa-clock"></i> ${eHtml(dlabel)}</span>`;
             }
             let evtHtml = '';
             if (item.hasEvent && item.eventDate) {
                 const elabel = formatNewsDeadline(item.eventDate, item.eventTime);
-                evtHtml = `<span class="ni-dl" style="background:rgba(0, 229, 255, 0.15); border-color:#00E5FF; color:#00E5FF; box-shadow:0 0 10px rgba(0,229,255,0.4);">🗓️ Held on: ${eHtml(elabel)}</span>`;
+                evtHtml = `<span class="ni-dl" style="background:rgba(0, 229, 255, 0.15); border-color:#00E5FF; color:#00E5FF; box-shadow:0 0 10px rgba(0,229,255,0.4);"><i class="fa-solid fa-calendar"></i> Held on: ${eHtml(elabel)}</span>`;
             }
             const subHtml = item.sub ? `<span class="ni-sub">${eHtml(item.sub)}</span>` : '';
             const linkUrl = String(item.linkUrl || '').trim();
             const linkNote = String(item.linkNote || '').trim();
             const normalizedLink = /^https?:\/\//i.test(linkUrl) ? linkUrl : (linkUrl ? ('https://' + linkUrl) : '');
             const linkHtml = normalizedLink
-                ? `<div class="ni-link-row"><a href="${eHtml(normalizedLink)}" target="_blank" rel="noopener noreferrer" class="modal-url-badge">🔗 ${eHtml(linkNote || 'Open Link')}</a></div>`
+                ? `<div class="ni-link-row"><a href="${eHtml(normalizedLink)}" target="_blank" rel="noopener noreferrer" class="modal-url-badge"><i class="fa-solid fa-link"></i> ${eHtml(linkNote || 'Open Link')}</a></div>`
                 : '';
             return `<div class="news-item${isUnread ? ' news-unread' : ''}">
                 <div class="ni-inner">
-                    <div class="ni-emoji">${item.emoji || '📬'}</div>
+                    <div class="ni-emoji">${ahIcon(item.emoji || '📬')}</div>
                     <div class="ni-body">
                         <div class="ni-title">${eHtml(item.title || '')}</div>
                         ${item.body ? `<div class="ni-note">${eHtml(item.body)}</div>` : ''}
@@ -6478,7 +6507,7 @@
                     '<span style="color:#ddd; font-size:0.84rem; min-width:120px;">' + timeText + '</span>' +
                     '<span style="color:#fff; font-weight:700; font-size:0.84rem; min-width:60px;">' + (ev.subject || '') + '</span>' +
                     '<span style="color:#aaa; font-size:0.8rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (ev.room || 'No room') + '</span>' +
-                    '<button style="background:none; border:1px solid rgba(255,59,48,0.35); color:#ff3b30; width:24px; height:24px; border-radius:6px; cursor:pointer; font-weight:700;" onclick="studioRemoveTempEvent(' + idx + ')">✕</button>';
+                    '<button style="background:none; border:1px solid rgba(255,59,48,0.35); color:#ff3b30; width:24px; height:24px; border-radius:6px; cursor:pointer; font-weight:700;" onclick="studioRemoveTempEvent(' + idx + ')"><i class="fa-solid fa-xmark"></i></button>';
                 box.appendChild(row);
             });
     }
@@ -6663,14 +6692,14 @@
         // Mode selector
         html += '<div class="tt-control-group"><div class="tt-control-label">Timing</div><div>';
         html += `<span class="tt-pill ${ttMode==='normal'?'active':''}" onclick="ttSetMode('normal')">Normal</span>`;
-        html += `<span class="tt-pill ${ttMode==='ramadan'?'active':''}" onclick="ttSetMode('ramadan')">☪ Ramadan</span>`;
+        html += `<span class="tt-pill ${ttMode==='ramadan'?'active':''}" onclick="ttSetMode('ramadan')"><i class="fa-solid fa-moon"></i> Ramadan</span>`;
         html += '</div></div>';
         // Subject checkboxes
         html += '<div class="tt-control-group" style="flex:1; min-width:280px;"><div class="tt-control-label">Subjects</div><div>';
         TD.subjects.forEach(sub => {
             const c = TT_SUBJECT_COLORS[sub] || { text:'#aaa' };
             const active = ttSelectedSubjects.includes(sub);
-            html += `<span class="tt-pill-sub ${active?'active':''}" style="color:${c.text};" onclick="ttToggleSub('${sub}')"><span class="tt-check">${active?'✓':''}</span>${sub}</span>`;
+            html += `<span class="tt-pill-sub ${active?'active':''}" style="color:${c.text};" onclick="ttToggleSub('${sub}')"><span class="tt-check">${active?'<i class="fa-solid fa-check"></i>':''}</span>${sub}</span>`;
         });
         html += '</div></div></div>';
         ctrls.innerHTML = html;
@@ -6779,8 +6808,8 @@
         const subjects = [...new Set(staffData.flatMap(s => s.subjects))].sort();
         const roles = [
             { key: 'all', label: 'All',          color: '#00E5FF' },
-            { key: 'doctor', label: '🎓 Doctors', color: '#007aff' },
-            { key: 'ta',     label: '👨‍🏫 TAs',    color: '#34c759' }
+            { key: 'doctor', fa: 'graduation-cap', label: 'Doctors', color: '#007aff' },
+            { key: 'ta',     fa: 'chalkboard-user', label: 'TAs',    color: '#34c759' }
         ];
 
         const anyActive = directoryRoleFilter !== 'all' || directorySubFilter.size > 0;
@@ -6793,9 +6822,9 @@
                 const parts = [];
                 if (directoryRoleFilter !== 'all') { const r = roles.find(x=>x.key===directoryRoleFilter); if(r) parts.push(r.label.replace(/^\S+\s/,'')); }
                 if (directorySubFilter.size > 0) [...directorySubFilter].forEach(s => parts.push(s));
-                return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open?'▲':'▼'}</span>`;
+                return `Filter: <span class="fp-active-label">${parts.join(', ')}</span> <span class="fp-arrow">${open?'<i class="fa-solid fa-caret-up"></i>':'<i class="fa-solid fa-caret-down"></i>'}</span>`;
             }
-            return `Filter <span class="fp-arrow">${open?'▲':'▼'}</span>`;
+            return `Filter <span class="fp-arrow">${open?'<i class="fa-solid fa-caret-up"></i>':'<i class="fa-solid fa-caret-down"></i>'}</span>`;
         };
         togBtn.className = 'fp-toggle' + (anyActive ? ' has-filter' : '') + (isOpen ? ' open' : '');
         togBtn.innerHTML = getTogLabel(isOpen);
@@ -6838,7 +6867,7 @@
         roles.forEach(r => {
             const btn = document.createElement('button');
             btn.className = 'fp-chip' + (directoryRoleFilter === r.key ? ' active' : '');
-            btn.textContent = r.label;
+            btn.innerHTML = (r.fa ? '<i class="fa-solid fa-' + r.fa + '"></i> ' : '') + r.label;
             btn.dataset.key = r.key;
             if (directoryRoleFilter === r.key && r.color) btn.style.cssText = `background:${r.color}22; border-color:${r.color}; color:${r.color}; box-shadow:0 0 10px ${r.color}55;`;
             btn.addEventListener('click', () => {
@@ -6923,7 +6952,7 @@
         dirClearRow.style.cssText = 'display:' + (anyActive ? 'flex' : 'none') + '; justify-content:center;';
         const dirClearBtn = document.createElement('button');
         dirClearBtn.className = 'fp-clear-btn';
-        dirClearBtn.innerHTML = '✕ Clear all filters';
+        dirClearBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Clear all filters';
         dirClearBtn.addEventListener('click', () => {
             directoryRoleFilter = 'all';
             directorySubFilter.clear();
@@ -7002,7 +7031,7 @@
         sorted.forEach(person => {
             const roleColor = person.role === 'doctor' ? '#007aff' : '#34c759';
             const roleBg = person.role === 'doctor' ? 'rgba(0,122,255,0.12)' : 'rgba(52,199,89,0.12)';
-            const roleLabel = person.role === 'doctor' ? '🎓 Doctor' : '👨‍🏫 TA';
+            const roleLabel = person.role === 'doctor' ? '<i class="fa-solid fa-graduation-cap"></i> Doctor' : '<i class="fa-solid fa-chalkboard-user"></i> TA';
 
             const row = document.createElement('div');
             row.style.cssText = `display:flex; align-items:center; gap:14px; padding:10px 14px; border-radius:10px; margin-bottom:6px; background:rgba(0,0,0,0.2); border-left:3px solid ${roleColor}; transition:all 0.2s; cursor:${person.teamsLink ? 'pointer' : 'default'};`;
@@ -7010,7 +7039,7 @@
             row.onmouseleave = () => { row.style.background = 'rgba(0,0,0,0.2)'; row.style.transform = 'translateX(0)'; };
 
             let noteHtml = person.note ? `<div style="font-size:0.75rem; color:var(--text-sub); margin-top:2px;">${person.note}</div>` : '';
-            let teamsHtml = person.teamsLink ? `<span style="font-size:0.8rem; color:#6264a7; flex-shrink:0;">💬 Teams</span>` : '';
+            let teamsHtml = person.teamsLink ? `<span style="font-size:0.8rem; color:#6264a7; flex-shrink:0;"><i class="fa-solid fa-comment"></i> Teams</span>` : '';
 
             row.innerHTML = `
                 <span style="font-size:0.65rem; font-weight:700; color:${roleColor}; background:${roleBg}; padding:3px 8px; border-radius:6px; white-space:nowrap; letter-spacing:1px; text-transform:uppercase;">${roleLabel}</span>
@@ -7061,7 +7090,7 @@
             const card = document.createElement('div');
             card.className = 'update-card';
             card.innerHTML = `
-                <div class="update-card-icon">${item.icon || '🚀'}</div>
+                <div class="update-card-icon">${ahIcon(item.icon || '🚀')}</div>
                 <div class="update-card-title">${item.title || 'Update'}</div>
                 <div class="update-card-desc">${item.desc || ''}</div>
                 ${item.date ? `<div class="update-card-date">${item.date}</div>` : ''}
@@ -7315,7 +7344,7 @@
             // Inline cumulative sub-toggle
             const cumWrap = document.createElement('div');
             cumWrap.className = 'gpa-cum-sub-wrap';
-            cumWrap.innerHTML = `<button class="gpa-cum-sub-btn ${gpaCumulativeOn ? 'active' : ''}" id="gpa-cum-toggle" onclick="toggleGpaCumulative()">📈 Include Previous GPA</button>`;
+            cumWrap.innerHTML = `<button class="gpa-cum-sub-btn ${gpaCumulativeOn ? 'active' : ''}" id="gpa-cum-toggle" onclick="toggleGpaCumulative()"><i class="fa-solid fa-chart-line"></i> Include Previous GPA</button>`;
             container.appendChild(cumWrap);
             renderGpaNormal(container);
         } else {
@@ -7325,8 +7354,8 @@
             viewWrap.className = 'gpa-view-toggle-wrap';
             viewWrap.innerHTML = `
                 <span style="color:#555; font-size:0.78rem; font-weight:600; letter-spacing:0.5px;">VIEW</span>
-                <button class="gpa-view-pill ${!gpaCardMode ? 'active' : ''}" id="gpa-list-pill" onclick="if(gpaCardMode){toggleGpaCardMode();}">📋 List</button>
-                <button class="gpa-view-pill ${gpaCardMode ? 'active' : ''}"  id="gpa-card-pill" onclick="if(!gpaCardMode){toggleGpaCardMode();}">🪟 Cards</button>
+                <button class="gpa-view-pill ${!gpaCardMode ? 'active' : ''}" id="gpa-list-pill" onclick="if(gpaCardMode){toggleGpaCardMode();}"><i class="fa-solid fa-list"></i> List</button>
+                <button class="gpa-view-pill ${gpaCardMode ? 'active' : ''}"  id="gpa-card-pill" onclick="if(!gpaCardMode){toggleGpaCardMode();}"><i class="fa-solid fa-table-columns"></i> Cards</button>
             `;
             container.appendChild(viewWrap);
             renderGpaGrouped(container);
@@ -7384,13 +7413,13 @@
                 htmlCore = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
                         <h3 style="margin:0; font-size:1.1rem; color:var(--accent-pink); padding:4px; display:flex; align-items:center; gap:8px;">
                             <span contenteditable="true" onblur="gpaUpdateSemName('${sem.id}', this.innerText)" style="border-bottom:1px dashed rgba(255,255,255,0.5); outline:none; min-width:50px;" title="Click to rename">${sem.name}</span>
-                            <span style="font-size:0.8rem; opacity:0.6; pointer-events:none;">✏️</span>
+                            <span style="font-size:0.8rem; opacity:0.6; pointer-events:none;"><i class="fa-solid fa-pen"></i></span>
                         </h3>
                         <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                             <button class="gpa-add-btn" style="padding:6px 10px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.2); border-radius:12px;" onclick="toggleSemesterMode('${sem.id}')">Switch to Subjects</button>
-                            <button class="gpa-add-btn" style="padding:6px 10px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.2); border-radius:12px;" onclick="gpaMoveSemester('${sem.id}', -1)" title="Move Up"${idx === 0 ? ' disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>↑</button>
-                            <button class="gpa-add-btn" style="padding:6px 10px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.2); border-radius:12px;" onclick="gpaMoveSemester('${sem.id}', 1)" title="Move Down"${idx === gpaSemesters.length - 1 ? ' disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>↓</button>
-                            <button class="gpa-row-remove" onclick="gpaRemoveSemester('${sem.id}')" title="Remove Semester">✕</button>
+                            <button class="gpa-add-btn" style="padding:6px 10px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.2); border-radius:12px;" onclick="gpaMoveSemester('${sem.id}', -1)" title="Move Up"${idx === 0 ? ' disabled style="opacity:0.3; cursor:not-allowed;"' : ''}><i class="fa-solid fa-arrow-up"></i></button>
+                            <button class="gpa-add-btn" style="padding:6px 10px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.2); border-radius:12px;" onclick="gpaMoveSemester('${sem.id}', 1)" title="Move Down"${idx === gpaSemesters.length - 1 ? ' disabled style="opacity:0.3; cursor:not-allowed;"' : ''}><i class="fa-solid fa-arrow-down"></i></button>
+                            <button class="gpa-row-remove" onclick="gpaRemoveSemester('${sem.id}')" title="Remove Semester"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     </div>
                     <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; padding-bottom:8px;">
@@ -7421,14 +7450,14 @@
                 htmlCore = `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:16px; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
                         <h3 style="margin:0; font-size:1.15rem; color:var(--accent-pink); flex:1; padding:4px; min-width:120px; display:flex; align-items:center; gap:8px;">
                             <span contenteditable="true" onblur="gpaUpdateSemName('${sem.id}', this.innerText)" style="border-bottom:1px dashed rgba(255,255,255,0.5); outline:none; min-width:50px;" title="Click to rename">${sem.name}</span>
-                            <span style="font-size:0.8rem; opacity:0.6; pointer-events:none;">✏️</span>
+                            <span style="font-size:0.8rem; opacity:0.6; pointer-events:none;"><i class="fa-solid fa-pen"></i></span>
                         </h3>
                         <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                             ${gpaLabel} <span style="color:#888; font-size:0.85rem;">${totalCr} cr</span>
                             <button class="gpa-add-btn" style="padding:6px 10px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.2); border-radius:12px;" onclick="toggleSemesterMode('${sem.id}')">Switch to Manual GPA/Hrs</button>
-                            <button class="gpa-add-btn" style="padding:6px 10px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.2); border-radius:12px;" onclick="gpaMoveSemester('${sem.id}', -1)" title="Move Up"${idx === 0 ? ' disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>↑</button>
-                            <button class="gpa-add-btn" style="padding:6px 10px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.2); border-radius:12px;" onclick="gpaMoveSemester('${sem.id}', 1)" title="Move Down"${idx === gpaSemesters.length - 1 ? ' disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>↓</button>
-                            <button class="gpa-row-remove" onclick="gpaRemoveSemester('${sem.id}')" title="Remove Semester">✕</button>
+                            <button class="gpa-add-btn" style="padding:6px 10px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.2); border-radius:12px;" onclick="gpaMoveSemester('${sem.id}', -1)" title="Move Up"${idx === 0 ? ' disabled style="opacity:0.3; cursor:not-allowed;"' : ''}><i class="fa-solid fa-arrow-up"></i></button>
+                            <button class="gpa-add-btn" style="padding:6px 10px; font-size:0.8rem; border:1px solid rgba(255,255,255,0.2); border-radius:12px;" onclick="gpaMoveSemester('${sem.id}', 1)" title="Move Down"${idx === gpaSemesters.length - 1 ? ' disabled style="opacity:0.3; cursor:not-allowed;"' : ''}><i class="fa-solid fa-arrow-down"></i></button>
+                            <button class="gpa-row-remove" onclick="gpaRemoveSemester('${sem.id}')" title="Remove Semester"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     </div>
                     <div id="gpa-subj-list-${sem.id}" style="min-height:50px; padding-bottom:10px;" ondragover="gpaDragOver(event, '${sem.id}')" ondrop="gpaDrop(event, '${sem.id}')"></div>
@@ -7528,8 +7557,8 @@
             row.innerHTML = `<div class="gpa-drag-handle gpa-row-name" style="flex:1; display:flex; align-items:center;">
                 <span style="opacity:0.3; padding:0 6px 0 0; cursor:grab; font-weight:normal;" title="Drag to reorder">⋮⋮</span>
                 <div class="gpa-row-updown">
-                    <button class="gpa-row-btn" onclick="gpaMoveSubject('${sem.id}', ${sIdx}, -1)" ${sIdx === 0 ? 'disabled' : ''}>↑</button>
-                    <button class="gpa-row-btn" onclick="gpaMoveSubject('${sem.id}', ${sIdx}, 1)" ${sIdx === sem.subjects.length - 1 ? 'disabled' : ''}>↓</button>
+                    <button class="gpa-row-btn" onclick="gpaMoveSubject('${sem.id}', ${sIdx}, -1)" ${sIdx === 0 ? 'disabled' : ''}><i class="fa-solid fa-arrow-up"></i></button>
+                    <button class="gpa-row-btn" onclick="gpaMoveSubject('${sem.id}', ${sIdx}, 1)" ${sIdx === sem.subjects.length - 1 ? 'disabled' : ''}><i class="fa-solid fa-arrow-down"></i></button>
                 </div>
                 <div>
                     ${sub.code ? `<span style="color:var(--accent-purple); font-family:'Orbitron',sans-serif; font-size:0.7rem; margin-right:6px;">${sub.code}</span>` : ''}
@@ -7542,7 +7571,7 @@
                 <input type="number" id="gpa-pts-${sem.id}-${sIdx}" class="gpa-input" style="width:50px; padding:4px 6px; flex-shrink:0; text-align:center;" placeholder="Pts" min="0" max="100" value="${sub.pointsLost !== '' ? sub.pointsLost : ''}" oninput="gpaSetPoints('${sem.id}', ${sIdx}, this.value)">
             </div>
             ${resultHtml}
-            <button class="gpa-row-remove" onclick="gpaRemoveSubject('${sem.id}', ${sIdx})" title="Remove">✕</button>`;
+            <button class="gpa-row-remove" onclick="gpaRemoveSubject('${sem.id}', ${sIdx})" title="Remove"><i class="fa-solid fa-xmark"></i></button>`;
             container.appendChild(row);
         });
     }
@@ -7654,7 +7683,7 @@
                 </div>`;
             });
             html += `<div class="gpa-add-menu-item" onclick="gpaShowCustomAdd('${semId}')" style="border-top:1px solid rgba(255,255,255,0.08); margin-top:4px; padding-top:10px; color:#ffd700;">
-                <span style="font-size:1rem;">✏️</span><span>Custom subject...</span>
+                <span style="font-size:1rem;"><i class="fa-solid fa-pen"></i></span><span>Custom subject...</span>
             </div>`;
             menu.innerHTML = html;
         }
@@ -7869,7 +7898,7 @@
 
     function exportTimetableDayImage() {
         if (typeof window.html2canvas !== 'function') {
-            showToast('⏳ Loading screenshot library...', 'locked');
+            showToast('<i class="fa-solid fa-hourglass-half"></i> Loading screenshot library...', 'locked');
             const poll = setInterval(() => { if (typeof window.html2canvas === 'function') { clearInterval(poll); exportTimetableDayImage(); } }, 200);
             return;
         }
@@ -7951,23 +7980,23 @@
             }
 
             document.body.appendChild(shell);
-            showToast('📸 Generating image...', 'locked');
+            showToast('<i class="fa-solid fa-image"></i> Generating image...', 'locked');
             requestAnimationFrame(function() {
                 window.html2canvas(shell, { backgroundColor:'#0a0012', scale:2.5, useCORS:true, allowTaint:true, width:shell.scrollWidth, windowWidth:shell.scrollWidth, logging:false })
                     .then(function(canvas) {
                         canvas.toBlob(function(blob) {
                             if (blob) {
                                 downloadBlob(blob, fileName || ('timetable-' + String(dayName || 'day').toLowerCase() + '.png'));
-                                showToast('📸 Image saved!','locked');
+                                showToast('<i class="fa-solid fa-image"></i> Image saved!','locked');
                                 resolve();
                             } else {
-                                showToast('⚠️ Could not generate image','locked');
+                                showToast('<i class="fa-solid fa-triangle-exclamation"></i> Could not generate image','locked');
                                 reject(new Error('Capture failed'));
                             }
                         });
                     })
                     .catch(function() {
-                        showToast('⚠️ Could not generate image','locked');
+                        showToast('<i class="fa-solid fa-triangle-exclamation"></i> Could not generate image','locked');
                         reject(new Error('Capture failed'));
                     })
                     .finally(function() { shell.remove(); });
@@ -7983,7 +8012,7 @@
         const TD = window.TIMETABLE_DATA;
         if (!TD) return;
         if (typeof window.html2canvas !== 'function') {
-            showToast('⏳ Loading screenshot library...', 'locked');
+            showToast('<i class="fa-solid fa-hourglass-half"></i> Loading screenshot library...', 'locked');
             const poll = setInterval(function() {
                 if (typeof window.html2canvas === 'function') {
                     clearInterval(poll);
@@ -8002,7 +8031,7 @@
     function studioCaptureCustomTimetable(selectedDayName) {
         const TD = window.TIMETABLE_DATA;
         if (typeof window.html2canvas !== 'function') {
-            showToast('⏳ Loading screenshot library...', 'locked');
+            showToast('<i class="fa-solid fa-hourglass-half"></i> Loading screenshot library...', 'locked');
             const poll = setInterval(function() {
                 if (typeof window.html2canvas === 'function') {
                     clearInterval(poll);
@@ -8086,16 +8115,16 @@
                 canvas.toBlob(function(blob) {
                     if (blob) {
                         downloadBlob(blob, 'timetable-custom-' + String(chosenDay).toLowerCase() + '.png');
-                        showToast('📸 Image saved!', 'locked');
+                        showToast('<i class="fa-solid fa-image"></i> Image saved!', 'locked');
                     } else {
-                        showToast('⚠️ Could not generate image', 'locked');
+                        showToast('<i class="fa-solid fa-triangle-exclamation"></i> Could not generate image', 'locked');
                     }
                     if (ghostContainer.parentNode) ghostContainer.parentNode.removeChild(ghostContainer);
                     closeScreenshotStudioModal(null, true);
                 });
             }).catch(function() {
                     if (ghostContainer.parentNode) ghostContainer.parentNode.removeChild(ghostContainer);
-                    showToast('⚠️ Could not generate image', 'locked');
+                    showToast('<i class="fa-solid fa-triangle-exclamation"></i> Could not generate image', 'locked');
                 });
         }, 150);
     }
@@ -8137,34 +8166,34 @@
 
     function exportMidtermImage() {
         if (typeof window.html2canvas !== 'function') {
-            showToast('⏳ Loading screenshot library...', 'locked');
+            showToast('<i class="fa-solid fa-hourglass-half"></i> Loading screenshot library...', 'locked');
             const poll = setInterval(() => { if (typeof window.html2canvas === 'function') { clearInterval(poll); exportMidtermImage(); } }, 200);
             return;
         }
         const { shell, fileName } = _buildExamShell(false);
         document.body.appendChild(shell);
-        showToast('📸 Generating image...', 'locked');
+        showToast('<i class="fa-solid fa-image"></i> Generating image...', 'locked');
         requestAnimationFrame(() => {
             window.html2canvas(shell, { backgroundColor: '#0a0012', scale: 2.5, useCORS: true, allowTaint: true, width: shell.scrollWidth, windowWidth: shell.scrollWidth, logging: false })
-                .then(canvas => { canvas.toBlob(blob => { if (blob) { downloadBlob(blob, fileName); showToast('📸 Image saved!', 'locked'); } }); })
-                .catch(() => showToast('⚠️ Could not generate image', 'locked'))
+                .then(canvas => { canvas.toBlob(blob => { if (blob) { downloadBlob(blob, fileName); showToast('<i class="fa-solid fa-image"></i> Image saved!', 'locked'); } }); })
+                .catch(() => showToast('<i class="fa-solid fa-triangle-exclamation"></i> Could not generate image', 'locked'))
                 .finally(() => shell.remove());
         });
     }
 
     function exportFinalsImage() {
         if (typeof window.html2canvas !== 'function') {
-            showToast('⏳ Loading screenshot library...', 'locked');
+            showToast('<i class="fa-solid fa-hourglass-half"></i> Loading screenshot library...', 'locked');
             const poll = setInterval(() => { if (typeof window.html2canvas === 'function') { clearInterval(poll); exportFinalsImage(); } }, 200);
             return;
         }
         const { shell, fileName } = _buildExamShell(true);
         document.body.appendChild(shell);
-        showToast('📸 Generating image...', 'locked');
+        showToast('<i class="fa-solid fa-image"></i> Generating image...', 'locked');
         requestAnimationFrame(() => {
             window.html2canvas(shell, { backgroundColor: '#0a0012', scale: 2.5, useCORS: true, allowTaint: true, width: shell.scrollWidth, windowWidth: shell.scrollWidth, logging: false })
-                .then(canvas => { canvas.toBlob(blob => { if (blob) { downloadBlob(blob, fileName); showToast('📸 Image saved!', 'locked'); } }); })
-                .catch(() => showToast('⚠️ Could not generate image', 'locked'))
+                .then(canvas => { canvas.toBlob(blob => { if (blob) { downloadBlob(blob, fileName); showToast('<i class="fa-solid fa-image"></i> Image saved!', 'locked'); } }); })
+                .catch(() => showToast('<i class="fa-solid fa-triangle-exclamation"></i> Could not generate image', 'locked'))
                 .finally(() => shell.remove());
         });
     }
@@ -8178,14 +8207,14 @@
         if (!el) { showToast('Nothing to capture', 'locked'); return; }
 
         if (typeof window.html2canvas !== 'function') {
-            showToast('⏳ Loading screenshot library...', 'locked');
+            showToast('<i class="fa-solid fa-hourglass-half"></i> Loading screenshot library...', 'locked');
             const poll = setInterval(() => {
                 if (typeof window.html2canvas === 'function') { clearInterval(poll); exportGpaImage(); }
             }, 200);
             return;
         }
 
-        showToast('📸 Generating image...', 'locked');
+        showToast('<i class="fa-solid fa-image"></i> Generating image...', 'locked');
         [exportBar, backBtn, toggles].forEach(item => { if (item) item.style.display = 'none'; });
 
         const isGrid = gpaGroupMode && gpaCardMode;
@@ -8216,9 +8245,9 @@
                 link.download = 'gpa-calculator.png';
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-                showToast('📸 Image saved!', 'locked');
+                showToast('<i class="fa-solid fa-image"></i> Image saved!', 'locked');
             }).catch(() => {
-                showToast('⚠️ Could not generate image', 'locked');
+                showToast('<i class="fa-solid fa-triangle-exclamation"></i> Could not generate image', 'locked');
             }).finally(() => {
                 [exportBar, backBtn, toggles].forEach(item => { if (item) item.style.display = ''; });
                 el.style.maxWidth = origMaxWidth;
@@ -8233,7 +8262,7 @@
         if (!el) { showToast('Nothing to capture', 'locked'); return; }
 
         if (typeof window.html2canvas !== 'function') {
-            showToast('⏳ Loading screenshot library...', 'locked');
+            showToast('<i class="fa-solid fa-hourglass-half"></i> Loading screenshot library...', 'locked');
             const poll = setInterval(() => {
                 if (typeof window.html2canvas === 'function') {
                     clearInterval(poll);
@@ -8243,7 +8272,7 @@
             return;
         }
 
-        showToast('📸 Generating image...', 'locked');
+        showToast('<i class="fa-solid fa-image"></i> Generating image...', 'locked');
 
         // The element may be inside a display:none container (e.g. the inactive
         // midterms/finals sub-view). Temporarily make every hidden ancestor visible
@@ -8281,9 +8310,9 @@
                 link.download = fileName;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-                showToast('📸 Image saved!', 'locked');
+                showToast('<i class="fa-solid fa-image"></i> Image saved!', 'locked');
             }).catch(() => {
-                showToast('⚠️ Could not generate image', 'locked');
+                showToast('<i class="fa-solid fa-triangle-exclamation"></i> Could not generate image', 'locked');
             }).finally(() => {
                 // Restore everything
                 hideElements.forEach((item, i) => { if (item) item.style.display = origDisplays[i] || ''; });
@@ -8344,7 +8373,7 @@
         
         if (navigator.clipboard) {
             navigator.clipboard.writeText(input.value).then(() => {
-                showToast('📋 Copied to clipboard!', 'success');
+                showToast('<i class="fa-solid fa-clipboard-check"></i> Copied to clipboard!', 'success');
             }).catch(() => {
                 fallbackCopy(input);
             });
@@ -8357,16 +8386,16 @@
         input.select();
         try {
             document.execCommand('copy');
-            showToast('📋 Copied to clipboard!', 'success');
+            showToast('<i class="fa-solid fa-clipboard-check"></i> Copied to clipboard!', 'success');
         } catch (err) {
-            showToast('⚠️ Could not copy automatically', 'locked');
+            showToast('<i class="fa-solid fa-triangle-exclamation"></i> Could not copy automatically', 'locked');
         }
     }
 
     function importGpaData() {
         const textarea = document.getElementById('gpa-import-text');
         if (!textarea.value) {
-            showToast('⚠️ Please paste a data code first', 'locked');
+            showToast('<i class="fa-solid fa-triangle-exclamation"></i> Please paste a data code first', 'locked');
             return;
         }
         
@@ -8388,12 +8417,12 @@
                 gpaRecalc();
                 
                 closeGpaDataModal(null, true);
-                showToast('✅ GPA Data Imported Successfully!', 'success');
+                showToast('<i class="fa-solid fa-circle-check"></i> GPA Data Imported Successfully!', 'success');
             } else {
-                showToast('❌ Invalid Data Format', 'locked');
+                showToast('<i class="fa-solid fa-circle-xmark"></i> Invalid Data Format', 'locked');
             }
         } catch(e) {
-            showToast('❌ Failed to parse data. Make sure you copied the entire string.', 'locked');
+            showToast('<i class="fa-solid fa-circle-xmark"></i> Failed to parse data. Make sure you copied the entire string.', 'locked');
         }
     }
 
@@ -8496,7 +8525,7 @@
             menu.id = 'wbw-ctx-menu';
 
             const openBtn = document.createElement('button');
-            openBtn.innerHTML = '<span class="ctx-icon">↗</span> Open in new tab';
+            openBtn.innerHTML = '<span class="ctx-icon"><i class="fa-solid fa-arrow-up-right-from-square"></i></span> Open in new tab';
             openBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -8509,12 +8538,12 @@
             const sep = document.createElement('hr');
 
             const copyBtn = document.createElement('button');
-            copyBtn.innerHTML = '<span class="ctx-icon">🔗</span> Copy link';
+            copyBtn.innerHTML = '<span class="ctx-icon"><i class="fa-solid fa-link"></i></span> Copy link';
             copyBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (navigator.clipboard) {
                     navigator.clipboard.writeText(url).then(() => {
-                        copyBtn.innerHTML = '<span class="ctx-icon">✓</span> Copied!';
+                        copyBtn.innerHTML = '<span class="ctx-icon"><i class="fa-solid fa-check"></i></span> Copied!';
                         copyBtn.style.color = '#34c759';
                         setTimeout(closeMenu, 800);
                     }).catch(() => fallbackCopyCtx(url, copyBtn));
@@ -8541,7 +8570,7 @@
             ta.style.cssText = 'position:fixed; opacity:0;';
             document.body.appendChild(ta);
             ta.select();
-            try { document.execCommand('copy'); btn.innerHTML = '<span class="ctx-icon">✓</span> Copied!'; btn.style.color = '#34c759'; } catch(_) { btn.innerHTML = '<span class="ctx-icon">✗</span> Failed'; }
+            try { document.execCommand('copy'); btn.innerHTML = '<span class="ctx-icon"><i class="fa-solid fa-check"></i></span> Copied!'; btn.style.color = '#34c759'; } catch(_) { btn.innerHTML = '<span class="ctx-icon"><i class="fa-solid fa-xmark"></i></span> Failed'; }
             document.body.removeChild(ta);
             setTimeout(closeMenu, 800);
         }
