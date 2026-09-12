@@ -1,4 +1,4 @@
-/* VERSION: 2026-07-03 (7.4 icons d) — FA icon picker (click-to-pick buttons); Maintenance > Clear all NEW badges; removed redundant per-subject Semester field (semester comes from the topbar selector; student cards read it live). Icons stored as fa-* ; legacy emoji via ahIcon. */
+/* VERSION: 2026-09-12f — v5b: timetable subjects import from site subjects with editable display names. */
 /* Academic Hub - admin.js (extracted from admin.html, Phase 1) */
     let cIdx = 0; let wIdx = 0; let eIdx = 0; let pIdx = 0; let schWIdx = 0; 
     let schedulePanelMode = 'weeks';
@@ -275,7 +275,8 @@
                 days: ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday"],
                 subjects: ["Operating Systems","Computer Networks","Data Structures","Database Systems","Machine Learning","Artificial Intelligence","Computer Architecture","Quantum Computing","Robotics Engineering","Software Testing"],
                 defaultSubjects: ["Operating Systems","Computer Networks","Data Structures","Database Systems","Machine Learning","Artificial Intelligence","Computer Architecture"],
-                sections: {"1-2":[],"3-4":[]}
+                sections: {"1-2":[],"3-4":[]},
+                ramadanEnabled: true
             };
         }
 
@@ -510,8 +511,35 @@
         }
     }
 
+
+    /* ── v5: next-number helpers ──────────────────────────────────────────────
+       The old code used array length + 1, which repeats a number after a delete
+       and ignores any number the admin typed by hand. These read the LAST item's
+       actual number instead, so the sequence always continues from what's there. */
+    function ahNumFromTitle(t) {
+        const m = String(t || '').match(/(\d+)/);
+        return m ? parseInt(m[1], 10) : null;
+    }
+    function ahNextTitleNumber(arr, label) {
+        if (!arr || arr.length === 0) return 1;
+        // walk backwards to the last entry that actually carries a number
+        for (let i = arr.length - 1; i >= 0; i--) {
+            const n = ahNumFromTitle(arr[i] && arr[i].title);
+            if (n !== null && !isNaN(n)) return n + 1;
+        }
+        return arr.length + 1;
+    }
+    function ahNextScheduleWeek(arr) {
+        if (!arr || arr.length === 0) return 1;
+        for (let i = arr.length - 1; i >= 0; i--) {
+            const n = parseInt(arr[i] && arr[i].week, 10);
+            if (!isNaN(n)) return n + 1;
+        }
+        return arr.length + 1;
+    }
+
     function addMiddleItem(type) {
-        if(type === 'week') { window.COURSE_DATA[cIdx].weeks.push({title:`WEEK ${window.COURSE_DATA[cIdx].weeks.length+1}`, resources:{}}); wIdx=window.COURSE_DATA[cIdx].weeks.length-1; }
+        if(type === 'week') { window.COURSE_DATA[cIdx].weeks.push({title:`WEEK ${ahNextTitleNumber(window.COURSE_DATA[cIdx].weeks)}`, resources:{}}); wIdx=window.COURSE_DATA[cIdx].weeks.length-1; }
         else if(type === 'event') { window.COURSE_DATA[cIdx].events.push({title:`Quiz ${window.COURSE_DATA[cIdx].events.length+1}`, resources:{}}); eIdx=window.COURSE_DATA[cIdx].events.length-1; }
         else if(type === 'playlist') { window.COURSE_DATA[cIdx].playlists.push({title:`New Link`, link:"#", icon:"🔗", note:"", badges:[]}); pIdx=window.COURSE_DATA[cIdx].playlists.length-1; }
         renderMiddleColumn(); renderEditor();
@@ -1298,7 +1326,7 @@
     }
 
     function updateSchTask(tIdx, field, val) { window.SCHEDULE_DATA[schWIdx].tasks[tIdx][field] = val; }
-    function addScheduleWeek() { window.SCHEDULE_DATA.push({ week: window.SCHEDULE_DATA.length + 1, tasks: [] }); schWIdx = window.SCHEDULE_DATA.length - 1; refreshScheduleViews(); }
+    function addScheduleWeek() { window.SCHEDULE_DATA.push({ week: ahNextScheduleWeek(window.SCHEDULE_DATA), tasks: [] }); schWIdx = window.SCHEDULE_DATA.length - 1; refreshScheduleViews(); }
     function delScheduleWeek(e, i) { e.stopPropagation(); if(confirm("Delete this week?")) { window.SCHEDULE_DATA.splice(i, 1); schWIdx = Math.max(0, Math.min(schWIdx, window.SCHEDULE_DATA.length - 1)); refreshScheduleViews(); } }
     function addScheduleTask() { window.SCHEDULE_DATA[schWIdx].tasks.push(createEmptyScheduleTask()); refreshScheduleViews(); }
     function delScheduleTask(tIdx) { if(confirm("Remove this task?")) { window.SCHEDULE_DATA[schWIdx].tasks.splice(tIdx, 1); refreshScheduleViews(); } }
@@ -2030,10 +2058,129 @@
 
     function toggleTimetableManager() { setView('timetable'); renderTimetableManager(); closeSidebar(); }
 
+    /* v5: default slot sets, used when seeding a semester that has no timetable yet. */
+    const AH_DEFAULT_SLOTS = {
+        normal:  ["8:00 - 9:50","10:00 - 11:50","12:30 - 2:20","2:30 - 4:20","4:30 - 6:20","6:30 - 8:20"],
+        ramadan: ["8:00 - 9:25","9:30 - 10:55","11:00 - 12:25","1:00 - 2:25","2:30 - 3:55","4:00 - 5:25"]
+    };
+
+    /* v5: repair/seed TIMETABLE_DATA. The original seeding only ran once at boot,
+       so switching to a semester that never had a timetable left TD undefined and
+       the whole panel threw before it could render. This runs on every open. */
+    function ahEnsureTimetableData() {
+        if (!window.TIMETABLE_DATA || typeof window.TIMETABLE_DATA !== 'object') {
+            window.TIMETABLE_DATA = {};
+        }
+        const TD = window.TIMETABLE_DATA;
+        if (!TD.timeSlots || typeof TD.timeSlots !== 'object') TD.timeSlots = {};
+        if (!Array.isArray(TD.timeSlots.normal)  || TD.timeSlots.normal.length === 0)  TD.timeSlots.normal  = AH_DEFAULT_SLOTS.normal.slice();
+        if (!Array.isArray(TD.timeSlots.ramadan) || TD.timeSlots.ramadan.length === 0) TD.timeSlots.ramadan = AH_DEFAULT_SLOTS.ramadan.slice();
+        if (!Array.isArray(TD.days) || TD.days.length === 0) TD.days = ["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday"];
+        if (!Array.isArray(TD.subjects)) TD.subjects = [];
+        if (!Array.isArray(TD.defaultSubjects)) TD.defaultSubjects = TD.subjects.slice();
+        if (!TD.subjectMeta || typeof TD.subjectMeta !== 'object') TD.subjectMeta = {};
+        if (!TD.sections || typeof TD.sections !== 'object' || Object.keys(TD.sections).length === 0) TD.sections = {"1-2":[],"3-4":[]};
+        if (TD.ramadanEnabled === undefined) TD.ramadanEnabled = true;
+        if (!TD.sections[ttAdminSection]) ttAdminSection = Object.keys(TD.sections)[0];
+        return TD;
+    }
+
+    /* v5: Ramadan timing visibility. Undefined on older saved data = ON,
+       so existing semesters keep working until an admin turns it off.
+       NOTE: this flag only controls what STUDENTS see. The Ramadan slot values
+       are never cleared by unchecking it, and stay editable in the admin. */
+    function ahRamadanOn() {
+        const TD = window.TIMETABLE_DATA || {};
+        return TD.ramadanEnabled === undefined ? true : !!TD.ramadanEnabled;
+    }
+
+    function ttSetSlot(mode, i, val) {
+        const TD = ahEnsureTimetableData();
+        TD.timeSlots[mode][i] = val;
+        markDirty();
+    }
+    window.ttSetSlot = ttSetSlot;
+
+    function ttAddSlot(mode) {
+        const TD = ahEnsureTimetableData();
+        TD.timeSlots[mode].push('');
+        markDirty(); renderTimetableManager();
+    }
+    window.ttAddSlot = ttAddSlot;
+
+    function ttDelSlot(mode, i) {
+        const TD = ahEnsureTimetableData();
+        if (!confirm('Remove this time slot? Entries using it will shift.')) return;
+        TD.timeSlots[mode].splice(i, 1);
+        markDirty(); renderTimetableManager();
+    }
+    window.ttDelSlot = ttDelSlot;
+
+    function ttCopyNormalToRamadan() {
+        const TD = ahEnsureTimetableData();
+        if (!confirm('Overwrite the Ramadan slots with a copy of the Normal slots?')) return;
+        TD.timeSlots.ramadan = TD.timeSlots.normal.slice();
+        markDirty(); renderTimetableManager();
+    }
+    window.ttCopyNormalToRamadan = ttCopyNormalToRamadan;
+
+    function ttToggleSlotsPanel() {
+        window.__ttSlotsPanelOpen = !window.__ttSlotsPanelOpen;
+        renderTimetableManager();
+    }
+    window.ttToggleSlotsPanel = ttToggleSlotsPanel;
+
+    function ahRenderSlotEditor() {
+        const TD = ahEnsureTimetableData();
+        if (!window.__ttSlotsPanelOpen) {
+            return `<button class="btn" style="width:100%; background:rgba(255,255,255,0.12); color:white; padding:7px; font-size:0.75rem; margin-top:4px;" onclick="ttToggleSlotsPanel()">
+                <i class="fa-solid fa-clock"></i> Edit time slots
+            </button>`;
+        }
+        function rows(mode) {
+            return TD.timeSlots[mode].map((t, i) => `
+                <div style="display:flex; gap:6px; margin-bottom:5px; align-items:center;">
+                    <span style="color:#777; font-size:0.68rem; width:16px; flex-shrink:0;">${i + 1}</span>
+                    <input type="text" value="${String(t).replace(/"/g, '&quot;')}" placeholder="e.g. 8:00 - 9:50"
+                        oninput="ttSetSlot('${mode}', ${i}, this.value)"
+                        style="flex:1; padding:5px 8px; font-size:0.75rem;">
+                    <button class="btn btn-del" style="padding:2px 7px; font-size:0.7rem;" onclick="ttDelSlot('${mode}', ${i})">✕</button>
+                </div>`).join('');
+        }
+        return `<div style="background:#150a25; border:1px solid #333; border-radius:8px; padding:12px; margin-top:6px; text-align:left; max-height:44vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <span style="font-size:0.78rem; font-weight:700; color:#fff;"><i class="fa-solid fa-clock"></i> Time Slots</span>
+                <button class="btn" style="padding:3px 9px; font-size:0.7rem; background:rgba(255,255,255,0.15); color:#fff;" onclick="ttToggleSlotsPanel()">Close</button>
+            </div>
+
+            <div style="font-size:0.7rem; color:#8b8397; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px;">Normal</div>
+            ${rows('normal')}
+            <button class="btn btn-add" style="padding:3px 10px; font-size:0.7rem; margin-bottom:14px;" onclick="ttAddSlot('normal')">+ Add slot</button>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; margin-top:6px;">
+                <span style="font-size:0.7rem; color:#8b8397; letter-spacing:1px; text-transform:uppercase;"><i class="fa-solid fa-moon"></i> Ramadan</span>
+                <button class="btn" style="padding:3px 9px; font-size:0.68rem; background:rgba(255,255,255,0.12); color:#ccc;" onclick="ttCopyNormalToRamadan()">Copy from Normal</button>
+            </div>
+            ${rows('ramadan')}
+            <button class="btn btn-add" style="padding:3px 10px; font-size:0.7rem;" onclick="ttAddSlot('ramadan')">+ Add slot</button>
+
+            <div style="font-size:0.68rem; color:#777; margin-top:12px; line-height:1.5; border-top:1px solid #333; padding-top:9px;">
+                Ramadan slots are always saved and editable here. The checkbox above only controls whether students can see the Ramadan option — unchecking it never deletes these values.
+            </div>
+        </div>`;
+    }
+    function ttSetRamadanEnabled(v) {
+        if (!window.TIMETABLE_DATA) return;
+        window.TIMETABLE_DATA.ramadanEnabled = !!v;
+        markDirty();
+        renderTimetableManager();
+    }
+    window.ttSetRamadanEnabled = ttSetRamadanEnabled;
+
     function renderTimetableManager() {
         const mid = document.getElementById('middle-col');
         mid.style.display = 'flex';
-        const TD = window.TIMETABLE_DATA;
+        const TD = ahEnsureTimetableData();
         const entries = TD.sections[ttAdminSection] || [];
         const days = TD.days;
         const timeSlots = TD.timeSlots.normal;
@@ -2051,18 +2198,35 @@
                 <button class="btn" style="flex:1; background:${ttAdminView==='subject'?'white':'rgba(255,255,255,0.2)'}; color:${ttAdminView==='subject'?'#ff375f':'white'}; padding:5px; font-size:0.75rem;" onclick="ttAdminView='subject'; renderTimetableManager();">By Subject</button>
                 <button class="btn" style="flex:1; background:${ttAdminView==='day'?'white':'rgba(255,255,255,0.2)'}; color:${ttAdminView==='day'?'#ff375f':'white'}; padding:5px; font-size:0.75rem;" onclick="ttAdminView='day'; ttAdminDay=0; renderTimetableManager();">By Day</button>
             </div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.75rem; font-weight:600; cursor:pointer; background:rgba(0,0,0,0.18); padding:6px 10px; border-radius:6px;" title="Hides the Ramadan option from students. Your Ramadan times stay saved either way.">
+                <input type="checkbox" ${ahRamadanOn() ? 'checked' : ''} onchange="ttSetRamadanEnabled(this.checked)" style="cursor:pointer;">
+                <span>Show Ramadan option to students <span style="font-weight:400; opacity:.75;">(times stay saved)</span></span>
+            </label>
+            ${ahRenderSlotEditor()}
         </div>`;
         midHtml += `<div class="list-container">`;
 
         if (ttAdminView === 'subject') {
+            if (subjects.length === 0) {
+                midHtml += `<div style="padding:18px 14px; color:#8b8397; font-size:0.8rem; line-height:1.6; text-align:center;">
+                    No subjects on this timetable yet.<br>Import them from this semester's subjects below.
+                </div>`;
+            }
             subjects.forEach(sub => {
                 const count = entries.filter(e => e.subject === sub).length;
                 const color = TT_ADMIN_COLORS[sub] || '#aaa';
                 const active = ttAdminSubject === sub;
+                const _meta = (TD.subjectMeta && TD.subjectMeta[sub]) || {};
+                const _shown = ttSubjectDisplay(sub);
+                const _esc = String(sub).replace(/'/g, "\\'");
                 midHtml += `<div class="list-item ${active?'active':''}" style="${active ? 'border-left:5px solid '+color+';' : ''}" onclick="ttAdminSubject='${sub}'; renderTimetableManager(); renderTtEditor();">
                     <div style="width:8px; height:8px; border-radius:50%; background:${color}; flex-shrink:0;"></div>
-                    <div style="flex:1; ${active?'':'color:'+color}">${sub}</div>
+                    <div style="flex:1; min-width:0; ${active?'':'color:'+color}">
+                        <div>${_shown}</div>
+                        ${_meta.code ? `<div style="font-size:0.65rem; color:#8b8397;">${_meta.code}${_meta.credits ? ' · ' + _meta.credits : ''}</div>` : ''}
+                    </div>
                     <span style="font-size:0.7rem; background:#333; padding:2px 6px; border-radius:4px;">${count}</span>
+                    <button class="btn btn-del" style="padding:1px 6px; font-size:0.68rem;" onclick="ttDelSubject(event, '${_esc}')">✕</button>
                 </div>`;
             });
         } else {
@@ -2075,6 +2239,11 @@
                 </div>`;
             });
         }
+        if (ttAdminView === 'subject') {
+            midHtml += `<div style="padding:10px 12px; border-top:1px solid #333;">
+                <button class="btn btn-add" style="width:100%; padding:6px; font-size:0.75rem;" onclick="ttOpenSubjectPicker()"><i class="fa-solid fa-file-import"></i> Add Subjects from this semester</button>
+            </div>`;
+        }
         midHtml += `</div>`;
         mid.innerHTML = midHtml;
 
@@ -2082,7 +2251,7 @@
     }
 
     function renderTtEditor() {
-        const TD = window.TIMETABLE_DATA;
+        const TD = ahEnsureTimetableData();
         const allEntries = TD.sections[ttAdminSection] || [];
         const days = TD.days;
         const timeSlots = TD.timeSlots.normal;
@@ -2093,10 +2262,16 @@
         let filtered;
         let title, color;
         if (ttAdminView === 'subject') {
-            if (!ttAdminSubject) { container.innerHTML = '<div style="text-align:center; color:#666; margin-top:50px;">Select a subject from the list.</div>'; return; }
+            if (!ttAdminSubject) {
+                const _any = (TD.subjects || []).length > 0;
+                container.innerHTML = _any
+                    ? '<div style="text-align:center; color:#666; margin-top:50px;">Select a subject from the list.</div>'
+                    : '<div style="text-align:center; color:#8b8397; margin-top:50px; line-height:1.7; font-size:0.85rem;">This semester\'s timetable has no subjects yet.<br>Use <b>Add Subjects from this semester</b> on the left to import them<br>from the subjects already on the site.</div>';
+                return;
+            }
             filtered = allEntries.map((e,i) => ({...e, _idx:i})).filter(e => e.subject === ttAdminSubject);
             color = TT_ADMIN_COLORS[ttAdminSubject] || '#ff375f';
-            title = ttAdminSubject;
+            title = ttSubjectDisplay(ttAdminSubject);
         } else {
             filtered = allEntries.map((e,i) => ({...e, _idx:i})).filter(e => e.day === ttAdminDay);
             color = '#ff375f';
@@ -2106,8 +2281,27 @@
         filtered.sort((a, b) => a.slot - b.slot);
 
         let html = `<div class="form-section" style="border-color:${color};">
-            <h3 style="color:${color};">🗓️ ${title} <span style="font-size:0.8rem; color:#888; font-weight:normal;">— Section ${ttAdminSection}</span></h3>
-            ${makeHelpBox('timetable', 'The timetable appears on the Timetable page and powers the Screenshot Studio. Each entry is one class slot: choose subject, type (lecture/tutorial/lab), day, and time slot. Sections (e.g. A, B) let different student groups see different schedules. The Screenshot Studio lets students export a custom timetable image.')}`;
+            <h3 style="color:${color};">🗓️ ${title} <span style="font-size:0.8rem; color:#888; font-weight:normal;">— Section ${ttAdminSection}</span></h3>`;
+
+        if (ttAdminView === 'subject' && ttAdminSubject) {
+            const _m = (TD.subjectMeta && TD.subjectMeta[ttAdminSubject]) || {};
+            const _src = _m.fromCourse
+                ? `Imported from the site subject <b>${_m.code || ttAdminSubject}</b>${_m.credits ? ' · ' + _m.credits : ''}.`
+                : 'Added manually (not linked to a site subject).';
+            html += `<div style="background:#150a25; border:1px solid #333; border-radius:8px; padding:12px; margin-bottom:14px;">
+                <label style="display:block; font-size:0.7rem; color:#8b8397; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">Name shown on the timetable</label>
+                <input type="text" value="${String(ttSubjectDisplay(ttAdminSubject)).replace(/"/g, '&quot;')}"
+                    placeholder="${String(ttAdminSubject).replace(/"/g, '&quot;')}"
+                    oninput="ttRenameSubjectDisplay('${String(ttAdminSubject).replace(/'/g, "\\'")}', this.value)"
+                    onblur="renderTimetableManager()"
+                    style="width:100%; padding:7px 9px; font-size:0.82rem;">
+                <div style="font-size:0.68rem; color:#777; margin-top:7px; line-height:1.5;">
+                    ${_src} Editing this only changes what students see on the timetable — the subject page keeps its own name.
+                </div>
+            </div>`;
+        }
+
+        html += `${makeHelpBox('timetable', 'The timetable appears on the Timetable page and powers the Screenshot Studio. Each entry is one class slot: choose subject, type (lecture/tutorial/lab), day, and time slot. Sections (e.g. A, B) let different student groups see different schedules. The Screenshot Studio lets students export a custom timetable image.')}`;
 
         if (filtered.length === 0) {
             html += '<div style="text-align:center; color:#666; margin:20px 0; font-style:italic;">No entries yet.</div>';
@@ -2117,7 +2311,7 @@
             const i = entry._idx;
             const typeLabel = {lec:'Lecture', tut:'Tutorial', lab:'Lab'}[entry.type] || entry.type;
             const typeColor = {lec:'#6ab4ff', tut:'#ffb347', lab:'#5cdb7f'}[entry.type] || '#aaa';
-            let subOpts = subjects.map(s => `<option value="${s}" ${entry.subject===s?'selected':''}>${s}</option>`).join('');
+            let subOpts = subjects.map(s => `<option value="${s}" ${entry.subject===s?'selected':''}>${ttSubjectDisplay(s)}</option>`).join('');
             let dayOpts = days.map((d,di) => `<option value="${di}" ${entry.day===di?'selected':''}>${d}</option>`).join('');
             let slotOpts = timeSlots.map((t,si) => `<option value="${si}" ${entry.slot===si?'selected':''}>${t}</option>`).join('');
             html += `<div style="background:#150a25; padding:15px; margin-bottom:10px; border-radius:8px; border:1px solid #333; border-left:4px solid ${typeColor};">
@@ -2151,10 +2345,144 @@
         container.innerHTML = html;
     }
 
+    /* v5b: timetable subjects come FROM the site's own subjects (COURSE_DATA) —
+       no retyping. The picker lists every subject in the current semester that
+       isn't on the timetable yet, imports its details, and still allows a
+       free-typed entry for anything that doesn't exist as a site subject.
+       TD.subjectMeta[<timetable name>] keeps the link + editable display fields. */
+
+    function ahCourseSubjectsForTimetable() {
+        const list = Array.isArray(window.COURSE_DATA) ? window.COURSE_DATA : [];
+        return list.map(function (c) {
+            return {
+                code: c.code || '',
+                name: c.name || c.code || '',
+                credits: c.credits || '',
+                label: (c.name || c.code || '').toString()
+            };
+        }).filter(function (x) { return x.label; });
+    }
+
+    function ttOpenSubjectPicker() {
+        const TD = ahEnsureTimetableData();
+        const all = ahCourseSubjectsForTimetable();
+        const already = TD.subjects.map(function (s) { return String(s).toLowerCase(); });
+        const avail = all.filter(function (c) { return already.indexOf(c.label.toLowerCase()) === -1; });
+
+        let rows = '';
+        if (avail.length === 0) {
+            rows = `<div style="color:#8b8397; font-size:0.8rem; padding:12px 4px; text-align:center;">
+                Every subject from this semester is already on the timetable.
+            </div>`;
+        } else {
+            rows = avail.map(function (c, i) {
+                const meta = [c.code, c.credits].filter(Boolean).join(' · ');
+                return `<label style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:6px; background:#150a25; margin-bottom:6px; cursor:pointer;">
+                    <input type="checkbox" class="ah-tt-pick" value="${String(c.label).replace(/"/g, '&quot;')}"
+                        data-code="${String(c.code).replace(/"/g, '&quot;')}"
+                        data-credits="${String(c.credits).replace(/"/g, '&quot;')}" style="cursor:pointer;">
+                    <span style="flex:1;">
+                        <span style="color:#fff; font-size:0.82rem; font-weight:600;">${c.label}</span>
+                        ${meta ? `<span style="display:block; color:#8b8397; font-size:0.7rem; margin-top:1px;">${meta}</span>` : ''}
+                    </span>
+                </label>`;
+            }).join('');
+        }
+
+        const ov = document.createElement('div');
+        ov.id = 'ah-tt-picker';
+        ov.style.cssText = 'position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.65); display:flex; align-items:center; justify-content:center; padding:20px;';
+        ov.innerHTML = `<div style="background:#1a0d2e; border:1px solid #3a2a4e; border-radius:12px; width:420px; max-width:94vw; max-height:82vh; display:flex; flex-direction:column; padding:20px;">
+            <div style="font-size:1rem; font-weight:700; color:#fff; margin-bottom:4px;">Add subjects to the timetable</div>
+            <div style="font-size:0.76rem; color:#8b8397; margin-bottom:14px; line-height:1.5;">
+                Pulled from this semester's subjects. Names and details import automatically and stay editable afterwards.
+            </div>
+            <div style="flex:1; overflow-y:auto; margin-bottom:14px;">${rows}</div>
+            <div style="border-top:1px solid #333; padding-top:12px;">
+                <label style="display:block; font-size:0.7rem; color:#8b8397; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">Or add one that isn't a site subject</label>
+                <input id="ah-tt-custom" type="text" placeholder="e.g. Military Education" style="width:100%; padding:7px 9px; font-size:0.8rem; margin-bottom:12px;">
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button class="btn" id="ah-tt-cancel" style="flex:1; background:rgba(255,255,255,0.14); color:#fff; padding:8px;">Cancel</button>
+                <button class="btn btn-add" id="ah-tt-confirm" style="flex:1; padding:8px;">Add selected</button>
+            </div>
+        </div>`;
+        document.body.appendChild(ov);
+
+        function close() { ov.remove(); }
+        ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+        ov.querySelector('#ah-tt-cancel').addEventListener('click', close);
+        ov.querySelector('#ah-tt-confirm').addEventListener('click', function () {
+            const picked = [].slice.call(ov.querySelectorAll('.ah-tt-pick:checked'));
+            const custom = (ov.querySelector('#ah-tt-custom').value || '').trim();
+            if (picked.length === 0 && !custom) { close(); return; }
+
+            if (!TD.subjectMeta || typeof TD.subjectMeta !== 'object') TD.subjectMeta = {};
+            if (!Array.isArray(TD.defaultSubjects)) TD.defaultSubjects = [];
+
+            picked.forEach(function (cb) {
+                const label = cb.value;
+                if (TD.subjects.indexOf(label) > -1) return;
+                TD.subjects.push(label);
+                TD.defaultSubjects.push(label);
+                TD.subjectMeta[label] = {
+                    fromCourse: true,
+                    code: cb.dataset.code || '',
+                    credits: cb.dataset.credits || '',
+                    display: label            // editable: what the timetable actually shows
+                };
+                ttAdminSubject = label;
+            });
+
+            if (custom && TD.subjects.indexOf(custom) === -1) {
+                TD.subjects.push(custom);
+                TD.defaultSubjects.push(custom);
+                TD.subjectMeta[custom] = { fromCourse: false, code: '', credits: '', display: custom };
+                ttAdminSubject = custom;
+            }
+
+            markDirty(); close(); renderTimetableManager(); renderTtEditor();
+        });
+    }
+    window.ttOpenSubjectPicker = ttOpenSubjectPicker;
+
+    /* rename only the display label; the key stays stable so entries don't break */
+    function ttRenameSubjectDisplay(name, val) {
+        const TD = ahEnsureTimetableData();
+        if (!TD.subjectMeta || typeof TD.subjectMeta !== 'object') TD.subjectMeta = {};
+        if (!TD.subjectMeta[name]) TD.subjectMeta[name] = { fromCourse: false, code: '', credits: '', display: name };
+        TD.subjectMeta[name].display = val;
+        markDirty();
+    }
+    window.ttRenameSubjectDisplay = ttRenameSubjectDisplay;
+
+    function ttSubjectDisplay(name) {
+        const TD = window.TIMETABLE_DATA || {};
+        const m = TD.subjectMeta && TD.subjectMeta[name];
+        return (m && m.display && String(m.display).trim()) ? m.display : name;
+    }
+    window.ttSubjectDisplay = ttSubjectDisplay;
+
+    function ttDelSubject(e, name) {
+        if (e) e.stopPropagation();
+        const TD = ahEnsureTimetableData();
+        const used = Object.keys(TD.sections).reduce((n, k) => n + (TD.sections[k] || []).filter(x => x.subject === name).length, 0);
+        const warn = used > 0 ? ('\n\n' + used + ' timetable entr' + (used === 1 ? 'y uses' : 'ies use') + ' it and will also be removed.') : '';
+        if (!confirm('Remove "' + name + '" from this semester\'s timetable?' + warn)) return;
+        TD.subjects = TD.subjects.filter(x => x !== name);
+        TD.defaultSubjects = (TD.defaultSubjects || []).filter(x => x !== name);
+        Object.keys(TD.sections).forEach(k => {
+            TD.sections[k] = (TD.sections[k] || []).filter(x => x.subject !== name);
+        });
+        if (ttAdminSubject === name) ttAdminSubject = TD.subjects[0] || null;
+        markDirty(); renderTimetableManager(); renderTtEditor();
+    }
+    window.ttDelSubject = ttDelSubject;
+
     function addTtEntry() {
-        const TD = window.TIMETABLE_DATA;
+        const TD = ahEnsureTimetableData();
         if(!TD.sections[ttAdminSection]) TD.sections[ttAdminSection] = [];
-        const newEntry = { subject: ttAdminSubject || TD.subjects[0], type:'lec', day: ttAdminView==='day' ? ttAdminDay : 0, slot:0, room:'', alternating:false, backup:false, note:'' };
+        const newEntry = { subject: ttAdminSubject || TD.subjects[0] || '', type:'lec', day: ttAdminView==='day' ? ttAdminDay : 0, slot:0, room:'', alternating:false, backup:false, note:'' };
         TD.sections[ttAdminSection].push(newEntry);
         markDirty(); renderTimetableManager();
     }

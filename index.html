@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- VERSION: 2026-08-10c (v3) — Home dashboard tab + navbar Settings button. -->
+<!-- VERSION: 2026-09-12c (v5) — Subjects-tab shortcut buttons removed. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -102,9 +102,9 @@
             <h1>SUBJECTS</h1>
             <p class="subtitle">Select a subject to begin</p>
         </header>
-        <div class="header-actions">
-            <button class="schedule-btn" data-link="#schedule" onclick="showSchedule()"><i class="fa-solid fa-calendar-days"></i> Semester Map</button>
-            <button class="deadline-btn" data-link="#deadlines" onclick="showDeadlines()"><i class="fa-solid fa-hourglass-half"></i> Deadlines</button>
+        <!-- Subjects-tab shortcut buttons removed (v5): they duplicated the navbar.
+             #home-exam-btn is kept hidden so existing show/hide logic stays safe. -->
+        <div class="header-actions" style="display:none;">
             <button class="midterm-btn" id="home-exam-btn" style="display:none;" onclick="showMidterms()"><i class="fa-solid fa-file-pen"></i> Midterms / Finals</button>
         </div>
         <div class="grid subjects-grid" id="subjects-grid"></div>

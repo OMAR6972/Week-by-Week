@@ -1,4 +1,4 @@
-/* VERSION: 2026-06-30 — semesters (7.1) + auto badges/announcements (7.2) + accounts: username login, confirm password, forgot-password code (7.4a). If this dated line is present, you have the current file. */
+/* VERSION: 2026-09-12d — v5: password show button, timetable seeds for empty semesters, time-slot editor (Normal + Ramadan). */
 /* Academic Hub - admin-auth.js
    Login / sign-up / password-reset gate. Only users listed in the `admins`
    table get into the dashboard. On entry it loads the LIVE data for the
@@ -116,7 +116,45 @@
     var rResend = $('#ah-resend');        if (rResend) rResend.addEventListener('click', function (e) { e.preventDefault(); resendCode(); });
   }
 
-  function render() { ov.innerHTML = card(); bind(); if (!SB) { msg('Cannot reach the database. Check supabase-config.js.'); if (goEl) goEl.disabled = true; } }
+  /* v5: wrap every password field in a relative box and drop an eye button in it,
+     so the admin can read back what they typed. Purely visual — no value changes. */
+  function addPasswordToggles() {
+    ov.querySelectorAll('input[type="password"]').forEach(function (inp) {
+      if (inp.dataset.ahEye === '1') return;
+      inp.dataset.ahEye = '1';
+
+      var box = document.createElement('div');
+      box.style.cssText = 'position:relative;display:block;';
+      inp.parentNode.insertBefore(box, inp);
+      box.appendChild(inp);
+      inp.style.paddingRight = '40px';
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Show password');
+      btn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+      btn.style.cssText = 'position:absolute;top:0;right:10px;height:' + (inp.offsetHeight || 40) + 'px;' +
+        'display:flex;align-items:center;background:none;border:none;color:#8b8397;' +
+        'cursor:pointer;font-size:.9rem;padding:0;line-height:1;';
+      // the input has a bottom margin; pin the button to the field itself
+      btn.style.top = '0';
+      btn.style.bottom = (parseInt(getComputedStyle(inp).marginBottom, 10) || 0) + 'px';
+      btn.style.height = 'auto';
+
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var showing = inp.type === 'text';
+        inp.type = showing ? 'password' : 'text';
+        btn.innerHTML = showing ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
+        btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+        btn.style.color = showing ? '#8b8397' : '#e91e8c';
+        inp.focus();
+      });
+      box.appendChild(btn);
+    });
+  }
+
+  function render() { ov.innerHTML = card(); bind(); addPasswordToggles(); if (!SB) { msg('Cannot reach the database. Check supabase-config.js.'); if (goEl) goEl.disabled = true; } }
   function msg(m, ok) { if (msgEl) { msgEl.textContent = m || ''; msgEl.style.color = ok ? '#00c853' : '#ff6b6b'; } }
   function busy(b) { if (goEl) { goEl.disabled = b; goEl.style.opacity = b ? .6 : 1; } }
   function removeOverlay() { ov.remove(); }

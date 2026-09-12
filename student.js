@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12b — v4: exam card colours matched to weeks, exam screenshot export rebuilt, per-tab settings entries removed. */
+/* VERSION: 2026-09-12f — v5b: timetable subjects import from site subjects with editable display names. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -697,7 +697,10 @@
     }
 
     function openTopLevelTab(tabId) {
-        if(tabId === 'home') nav('home');
+        /* v5: 'dashboard' was missing here, so arrow-key tab navigation silently
+           did nothing on (and off) the Home tab. */
+        if(tabId === 'dashboard') showDashboard();
+        else if(tabId === 'home') nav('home');
         else if(tabId === 'recent') showRecent();
         else if(tabId === 'schedule') showSchedule();
         else if(tabId === 'deadlines') showDeadlines();
@@ -6650,7 +6653,7 @@
                 row.style.cssText = 'display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:8px 10px;';
                 row.innerHTML = '<span style="font-family:Orbitron,sans-serif; color:' + ts.color + '; font-size:0.68rem; min-width:42px;">' + ts.label + '</span>' +
                     '<span style="color:#ddd; font-size:0.84rem; min-width:120px;">' + timeText + '</span>' +
-                    '<span style="color:#fff; font-weight:700; font-size:0.84rem; min-width:60px;">' + (ev.subject || '') + '</span>' +
+                    '<span style="color:#fff; font-weight:700; font-size:0.84rem; min-width:60px;">' + ttDisplayName(ev.subject || '') + '</span>' +
                     '<span style="color:#aaa; font-size:0.8rem; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (ev.room || 'No room') + '</span>' +
                     '<button style="background:none; border:1px solid rgba(255,59,48,0.35); color:#ff3b30; width:24px; height:24px; border-radius:6px; cursor:pointer; font-weight:700;" onclick="studioRemoveTempEvent(' + idx + ')"><i class="fa-solid fa-xmark"></i></button>';
                 box.appendChild(row);
@@ -6820,10 +6823,28 @@
         studioRenderEvents();
     }
 
+    /* v5b: the admin can rename a timetable subject for display without renaming
+       the underlying site subject. Fall back to the raw key when nothing is set. */
+    function ttDisplayName(name) {
+        const TD = window.TIMETABLE_DATA || {};
+        const m = TD.subjectMeta && TD.subjectMeta[name];
+        return (m && m.display && String(m.display).trim()) ? m.display : name;
+    }
+
     function renderTimetable() {
         const TD = window.TIMETABLE_DATA;
         if (!TD) return;
+        /* v5: a semester saved without a full timetable used to throw here.
+           Fill in only what's missing so the page still renders. */
+        if (!TD.sections || typeof TD.sections !== 'object') TD.sections = {};
+        if (!Array.isArray(TD.days)) TD.days = [];
+        if (!TD.timeSlots || typeof TD.timeSlots !== 'object') TD.timeSlots = {};
+        if (!Array.isArray(TD.timeSlots.normal)) TD.timeSlots.normal = [];
+        if (!Array.isArray(TD.timeSlots.ramadan)) TD.timeSlots.ramadan = [];
+        if (!Array.isArray(TD.subjects)) TD.subjects = [];
+        if (!Array.isArray(TD.defaultSubjects)) TD.defaultSubjects = TD.subjects.slice();
         if (!ttSelectedSubjects) ttSelectedSubjects = [...TD.defaultSubjects];
+        if (!TD.sections[ttSection]) { const _k = Object.keys(TD.sections); if (_k.length) ttSection = _k[0]; }
 
         // Controls
         const ctrls = document.getElementById('timetable-controls');
@@ -6834,11 +6855,20 @@
             html += `<span class="tt-pill ${ttSection===s?'active':''}" onclick="ttSetSection('${s}')">${s}</span>`;
         });
         html += '</div></div>';
-        // Mode selector
-        html += '<div class="tt-control-group"><div class="tt-control-label">Timing</div><div>';
-        html += `<span class="tt-pill ${ttMode==='normal'?'active':''}" onclick="ttSetMode('normal')">Normal</span>`;
-        html += `<span class="tt-pill ${ttMode==='ramadan'?'active':''}" onclick="ttSetMode('ramadan')"><i class="fa-solid fa-moon"></i> Ramadan</span>`;
-        html += '</div></div>';
+        // Mode selector — only rendered when the admin has Ramadan timing enabled.
+        // TD.ramadanEnabled is undefined on older saved data, which we treat as ON
+        // so nothing disappears for existing semesters until an admin turns it off.
+        const _ttRamadanOn = (TD.ramadanEnabled === undefined) ? true : !!TD.ramadanEnabled;
+        if (_ttRamadanOn) {
+            html += '<div class="tt-control-group"><div class="tt-control-label">Timing</div><div>';
+            html += `<span class="tt-pill ${ttMode==='normal'?'active':''}" onclick="ttSetMode('normal')">Normal</span>`;
+            html += `<span class="tt-pill ${ttMode==='ramadan'?'active':''}" onclick="ttSetMode('ramadan')"><i class="fa-solid fa-moon"></i> Ramadan</span>`;
+            html += '</div></div>';
+        } else if (ttMode === 'ramadan') {
+            // admin turned Ramadan off while a student still had it selected — fall back
+            ttMode = 'normal';
+            try { localStorage.setItem('tt_mode', 'normal'); } catch(e) {}
+        }
         // Subject checkboxes
         const _ttShown = ttSelectedSubjects.length, _ttTotal = (TD.subjects || []).length;
         html += `<div class="tt-control-group tt-subjects-cell${window.__ttSubjectsOpen ? ' open' : ''}"><div class="tt-control-label">Subjects</div>`;
@@ -6847,7 +6877,7 @@
         TD.subjects.forEach(sub => {
             const c = TT_SUBJECT_COLORS[sub] || { text:'#aaa' };
             const active = ttSelectedSubjects.includes(sub);
-            html += `<span class="tt-pill-sub ${active?'active':''}" style="color:${c.text};" onclick="ttToggleSub('${sub}')"><span class="tt-check">${active?'<i class="fa-solid fa-check"></i>':''}</span>${sub}</span>`;
+            html += `<span class="tt-pill-sub ${active?'active':''}" style="color:${c.text};" onclick="ttToggleSub('${sub}')"><span class="tt-check">${active?'<i class="fa-solid fa-check"></i>':''}</span>${ttDisplayName(sub)}</span>`;
         });
         html += '</div></div></div>';
         ctrls.innerHTML = html;
@@ -6894,7 +6924,7 @@
                         if (e.alternating) {
                             grid += `<svg class="tt-alt-line" xmlns="http://www.w3.org/2000/svg"><line x1="100%" y1="0" x2="0" y2="100%" stroke="${ts.color}" stroke-width="2" opacity="0.35"/></svg>`;
                         }
-                        grid += `<div class="tt-card-name" style="color:${sc.text};">${e.subject}</div>`;
+                        grid += `<div class="tt-card-name" style="color:${sc.text};">${ttDisplayName(e.subject)}</div>`;
                         grid += `<div class="tt-card-info" style="color:${ts.text};">${ts.label}${e.room ? ' · ' + e.room : ''}</div>`;
                         grid += `<div class="tt-badges-row">`;
                         grid += `<span class="tt-type-badge" style="background:${ts.border}; color:#000;">${ts.label}</span>`;
