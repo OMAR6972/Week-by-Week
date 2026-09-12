@@ -1,3 +1,4 @@
+/* VERSION: 2026-09-12g — v5c: per-admin tab permissions (RLS-enforced) + locked tab UI. */
 /* Academic Hub - admin.css (extracted from admin.html, Phase 1) */
 /* VERSION: 2026-06-28 — semesters (7.1) + auto badges & announcements (7.2). If this dated line is present, you have the current file. */
         :root { --bg: #0a0012; --panel: #1a0d2e; --accent: #e91e8c; --text: #fff; --hover: rgba(233,30,140,0.1); }
@@ -185,4 +186,17 @@
     #editor-area { max-width: none !important; width: 100% !important; padding: 0 10px; }
     /* stack any inner side-by-side columns (weeks list + details) vertically */
     #editor-area > div { flex-direction: column !important; }
+}
+
+/* ===== v5: locked tabs (per-admin permissions) ===== */
+.nav-btn.nav-locked {
+    opacity: 0.4;
+    filter: grayscale(1);
+    cursor: not-allowed;
+    display: flex;
+    align-items: center;
+}
+.nav-btn.nav-locked:hover {
+    opacity: 0.55;
+    background: rgba(255, 179, 71, 0.08);
 }

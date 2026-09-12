@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12d — v5: password show button, timetable seeds for empty semesters, time-slot editor (Normal + Ramadan). */
+/* VERSION: 2026-09-12g — v5c: per-admin tab permissions (RLS-enforced) + locked tab UI. */
 /* Academic Hub - admin-auth.js
    Login / sign-up / password-reset gate. Only users listed in the `admins`
    table get into the dashboard. On entry it loads the LIVE data for the
@@ -186,6 +186,7 @@
     var row = await getAdminRow(res.data.user.id);
     if (!row) { msg('This account is not an admin yet. Ask the owner for access.'); await SB.auth.signOut(); busy(false); return; }
     window.__ahIsSuper = !!row.is_super;
+    await loadMyPermissions();
     await loadAndBoot();
   }
 
@@ -262,6 +263,43 @@
      DATA / BOOT  — unchanged from the previous version
      =========================================================================== */
 
+  /* v5: which areas may this admin write? Owner gets everything.
+     A missing key means allowed, so existing admins are unaffected until the
+     owner explicitly unchecks something. The authoritative check is the RLS
+     policy in the database — this copy only drives the UI lock state. */
+  var AH_KEY_AREA = {
+    COURSE_DATA: 'subjects', SUBJECT_DETAILS_DATA: 'subjects',
+    SCHEDULE_DATA: 'schedule',
+    MIDTERM_DATA: 'exams', FINAL_DATA: 'exams',
+    STAFF_DATA: 'staff',
+    TIMETABLE_DATA: 'timetable',
+    UPDATES_DATA: 'announcements', NEWS_DATA: 'announcements',
+    CONFIG: 'config'
+  };
+  window.__ahKeyArea = AH_KEY_AREA;
+
+  async function loadMyPermissions() {
+    window.__ahPerms = {};
+    if (!SB) return;
+    try {
+      var r = await SB.rpc('my_admin_permissions');
+      if (!r.error && r.data && typeof r.data === 'object') window.__ahPerms = r.data;
+    } catch (e) { /* pre-migration database: leave empty = everything allowed */ }
+  }
+
+  window.__ahCanEdit = function (area) {
+    if (window.__ahIsSuper) return true;
+    var p = window.__ahPerms || {};
+    if (p.__super) return true;
+    if (!Object.prototype.hasOwnProperty.call(p, area)) return true;  // unset = allowed
+    return p[area] !== false;
+  };
+
+  window.__ahCanWriteKey = function (key) {
+    var area = AH_KEY_AREA[key];
+    return area ? window.__ahCanEdit(area) : true;
+  };
+
   async function getAdminRow(uid) {
     var r = await SB.from('admins').select('*').eq('user_id', uid);
     if (r.error || !r.data || !r.data.length) return null;
@@ -310,14 +348,30 @@
   window.__ahSaveToDatabase = async function () {
     if (!SB) { alert('Not connected to the database.'); return false; }
     var sem = window.__ahSemester || null;
-    var rows = KEYS.filter(function (k) { return window[k] !== undefined; })
+    var blocked = KEYS.filter(function (k) { return window[k] !== undefined && !window.__ahCanWriteKey(k); });
+    var rows = KEYS.filter(function (k) { return window[k] !== undefined && window.__ahCanWriteKey(k); })
                    .map(function (k) {
                      var row = { key: k, value: window[k], updated_at: new Date().toISOString() };
                      if (sem) row.semester = sem;
                      return row;
                    });
+    if (!rows.length) {
+      alert('You do not have permission to edit anything on this page.');
+      return false;
+    }
     var res = await SB.from('site_data').upsert(rows, { onConflict: sem ? 'key,semester' : 'key' });
-    if (res.error) { alert('Save failed: ' + res.error.message); return false; }
+    if (res.error) {
+      var m = res.error.message || '';
+      if (/row-level security|policy/i.test(m)) {
+        alert('Save rejected: you do not have permission to edit one of these sections.');
+      } else {
+        alert('Save failed: ' + m);
+      }
+      return false;
+    }
+    if (blocked.length) {
+      alert('Saved. Note: ' + blocked.length + ' section(s) you cannot edit were left unchanged.');
+    }
     return true;
   };
 
@@ -333,7 +387,7 @@
       if (s.data && s.data.session && s.data.session.user) {
         busy(true);
         var row = await getAdminRow(s.data.session.user.id);
-        if (row) { window.__ahIsSuper = !!row.is_super; await loadAndBoot(); return; }
+        if (row) { window.__ahIsSuper = !!row.is_super; await loadMyPermissions(); await loadAndBoot(); return; }
         await SB.auth.signOut(); busy(false);
       }
     } catch (e) { /* show login */ }

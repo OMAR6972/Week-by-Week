@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12f — v5b: timetable subjects import from site subjects with editable display names. */
+/* VERSION: 2026-09-12g — v5c: per-admin tab permissions (RLS-enforced) + locked tab UI. */
 /* Academic Hub - admin.js (extracted from admin.html, Phase 1) */
     let cIdx = 0; let wIdx = 0; let eIdx = 0; let pIdx = 0; let schWIdx = 0; 
     let schedulePanelMode = 'weeks';
@@ -2919,4 +2919,88 @@
 
     // Phase 4: do not auto-start. The login layer (admin-auth.js) calls this
     // after a successful login + loading the live data from the database.
-    window.__ahAdminBoot = function () { init(); takeSnapshot(); };
+    /* ===================== v5: per-admin tab permissions =====================
+       The real enforcement is the RLS policy in the database; this greys out
+       the tabs an admin can't touch so they aren't left guessing. */
+    const AH_NAV_AREA = {
+        'nav-subjects':      'subjects',
+        'nav-schedule':      'schedule',
+        'nav-useful':        'subjects',      // useful links live inside COURSE_DATA
+        'nav-midterms':      'exams',
+        'nav-staff':         'staff',
+        'nav-timetable':     'timetable',
+        'nav-announcements': 'announcements',
+        'nav-config':        'config'
+    };
+    const AH_AREA_LABEL = {
+        subjects: 'Subjects', schedule: 'Semester Map', exams: 'Midterms / Finals',
+        staff: 'Staff Contacts', timetable: 'Timetable',
+        announcements: 'Announcements', config: 'Config'
+    };
+    const AH_OWNER_CONTACT = { phone: '01016769120', email: 'omar6972@gmail.com' };
+
+    function ahCanEditArea(area) {
+        return (typeof window.__ahCanEdit === 'function') ? window.__ahCanEdit(area) : true;
+    }
+
+    function ahShowLockedNotice(area) {
+        const label = AH_AREA_LABEL[area] || 'this section';
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed; inset:0; z-index:100001; background:rgba(0,0,0,.65); display:flex; align-items:center; justify-content:center; padding:20px;';
+        ov.innerHTML = `<div style="background:#1a0d2e; border:1px solid #3a2a4e; border-radius:14px; width:400px; max-width:94vw; padding:24px; text-align:center;">
+            <div style="font-size:2rem; color:#ffb347; margin-bottom:10px;"><i class="fa-solid fa-lock"></i></div>
+            <div style="font-size:1.05rem; font-weight:700; color:#fff; margin-bottom:8px;">${label} is locked</div>
+            <div style="font-size:.85rem; color:#bbb; line-height:1.65; margin-bottom:18px;">
+                You don't have permission to edit this section.<br>
+                Contact the site owner if you need access.
+            </div>
+            <div style="background:#0a0012; border:1px solid #2a1a3e; border-radius:10px; padding:14px; text-align:left; margin-bottom:18px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:9px;">
+                    <i class="fa-solid fa-phone" style="color:#e91e8c; width:16px;"></i>
+                    <a href="tel:${AH_OWNER_CONTACT.phone}" style="color:#fff; text-decoration:none; font-size:.88rem;">${AH_OWNER_CONTACT.phone}</a>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fa-solid fa-envelope" style="color:#e91e8c; width:16px;"></i>
+                    <a href="mailto:${AH_OWNER_CONTACT.email}" style="color:#fff; text-decoration:none; font-size:.88rem; word-break:break-all;">${AH_OWNER_CONTACT.email}</a>
+                </div>
+            </div>
+            <button id="ah-locked-ok" class="btn" style="width:100%; padding:9px; background:#e91e8c; color:#fff;">Got it</button>
+        </div>`;
+        document.body.appendChild(ov);
+        const close = () => ov.remove();
+        ov.addEventListener('click', e => { if (e.target === ov) close(); });
+        ov.querySelector('#ah-locked-ok').addEventListener('click', close);
+    }
+    window.ahShowLockedNotice = ahShowLockedNotice;
+
+    function ahApplyNavPermissions() {
+        Object.keys(AH_NAV_AREA).forEach(function (id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const area = AH_NAV_AREA[id];
+            const allowed = ahCanEditArea(area);
+            el.classList.toggle('nav-locked', !allowed);
+            if (!allowed) {
+                if (!el.dataset.ahOrigClick) el.dataset.ahOrigClick = el.getAttribute('onclick') || '';
+                el.removeAttribute('onclick');
+                el.onclick = function (e) { e.stopPropagation(); ahShowLockedNotice(area); };
+                if (!el.querySelector('.ah-lock-ico')) {
+                    const lk = document.createElement('span');
+                    lk.className = 'ah-lock-ico';
+                    lk.innerHTML = ' <i class="fa-solid fa-lock"></i>';
+                    lk.style.cssText = 'margin-left:auto; opacity:.7; font-size:.75rem;';
+                    el.appendChild(lk);
+                }
+                el.title = 'Locked — you do not have permission to edit this';
+            } else if (el.dataset.ahOrigClick) {
+                el.setAttribute('onclick', el.dataset.ahOrigClick);
+                el.onclick = null;
+                const lk = el.querySelector('.ah-lock-ico');
+                if (lk) lk.remove();
+                el.title = '';
+            }
+        });
+    }
+    window.ahApplyNavPermissions = ahApplyNavPermissions;
+
+    window.__ahAdminBoot = function () { init(); takeSnapshot(); ahApplyNavPermissions(); };

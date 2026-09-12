@@ -1,9 +1,22 @@
+/* VERSION: 2026-09-12g — v5c: per-admin tab permissions (RLS-enforced) + locked tab UI. */
 /* Academic Hub - admin-manage.js
    Visual "Admins" panel. Only the OWNER (super admin) sees the button.
    Lets the owner add / remove admins by email - no SQL needed. */
 
 (function () {
   var SB = window.__ahSupabase;
+
+  /* v5: the tabs an admin's access can be scoped to. Keys must match
+     ah_area_for_key() in permissions-setup.sql. */
+  var AREAS = [
+    { key: 'subjects',      label: 'Subjects & Useful Links' },
+    { key: 'schedule',      label: 'Semester Map' },
+    { key: 'exams',         label: 'Midterms / Finals' },
+    { key: 'staff',         label: 'Staff Contacts' },
+    { key: 'timetable',     label: 'Timetable' },
+    { key: 'announcements', label: 'Announcements & Updates' },
+    { key: 'config',        label: 'Config' }
+  ];
 
   // called by admin-auth.js after a successful login + boot
   window.__ahInitAdminPanel = function () {
@@ -30,7 +43,7 @@
 
   function openModal() {
     var back = el('div', 'position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;font-family:\'Segoe UI\',sans-serif;');
-    var box = el('div', 'width:460px;max-width:94vw;max-height:88vh;overflow:auto;background:#1a0d2e;border:1px solid #2a1a3e;border-radius:14px;padding:22px;');
+    var box = el('div', 'width:520px;max-width:94vw;max-height:88vh;overflow:auto;background:#1a0d2e;border:1px solid #2a1a3e;border-radius:14px;padding:22px;');
     box.innerHTML =
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
         '<div style="font-size:1.2rem;font-weight:700;color:#fff;">Manage Admins</div>' +
@@ -64,13 +77,57 @@
       var rows = r.data || [];
       listEl.innerHTML = '';
       rows.forEach(function (a) {
-        var row = el('div', 'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid #221634;');
+        var wrap = el('div', 'padding:10px 0;border-bottom:1px solid #221634;');
+        var row = el('div', 'display:flex;align-items:center;justify-content:space-between;gap:8px;');
         var badge = a.is_super
           ? '<span style="font-size:.68rem;background:#7b3fe4;color:#fff;padding:2px 7px;border-radius:10px;margin-left:8px;">OWNER</span>'
           : '<span style="font-size:.68rem;background:#333;color:#ccc;padding:2px 7px;border-radius:10px;margin-left:8px;">ADMIN</span>';
         row.innerHTML = '<span style="color:#fff;word-break:break-all;">' + a.email + badge + '</span>';
+
         if (!a.is_super) {
-          var rm = el('button', 'background:rgba(255,59,48,.15);border:1px solid rgba(255,59,48,.4);color:#ff6b6b;padding:5px 12px;border-radius:7px;font-size:.8rem;cursor:pointer;flex-shrink:0;', 'Remove');
+          var btns = el('div', 'display:flex;gap:6px;flex-shrink:0;');
+
+          var permBtn = el('button', 'background:rgba(123,63,228,.18);border:1px solid rgba(123,63,228,.5);color:#b98cff;padding:5px 12px;border-radius:7px;font-size:.8rem;cursor:pointer;', 'Access');
+          var panel = el('div', 'display:none;margin-top:10px;background:#120823;border:1px solid #2a1a3e;border-radius:10px;padding:12px;');
+          permBtn.addEventListener('click', function () {
+            var open = panel.style.display !== 'none';
+            panel.style.display = open ? 'none' : 'block';
+            permBtn.style.background = open ? 'rgba(123,63,228,.18)' : 'rgba(123,63,228,.45)';
+          });
+
+          var perms = a.permissions || {};
+          var boxesHtml = AREAS.map(function (ar) {
+            var on = !Object.prototype.hasOwnProperty.call(perms, ar.key) || perms[ar.key] !== false;
+            return '<label style="display:flex;align-items:center;gap:9px;padding:6px 4px;cursor:pointer;font-size:.84rem;color:#ddd;">' +
+                     '<input type="checkbox" class="ah-perm" data-area="' + ar.key + '"' + (on ? ' checked' : '') + ' style="cursor:pointer;">' +
+                     '<span>' + ar.label + '</span>' +
+                   '</label>';
+          }).join('');
+
+          panel.innerHTML =
+            '<div style="font-size:.75rem;color:#999;margin-bottom:8px;line-height:1.5;">' +
+              'Ticked = this admin can open and edit that tab. Unticked tabs appear locked for them, and the database rejects their edits even outside the dashboard.' +
+            '</div>' +
+            boxesHtml +
+            '<button class="ah-perm-save" style="width:100%;margin-top:10px;padding:8px;background:#e91e8c;border:none;border-radius:7px;color:#fff;font-weight:600;font-size:.82rem;cursor:pointer;">Save access</button>' +
+            '<div class="ah-perm-msg" style="font-size:.78rem;margin-top:8px;min-height:15px;"></div>';
+
+          panel.querySelector('.ah-perm-save').addEventListener('click', async function () {
+            var sv = panel.querySelector('.ah-perm-save');
+            var pm = panel.querySelector('.ah-perm-msg');
+            var out = {};
+            [].slice.call(panel.querySelectorAll('.ah-perm')).forEach(function (cb) {
+              out[cb.dataset.area] = cb.checked;
+            });
+            sv.disabled = true; pm.style.color = '#999'; pm.textContent = 'Saving…';
+            var res = await SB.rpc('set_admin_permissions', { p_email: a.email, p_permissions: out });
+            sv.disabled = false;
+            if (res.error) { pm.style.color = '#ff6b6b'; pm.textContent = friendly(res.error.message); return; }
+            pm.style.color = '#00c853'; pm.textContent = 'Access updated.';
+            setTimeout(function () { pm.textContent = ''; }, 2500);
+          });
+
+          var rm = el('button', 'background:rgba(255,59,48,.15);border:1px solid rgba(255,59,48,.4);color:#ff6b6b;padding:5px 12px;border-radius:7px;font-size:.8rem;cursor:pointer;', 'Remove');
           rm.addEventListener('click', async function () {
             if (!confirm('Remove admin access for ' + a.email + '?')) return;
             rm.disabled = true; rm.textContent = '…';
@@ -78,9 +135,15 @@
             if (res.error) { alert('Could not remove: ' + friendly(res.error.message)); rm.disabled = false; rm.textContent = 'Remove'; return; }
             refresh();
           });
-          row.appendChild(rm);
+
+          btns.appendChild(permBtn); btns.appendChild(rm);
+          row.appendChild(btns);
+          wrap.appendChild(row);
+          wrap.appendChild(panel);
+        } else {
+          wrap.appendChild(row);
         }
-        listEl.appendChild(row);
+        listEl.appendChild(wrap);
       });
       if (!rows.length) listEl.textContent = 'No admins found.';
     }
@@ -100,6 +163,9 @@
 
     function friendly(m) {
       m = m || '';
+      if (m.indexOf('CANNOT_EDIT_SUPER') > -1) return 'The owner\'s access cannot be changed.';
+      if (m.indexOf('set_admin_permissions') > -1 || m.indexOf('my_admin_permissions') > -1)
+        return 'Permissions are not set up in the database yet. Run permissions-setup.sql in Supabase first.';
       if (m.indexOf('NO_USER') > -1) return 'No account with that email yet. They need to create an account on the login screen first.';
       if (m.indexOf('CANNOT_REMOVE_SUPER') > -1) return 'The owner cannot be removed.';
       if (m.indexOf('NOT_ALLOWED') > -1) return 'Only the owner can do this.';
