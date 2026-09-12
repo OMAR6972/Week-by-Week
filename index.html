@@ -1,5 +1,5 @@
-﻿<!DOCTYPE html>
-<!-- VERSION: 2026-07-01 (7.4 icons pass 2) — Font Awesome navbar + all static page content icons converted from emoji to FA. If this dated line is present, you have the current file. -->
+<!DOCTYPE html>
+<!-- VERSION: 2026-08-10c (v3) — Home dashboard tab + navbar Settings button. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,9 +16,14 @@
 <nav class="navbar" id="main-navbar">
     <div class="nav-brand" onclick="nav('home')">WEEK BY WEEK</div>
     <div class="nav-links" id="nav-links">
+        <div class="nav-item" id="nav-item-dashboard">
+            <div class="nav-link active" data-nav="dashboard" data-link="#dashboard" onclick="navFromBar('dashboard')">
+                <span class="nav-icon"><i class="fa-solid fa-house"></i></span> Home
+            </div>
+        </div>
         <div class="nav-item" id="nav-item-home">
-            <div class="nav-link active" data-nav="home" data-link="#home" onclick="navFromBar('home')">
-                <span class="nav-icon"><i class="fa-solid fa-house"></i></span> Subjects <span class="nav-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+            <div class="nav-link" data-nav="home" data-link="#home" onclick="navFromBar('home')">
+                <span class="nav-icon"><i class="fa-solid fa-book"></i></span> Subjects <span class="nav-chevron"><i class="fa-solid fa-chevron-down"></i></span>
             </div>
             <div class="nav-dropdown" id="dd-subjects"></div>
         </div>
@@ -67,15 +72,34 @@
             </div>
         </div>
     </div>
+    <button class="nav-settings-btn" id="nav-settings-btn" onclick="openSettingsPanel()" title="Settings" aria-label="Settings"><i class="fa-solid fa-sliders"></i></button>
     <button class="nav-hamburger" id="nav-hamburger" onclick="toggleNavMenu()" aria-label="Toggle navigation"><i class="fa-solid fa-bars"></i></button>
 </nav>
 
 <div class="nav-overlay" id="nav-overlay" onclick="closeNavOverlay()"></div>
 
 <div class="container">
-    <div id="home-page" class="page active">
+    <div id="dashboard-page" class="page active">
+        <div class="dash-hero">
+            <h1 id="dash-greeting">WELCOME BACK</h1>
+            <p class="subtitle" id="dash-subline">Here's what's happening this week</p>
+        </div>
+        <div class="dash-grid">
+            <div class="dash-col">
+                <div class="dash-w" id="dw-deadlines"></div>
+                <div class="dash-w" id="dw-new"></div>
+            </div>
+            <div class="dash-col">
+                <div class="dash-w" id="dw-gpa"></div>
+                <div class="dash-w" id="dw-news"></div>
+                <div class="dash-w" id="dw-jump"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="home-page" class="page">
         <header>
-            <h1>WEEK BY WEEK MATERIAL</h1>
+            <h1>SUBJECTS</h1>
             <p class="subtitle">Select a subject to begin</p>
         </header>
         <div class="header-actions">

@@ -1,3 +1,4 @@
+/* VERSION: 2026-09-12b — v4: exam card colours matched to weeks, exam screenshot export rebuilt, per-tab settings entries removed. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -835,3 +836,718 @@
         #wbw-ctx-menu button:hover { background: rgba(233,30,140,0.15); color: white; }
         #wbw-ctx-menu button .ctx-icon { font-size: 0.9rem; opacity: 0.8; flex-shrink: 0; }
         #wbw-ctx-menu hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 3px 0; }
+
+
+/* ================= HOME DASHBOARD (v3) ================= */
+.dash-hero { text-align: center; margin-bottom: 28px; }
+.dash-hero h1 { font-size: 2.6rem; margin-bottom: 6px; }
+.dash-hero .subtitle { margin-bottom: 0; font-size: 1rem; }
+
+.dash-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; align-items: start; }
+.dash-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.dash-w { background: var(--card-bg); backdrop-filter: blur(12px); border: 2px solid rgba(233,30,140,0.2); border-radius: 20px; padding: 20px; }
+.dash-w:empty { display: none; }
+
+.dash-w-head { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+.dash-w-ic { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95rem; color: var(--accent-pink); background: linear-gradient(135deg, rgba(233,30,140,0.18), rgba(74,144,226,0.18)); border: 1.5px solid rgba(233,30,140,0.4); flex-shrink: 0; }
+.dash-w-head h2 { font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #fff; }
+.dash-see { margin-left: auto; font-size: 0.72rem; font-weight: 600; color: var(--accent-purple); cursor: pointer; letter-spacing: 0.5px; white-space: nowrap; }
+.dash-see:hover { color: var(--accent-pink); }
+.dash-empty { color: var(--text-sub); font-size: 0.86rem; font-style: italic; padding: 6px 0; }
+.dash-empty i { color: #34c759; font-style: normal; margin-right: 6px; }
+
+/* deadlines */
+.dash-dl { display: flex; align-items: center; gap: 13px; padding: 13px 14px; border-radius: 14px; margin-bottom: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-left: 3px solid #ff9500; cursor: pointer; transition: 0.2s; }
+.dash-dl:last-child { margin-bottom: 0; }
+.dash-dl:hover { background: rgba(255,255,255,0.06); transform: translateX(3px); }
+.dash-dl.urgent { border-left-color: #ff375f; }
+.dash-dl.ongoing { border-left-color: #34c759; }
+.dash-dl-ic { width: 38px; height: 38px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,149,0,0.14); color: #ff9500; flex-shrink: 0; }
+.dash-dl.urgent .dash-dl-ic { background: rgba(255,55,95,0.14); color: #ff375f; }
+.dash-dl.ongoing .dash-dl-ic { background: rgba(52,199,89,0.14); color: #34c759; }
+.dash-dl-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.dash-dl-txt b { font-size: 0.94rem; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-dl-txt i { font-style: normal; font-size: 0.76rem; color: var(--text-sub); margin-top: 2px; }
+.dash-dl-when { margin-left: auto; font-family: 'Orbitron', sans-serif; font-size: 0.72rem; font-weight: 700; color: #ff9500; white-space: nowrap; flex-shrink: 0; }
+.dash-dl.urgent .dash-dl-when { color: #ff375f; }
+.dash-dl.ongoing .dash-dl-when { color: #34c759; }
+
+/* just added */
+.dash-fd { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.07); cursor: pointer; }
+.dash-fd:last-child { border-bottom: 0; padding-bottom: 0; }
+.dash-fd:hover .dash-fd-txt b { color: var(--accent-pink); }
+.dash-fd-ic { width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(0,229,255,0.12); color: #00E5FF; flex-shrink: 0; }
+.dash-fd-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.dash-fd-txt b { font-size: 0.92rem; font-weight: 600; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: 0.2s; }
+.dash-fd-txt i { font-style: normal; font-size: 0.75rem; color: var(--text-sub); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-fd .badge-new { margin-left: auto; flex-shrink: 0; }
+
+/* gpa */
+.dash-gpa { display: flex; align-items: center; gap: 16px; }
+.dash-gpa-num { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 2.6rem; line-height: 1; background: linear-gradient(135deg, var(--accent-pink), var(--accent-blue)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.dash-gpa-info { display: flex; flex-direction: column; gap: 9px; align-items: flex-start; }
+.dash-gpa-info i { font-style: normal; font-size: 0.8rem; color: var(--text-sub); }
+.dash-gpa-empty { text-align: center; padding: 4px 0; }
+.dash-gpa-ei { width: 50px; height: 50px; border-radius: 15px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: var(--accent-purple); background: rgba(181,25,214,0.14); border: 1px solid rgba(181,25,214,0.4); }
+.dash-gpa-empty b { display: block; font-family: 'Orbitron', sans-serif; font-size: 0.95rem; margin-bottom: 6px; }
+.dash-gpa-empty p { color: var(--text-sub); font-size: 0.82rem; line-height: 1.5; margin-bottom: 14px; }
+.dash-cta { background: linear-gradient(90deg, var(--accent-pink), #c026a0); border: none; color: #fff; font-weight: 700; font-size: 0.82rem; padding: 10px 18px; border-radius: 10px; cursor: pointer; font-family: 'Work Sans', sans-serif; transition: 0.2s; }
+.dash-cta i { color: #fff; margin-right: 6px; }
+.dash-cta:hover { box-shadow: 0 6px 20px -6px rgba(233,30,140,0.7); }
+.dash-cta.sm { background: rgba(181,25,214,0.18); border: 1px solid rgba(181,25,214,0.5); color: #d9b3ff; font-size: 0.76rem; padding: 7px 13px; }
+.dash-cta.sm i { color: #d9b3ff; }
+
+/* announcements */
+.dash-an { border-bottom: 1px solid rgba(255,255,255,0.07); }
+.dash-an:last-child { border-bottom: 0; }
+.dash-an summary { list-style: none; display: flex; align-items: center; gap: 9px; padding: 12px 0; cursor: pointer; }
+.dash-an summary::-webkit-details-marker { display: none; }
+.dash-an-dot { width: 7px; height: 7px; border-radius: 50%; background: #00E5FF; box-shadow: 0 0 8px #00E5FF; flex-shrink: 0; }
+.dash-an-t { font-weight: 600; font-size: 0.89rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-an-chev { margin-left: auto; font-size: 0.6rem; color: var(--text-sub); transition: transform 0.2s; flex-shrink: 0; }
+.dash-an[open] .dash-an-chev { transform: rotate(180deg); }
+.dash-an-body { padding: 0 0 13px 16px; color: var(--text-sub); font-size: 0.83rem; line-height: 1.55; white-space: pre-wrap; }
+
+/* jump back in */
+.dash-jump { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.dash-jump::-webkit-scrollbar { display: none; }
+.dash-jc { min-width: 92px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 13px; padding: 13px 14px; cursor: pointer; transition: 0.2s; flex-shrink: 0; text-align: center; }
+.dash-jc:hover { border-color: var(--accent-pink); transform: translateY(-3px); }
+.dash-jc b { display: block; font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--accent-purple); }
+.dash-jc i { font-style: normal; display: block; font-size: 0.7rem; color: var(--text-sub); margin-top: 4px; }
+
+@media (max-width: 900px) {
+    .dash-grid { grid-template-columns: 1fr; gap: 16px; }
+    .dash-col { gap: 16px; }
+    .dash-hero h1 { font-size: 1.8rem; }
+    .dash-hero { margin-bottom: 20px; }
+    .dash-w { padding: 17px; border-radius: 17px; }
+    .dash-dl { padding: 12px; gap: 11px; }
+    .dash-dl-txt b { font-size: 0.9rem; white-space: normal; }
+    .dash-dl-when { font-size: 0.68rem; }
+}
+
+
+/* ============ WEEK CARDS / CHROME / FONTS (v3) ============ */
+
+/* --- unified typography: every control uses the site font --- */
+button, input, select, textarea, .back-btn, .btn, .qa-btn, .qa-submenu-btn {
+    font-family: 'Work Sans', sans-serif;
+}
+/* headings & short display labels stay Orbitron via their own rules */
+
+/* --- hide-buttons: reveal on hover only (desktop) --- */
+.subject-hide-btn, .week-hide-btn {
+    opacity: 0; transform: scale(0.9); pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease, color 0.2s, background 0.2s, border-color 0.2s;
+}
+.card:hover .subject-hide-btn, .card:hover .week-hide-btn,
+.subject-hide-btn:focus-visible, .week-hide-btn:focus-visible {
+    opacity: 1; transform: scale(1); pointer-events: auto;
+}
+/* locked cards dim their children — keep the hide button hidden until hover */
+.card.locked > .week-hide-btn, .card.locked > .subject-hide-btn { opacity: 0 !important; pointer-events: none; }
+.card.locked:hover > .week-hide-btn, .card.locked:hover > .subject-hide-btn { opacity: 0.6 !important; pointer-events: auto; }
+@media (hover: none), (pointer: coarse) {
+    .subject-hide-btn, .week-hide-btn { opacity: 0.7; transform: none; pointer-events: auto; }
+    .card.locked > .week-hide-btn, .card.locked > .subject-hide-btn { opacity: 0.5 !important; pointer-events: auto; }
+}
+
+/* --- week card: real title leads, everything else quiet --- */
+.card.wk-card { padding: 20px 22px 16px; }
+.wk-top { display: flex; align-items: baseline; gap: 10px; padding-left: 26px; }
+.wk-title {
+    font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 1.15rem; line-height: 1.25;
+    color: var(--accent-purple); word-break: break-word; flex: 1; min-width: 0;
+}
+.card.wk-card.is-event .wk-title { color: var(--accent-blue); }
+.wk-top .badge-new { margin-left: 0; flex-shrink: 0; align-self: center; }
+.wk-lock { color: #8a8a8a; font-size: 0.85rem; flex-shrink: 0; align-self: center; }
+.wk-foot { margin-top: auto; padding-top: 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.wk-locked-txt { font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase; color: #6f6f7a; font-weight: 700; }
+
+/* --- the note that replaced the corner badge: colour-coded but subtle (no filled block) --- */
+.wk-note {
+    margin-top: 13px; padding: 2px 0 2px 12px;
+    border-left: 3px solid var(--wk-note-c, #e91e8c);
+    background: none;
+    color: var(--text-sub); font-size: 0.84rem; line-height: 1.5;
+    white-space: pre-wrap; word-break: break-word;
+}
+.card.locked > .wk-note { opacity: 1 !important; filter: none !important; }
+
+/* --- floating buttons: fade away when idle, return on scroll/hover --- */
+.news-fab, .hotkeys-fab, .scroll-btn, .quick-actions {
+    transition: opacity 0.35s ease, transform 0.35s ease, border-color 0.2s, box-shadow 0.2s;
+}
+body:not(.ah-scrolling) .news-fab,
+body:not(.ah-scrolling) .hotkeys-fab,
+body:not(.ah-scrolling) .scroll-btn,
+body:not(.ah-scrolling) .quick-actions.visible {
+    opacity: 0.12; transform: scale(0.9);
+}
+.news-fab:hover, .hotkeys-fab:hover, .scroll-btn:hover, .quick-actions:hover,
+body.ah-scrolling .news-fab, body.ah-scrolling .hotkeys-fab,
+body.ah-scrolling .scroll-btn, body.ah-scrolling .quick-actions.visible {
+    opacity: 1 !important; transform: none !important;
+}
+/* keep them reachable: hovering the corner brings them back instantly */
+.news-fab:focus-visible, .hotkeys-fab:focus-visible, .scroll-btn:focus-visible { opacity: 1 !important; transform: none !important; }
+
+/* --- navbar auto-hide --- */
+.navbar { transition: transform 0.28s ease, box-shadow 0.3s; will-change: transform; }
+.navbar.nav-hidden { transform: translateY(-100%); }
+@media (max-width: 768px) {
+    .navbar.nav-hidden .nav-links.open { transform: translateY(0); }
+}
+
+/* --- scrollbar: only while scrolling (then fades after 3s) --- */
+html { scrollbar-color: transparent transparent; transition: scrollbar-color 0.4s ease; }
+html:has(body.ah-scrolling) { scrollbar-color: rgba(233, 30, 140, 0.85) rgba(8, 2, 16, 0.5); }
+html::-webkit-scrollbar-track { background: transparent; }
+html::-webkit-scrollbar-thumb { background: transparent; box-shadow: none; border-color: transparent; transition: background 0.4s ease, box-shadow 0.4s ease; }
+html:has(body.ah-scrolling)::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(233, 30, 140, 0.95), rgba(74, 144, 226, 0.95));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 10px rgba(233, 30, 140, 0.45), 0 0 14px rgba(74, 144, 226, 0.35);
+}
+/* fallback for browsers without :has() — keep the bar usable */
+@supports not selector(html:has(body)) {
+    html { scrollbar-color: rgba(233, 30, 140, 0.85) rgba(8, 2, 16, 0.9); }
+    html::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(233, 30, 140, 0.95), rgba(74, 144, 226, 0.95)); }
+}
+
+
+/* ---- in-week custom note (content page): same subtle language as the cards ---- */
+.content-badge {
+    display: block !important; background: none !important; color: var(--text-sub) !important;
+    padding: 2px 0 2px 12px !important; border-left: 3px solid var(--wk-note-c, #e91e8c);
+    border-radius: 0 !important; font-weight: 500 !important; font-size: 0.9rem !important;
+    margin-top: 14px; margin-bottom: 18px; box-shadow: none !important;
+    white-space: pre-wrap; word-break: break-word; max-width: 640px;
+}
+
+/* ---- equal-height week cards regardless of notes ---- */
+.wk-note { flex: 0 0 auto; }
+
+/* ---- "updated X ago" sits quietly in the card footer ---- */
+.wk-foot { font-size: 0.72rem; color: #8b8397; }
+.wk-foot:empty { display: none; }
+
+/* ---- hide buttons: flat icon, no circle, no fake slash ---- */
+.subject-hide-btn, .week-hide-btn {
+    border: none !important; background: transparent !important; border-radius: 8px !important;
+    width: 26px !important; height: 26px !important; color: #8b8397 !important; font-size: 0.85rem !important;
+}
+.subject-hide-btn::after, .week-hide-btn::after { display: none !important; content: none !important; }
+.subject-hide-btn:hover, .week-hide-btn:hover {
+    background: rgba(233, 30, 140, 0.14) !important; color: var(--accent-pink) !important;
+}
+.week-hide-btn { top: 12px !important; left: 14px !important; }
+.subject-hide-btn { top: 12px !important; right: 14px !important; }
+
+
+/* ============ SETTINGS PANEL + NAVBAR BUTTON (v3) ============ */
+.nav-settings-btn {
+    flex-shrink: 0; margin-left: 8px; width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(233,30,140,0.25);
+    color: var(--text-sub); cursor: pointer; font-size: 0.95rem;
+    display: inline-flex; align-items: center; justify-content: center; transition: 0.2s;
+}
+.nav-settings-btn:hover { color: #fff; border-color: var(--accent-pink); background: rgba(233,30,140,0.15); }
+
+.ah-settings { position: fixed; inset: 0; z-index: 1200; display: none; align-items: center; justify-content: center;
+    background: rgba(5, 0, 12, 0.72); backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.2s ease; padding: 20px; }
+.ah-settings.active { opacity: 1; }
+.ah-settings-card { width: 100%; max-width: 520px; max-height: 84vh; overflow-y: auto;
+    background: linear-gradient(180deg, #1f1136, #170a26); border: 2px solid rgba(233,30,140,0.3);
+    border-radius: 20px; padding: 22px; transform: translateY(10px); transition: transform 0.22s ease; }
+.ah-settings.active .ah-settings-card { transform: none; }
+.ah-settings-head { display: flex; align-items: center; margin-bottom: 18px; }
+.ah-settings-head span { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 700; letter-spacing: 1px; color: #fff; }
+.ah-settings-head span i { color: var(--accent-pink); margin-right: 9px; }
+.ah-settings-x { margin-left: auto; background: transparent; border: none; color: var(--text-sub); font-size: 1.1rem; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+.ah-settings-x:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+.ah-set-row { display: flex; align-items: center; gap: 16px; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.ah-set-row:last-child { border-bottom: 0; }
+.ah-set-txt { flex: 1; min-width: 0; }
+.ah-set-txt b { display: block; font-size: 0.93rem; font-weight: 600; color: #fff; margin-bottom: 3px; }
+.ah-set-txt i { font-style: normal; font-size: 0.78rem; color: var(--text-sub); line-height: 1.45; display: block; }
+.ah-set-select { background: rgba(255,255,255,0.06); border: 1px solid rgba(233,30,140,0.3); color: #fff;
+    padding: 9px 12px; border-radius: 10px; font-size: 0.84rem; cursor: pointer; flex-shrink: 0; max-width: 45%; }
+.ah-set-select option { background: #1a0d2e; color: #fff; }
+
+.ah-toggle { flex-shrink: 0; width: 46px; height: 26px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08); cursor: pointer; padding: 0; position: relative; transition: 0.22s; }
+.ah-toggle span { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+    background: #8b8397; transition: 0.22s; }
+.ah-toggle.on { background: rgba(233,30,140,0.28); border-color: var(--accent-pink); }
+.ah-toggle.on span { left: 22px; background: var(--accent-pink); box-shadow: 0 0 10px rgba(233,30,140,0.7); }
+
+@media (max-width: 768px) {
+    .nav-settings-btn { width: 34px; height: 34px; margin-left: 4px; }
+    .ah-set-select { max-width: 42%; }
+}
+
+/* honour the "don't fade" preference */
+body.ah-no-fade .news-fab, body.ah-no-fade .hotkeys-fab,
+body.ah-no-fade .scroll-btn, body.ah-no-fade .quick-actions.visible {
+    opacity: 1 !important; transform: none !important;
+}
+
+
+/* ---- in-week custom note (content page): same subtle language as the cards ---- */
+.content-badge {
+    display: block !important; background: none !important; color: var(--text-sub) !important;
+    padding: 2px 0 2px 12px !important; border-left: 3px solid var(--wk-note-c, #e91e8c);
+    border-radius: 0 !important; font-weight: 500 !important; font-size: 0.9rem !important;
+    margin-top: 14px; margin-bottom: 18px; box-shadow: none !important;
+    white-space: pre-wrap; word-break: break-word; max-width: 640px;
+}
+
+/* ---- equal-height week cards regardless of notes ---- */
+.wk-note { flex: 0 0 auto; }
+
+/* ---- "updated X ago" sits quietly in the card footer ---- */
+.wk-foot { font-size: 0.72rem; color: #8b8397; }
+.wk-foot:empty { display: none; }
+
+/* ---- hide buttons: flat icon, no circle, no fake slash ---- */
+.subject-hide-btn, .week-hide-btn {
+    border: none !important; background: transparent !important; border-radius: 8px !important;
+    width: 26px !important; height: 26px !important; color: #8b8397 !important; font-size: 0.85rem !important;
+}
+.subject-hide-btn::after, .week-hide-btn::after { display: none !important; content: none !important; }
+.subject-hide-btn:hover, .week-hide-btn:hover {
+    background: rgba(233, 30, 140, 0.14) !important; color: var(--accent-pink) !important;
+}
+.week-hide-btn { top: 12px !important; left: 14px !important; }
+.subject-hide-btn { top: 12px !important; right: 14px !important; }
+
+
+/* ============ SETTINGS PANEL + NAVBAR BUTTON (v3) ============ */
+.nav-settings-btn {
+    flex-shrink: 0; margin-left: 8px; width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(233,30,140,0.25);
+    color: var(--text-sub); cursor: pointer; font-size: 0.95rem;
+    display: inline-flex; align-items: center; justify-content: center; transition: 0.2s;
+}
+.nav-settings-btn:hover { color: #fff; border-color: var(--accent-pink); background: rgba(233,30,140,0.15); }
+
+.ah-settings { position: fixed; inset: 0; z-index: 1200; display: none; align-items: center; justify-content: center;
+    background: rgba(5, 0, 12, 0.72); backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.2s ease; padding: 20px; }
+.ah-settings.active { opacity: 1; }
+.ah-settings-card { width: 100%; max-width: 520px; max-height: 84vh; overflow-y: auto;
+    background: linear-gradient(180deg, #1f1136, #170a26); border: 2px solid rgba(233,30,140,0.3);
+    border-radius: 20px; padding: 22px; transform: translateY(10px); transition: transform 0.22s ease; }
+.ah-settings.active .ah-settings-card { transform: none; }
+.ah-settings-head { display: flex; align-items: center; margin-bottom: 18px; }
+.ah-settings-head span { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 700; letter-spacing: 1px; color: #fff; }
+.ah-settings-head span i { color: var(--accent-pink); margin-right: 9px; }
+.ah-settings-x { margin-left: auto; background: transparent; border: none; color: var(--text-sub); font-size: 1.1rem; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+.ah-settings-x:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+.ah-set-row { display: flex; align-items: center; gap: 16px; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.ah-set-row:last-child { border-bottom: 0; }
+.ah-set-txt { flex: 1; min-width: 0; }
+.ah-set-txt b { display: block; font-size: 0.93rem; font-weight: 600; color: #fff; margin-bottom: 3px; }
+.ah-set-txt i { font-style: normal; font-size: 0.78rem; color: var(--text-sub); line-height: 1.45; display: block; }
+.ah-set-select { background: rgba(255,255,255,0.06); border: 1px solid rgba(233,30,140,0.3); color: #fff;
+    padding: 9px 12px; border-radius: 10px; font-size: 0.84rem; cursor: pointer; flex-shrink: 0; max-width: 45%; }
+.ah-set-select option { background: #1a0d2e; color: #fff; }
+
+.ah-toggle { flex-shrink: 0; width: 46px; height: 26px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08); cursor: pointer; padding: 0; position: relative; transition: 0.22s; }
+.ah-toggle span { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+    background: #8b8397; transition: 0.22s; }
+.ah-toggle.on { background: rgba(233,30,140,0.28); border-color: var(--accent-pink); }
+.ah-toggle.on span { left: 22px; background: var(--accent-pink); box-shadow: 0 0 10px rgba(233,30,140,0.7); }
+
+@media (max-width: 768px) {
+    .nav-settings-btn { width: 34px; height: 34px; margin-left: 4px; }
+    .ah-set-select { max-width: 42%; }
+}
+
+/* honour the "don't fade" preference */
+body.ah-no-fade .news-fab, body.ah-no-fade .hotkeys-fab,
+body.ah-no-fade .scroll-btn, body.ah-no-fade .quick-actions.visible {
+    opacity: 1 !important; transform: none !important;
+}
+
+
+/* ============ v3d — card layout, hide affordance, calmer headers ============ */
+
+/* ---- week card: centred, balanced, no stranded left text ---- */
+.card.wk-card { padding: 24px 22px 18px; text-align: center; justify-content: center; align-items: center; }
+.wk-top { display: flex; align-items: center; justify-content: center; gap: 9px; padding-left: 0; width: 100%; flex-wrap: wrap; }
+.wk-title { font-size: 1.3rem; text-align: center; flex: 0 1 auto; }
+.wk-note {
+    margin: 15px auto 0; text-align: left; max-width: 92%; width: 100%;
+    padding: 8px 12px; border-left: 3px solid var(--wk-note-c, #e91e8c);
+    background: color-mix(in srgb, var(--wk-note-c, #e91e8c) 8%, transparent);
+    border-radius: 0 8px 8px 0; color: #e8dff5; font-size: 0.83rem;
+}
+@supports not (background: color-mix(in srgb, red 8%, transparent)) {
+    .wk-note { background: rgba(255,255,255,0.045); }
+}
+.wk-foot { justify-content: center; width: 100%; }
+
+/* ---- hide button: icon + word, so it explains itself ---- */
+.subject-hide-btn, .week-hide-btn {
+    width: auto !important; height: 26px !important; padding: 0 9px !important;
+    gap: 6px; background: rgba(0,0,0,0.35) !important; border: 1px solid rgba(255,255,255,0.14) !important;
+    border-radius: 999px !important; color: #b9b1c9 !important; font-size: 0.72rem !important;
+}
+.subject-hide-btn b, .week-hide-btn b { font-weight: 600; font-family: 'Work Sans', sans-serif; letter-spacing: 0.3px; }
+.subject-hide-btn:hover, .week-hide-btn:hover {
+    background: rgba(233,30,140,0.9) !important; border-color: var(--accent-pink) !important; color: #fff !important;
+}
+
+/* touch: hidden until a long-press reveals them */
+@media (hover: none), (pointer: coarse) {
+    .subject-hide-btn, .week-hide-btn { opacity: 0 !important; pointer-events: none !important; transform: scale(0.92); }
+    .card.ah-reveal .subject-hide-btn, .card.ah-reveal .week-hide-btn,
+    .card.locked.ah-reveal .week-hide-btn, .card.locked.ah-reveal .subject-hide-btn {
+        opacity: 1 !important; pointer-events: auto !important; transform: none;
+    }
+    .card.ah-reveal { box-shadow: 0 0 0 2px var(--accent-pink) inset; }
+}
+
+/* ---- in-week note: same language, but louder since it matters there ---- */
+.content-badge {
+    padding: 11px 16px !important; border-left: 4px solid var(--wk-note-c, #e91e8c);
+    background: color-mix(in srgb, var(--wk-note-c, #e91e8c) 14%, transparent) !important;
+    border-radius: 0 12px 12px 0 !important; color: #fff !important;
+    font-size: 1rem !important; font-weight: 600 !important;
+}
+@supports not (background: color-mix(in srgb, red 14%, transparent)) {
+    .content-badge { background: rgba(255,255,255,0.08) !important; }
+}
+
+/* ---- calmer page headers: less glow, tighter, more minimal ---- */
+.sub-tab, .cal-view-btn, .exam-view-card-label, .recent-btn, .schedule-btn,
+.midterm-btn, .deadline-btn, .useful-btn, .drive-btn {
+    box-shadow: none !important; letter-spacing: 0.6px !important;
+}
+.sub-tab { padding: 8px 16px !important; font-size: 0.75rem !important; border-radius: 10px !important; }
+.sub-tab.active { box-shadow: none !important; }
+.header-actions { gap: 10px !important; margin-bottom: 22px !important; }
+.subject-tabs { gap: 8px !important; margin-bottom: 18px !important; }
+h1 { text-shadow: none !important; }
+.info-box { box-shadow: none !important; border-width: 1px !important; }
+.cal-view-btn { border-radius: 10px !important; padding: 8px 15px !important; font-size: 0.8rem !important; }
+
+
+/* ================= v3e — V2 week cards, segmented toggles, timetable toolbar ================= */
+
+/* ---------- week cards: ghost numeral ---------- */
+#weeks-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important; }
+@media (max-width: 820px) { #weeks-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 14px !important; } }
+
+.card.wk-card {
+    container-type: inline-size; position: relative; overflow: hidden;
+    padding: 19px 20px; flex-direction: column; text-align: left; align-items: stretch;
+    justify-content: flex-start; min-height: 158px; height: 100%;
+}
+.wk-ghost {
+    position: absolute; right: -2cqw; bottom: -4cqw; z-index: 1; pointer-events: none;
+    font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: -2px; line-height: 1;
+    font-size: clamp(3rem, 34cqw, 5.4rem); color: rgba(181, 25, 214, 0.13);
+}
+.card.wk-card.is-event .wk-ghost { color: rgba(74, 144, 226, 0.13); }
+.card.locked .wk-ghost { color: rgba(255, 255, 255, 0.06); }
+
+.wk-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; position: relative; z-index: 2; padding-right: 46px; padding-left: 0; }
+.wk-title { font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--accent-purple);
+    font-size: clamp(0.95rem, 6.6cqw, 1.4rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card.wk-card.is-event .wk-title { color: var(--accent-blue); }
+.wk-lock { color: #888; font-size: 0.75rem; flex-shrink: 0; }
+
+.wk-note { position: relative; z-index: 2; margin: 0; padding: 0 34cqw 0 0; border: 0; background: none;
+    color: #e2d6f5; font-size: clamp(0.72rem, 4.4cqw, 0.85rem); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.card.locked > .wk-note { opacity: 1 !important; filter: none !important; }
+
+.wk-foot { position: relative; z-index: 2; margin-top: auto; padding: 12px 30cqw 0 0; display: flex;
+    align-items: center; gap: 9px; flex-wrap: wrap; font-size: clamp(0.6rem, 3.6cqw, 0.7rem); color: #8b8397;
+    transition: padding-bottom 0.2s ease; }
+.wk-foot:empty { display: none; }
+.wk-locked-txt { font-size: 0.66rem; letter-spacing: 1.5px; text-transform: uppercase; color: #6f6f7a; font-weight: 700; }
+
+/* NEW marker — dot + word, top right */
+.wk-new { position: absolute; top: 12px; right: 12px; z-index: 5; display: inline-flex; align-items: center; gap: 5px;
+    font-size: clamp(0.5rem, 3cqw, 0.57rem); letter-spacing: 1.2px; font-weight: 700; text-transform: uppercase;
+    color: var(--accent-pink); font-family: 'Work Sans', sans-serif; }
+.wk-new::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-pink);
+    box-shadow: 0 0 8px var(--accent-pink); flex-shrink: 0; }
+
+/* hide button: bottom-left, fades in, date lifts to make room */
+.card.wk-card .week-hide-btn {
+    top: auto !important; bottom: 12px !important; left: 12px !important; right: auto !important;
+    height: 24px !important; padding: 0 8px !important; border-radius: 999px !important;
+    background: rgba(0,0,0,0.55) !important; border: 1px solid rgba(255,255,255,0.18) !important;
+    color: #c3bbd1 !important; font-size: 0.65rem !important; backdrop-filter: blur(4px); z-index: 6;
+}
+.card.wk-card:hover .week-hide-btn, .card.wk-card.ah-reveal .week-hide-btn {
+    background: rgba(0,0,0,0.55) !important;
+}
+.card.wk-card .week-hide-btn:hover { background: var(--accent-pink) !important; border-color: var(--accent-pink) !important; color: #fff !important; }
+.card.wk-card:hover .wk-foot, .card.wk-card.ah-reveal .wk-foot { padding-bottom: 30px; }
+
+/* ---------- Semester Map: segmented toggle ---------- */
+#schedule-view-toggle { display: flex !important; justify-content: center; gap: 0 !important; margin-bottom: 10px; }
+.ah-seg .cal-view-btn {
+    border: 0 !important; background: transparent !important; color: #9a92ad !important;
+    font: 600 0.78rem 'Work Sans', sans-serif !important; padding: 7px 15px !important;
+    border-radius: 8px !important; box-shadow: none !important; letter-spacing: 0 !important; text-transform: none !important;
+}
+.ah-seg .cal-view-btn i { color: #9a92ad; }
+.ah-seg .cal-view-btn:hover { color: #fff !important; }
+.ah-seg .cal-view-btn.active { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
+.ah-seg .cal-view-btn.active i { color: var(--accent-pink); }
+
+/* ---------- Midterms / Finals: one joined switch ---------- */
+#exam-view-toggle { display: flex !important; justify-content: center; gap: 0 !important; margin: 0 auto 14px; }
+.exam-view-card {
+    border: 0 !important; border-right: 1px solid rgba(255,255,255,0.1) !important; border-radius: 0 !important;
+    background: transparent !important; box-shadow: none !important; padding: 11px 22px !important; min-width: 0 !important;
+}
+.exam-view-card:last-child { border-right: 0 !important; }
+.exam-view-card.active { background: rgba(255,255,255,0.08) !important; }
+.exam-view-card-label { font-size: 0.8rem !important; font-weight: 600 !important; color: #9a92ad !important;
+    letter-spacing: 0.4px !important; text-transform: none !important; }
+.exam-view-card.active .exam-view-card-label { color: #fff !important; }
+.exam-view-card-count { font-size: 0.65rem !important; color: #7d7590 !important; }
+.exam-view-card.active .exam-view-card-count { color: #a99bc9 !important; }
+
+/* ---------- Timetable: one organised toolbar ---------- */
+.tt-controls {
+    display: flex !important; flex-wrap: wrap; align-items: stretch; gap: 0 !important;
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; background: rgba(255,255,255,0.025);
+    overflow: hidden; margin-bottom: 18px; padding: 0 !important;
+}
+.tt-control-group {
+    display: flex !important; align-items: center; gap: 11px; padding: 12px 16px !important;
+    border: 0 !important; border-right: 1px solid rgba(255,255,255,0.08) !important; border-radius: 0 !important;
+    background: transparent !important; margin: 0 !important;
+}
+.tt-control-group:last-child { border-right: 0 !important; }
+/* subjects group takes its own full-width row */
+
+.tt-control-label {
+    font-family: 'Orbitron', sans-serif; font-size: 0.58rem !important; letter-spacing: 1.6px !important;
+    color: #7d7590 !important; text-transform: uppercase; margin: 0 !important; white-space: nowrap; padding-top: 2px;
+}
+/* section + timing pills become segmented controls */
+.tt-control-group:nth-child(1) > div:last-child,
+.tt-control-group:nth-child(2) > div:last-child {
+    display: inline-flex; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 9px; padding: 3px; gap: 2px;
+}
+.tt-pill {
+    border: 0 !important; background: transparent !important; color: #9a92ad !important;
+    font: 600 0.75rem 'Work Sans', sans-serif !important; padding: 6px 13px !important;
+    border-radius: 7px !important; box-shadow: none !important; margin: 0 !important;
+}
+.tt-pill.active { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
+.tt-pill.active i { color: var(--accent-pink); }
+/* subject chips: code-led, no colour coding */
+.tt-pill-sub {
+    color: #9a92ad !important; background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important; border-radius: 9px !important;
+    padding: 6px 11px !important; font-size: 0.75rem !important; box-shadow: none !important; margin: 0 4px 5px 0 !important;
+}
+.tt-pill-sub.active { background: rgba(255,255,255,0.1) !important; color: #fff !important; border-color: rgba(255,255,255,0.28) !important; }
+.tt-pill-sub .tt-check { color: var(--accent-pink) !important; }
+@media (max-width: 700px) {
+    .tt-control-group { flex-basis: 100%; border-right: 0 !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
+    .tt-control-group:last-child { border-bottom: 0 !important; }
+}
+
+
+/* ============ v3f — fixes: card alignment, note width, hide pill, centred toggles ============ */
+
+/* segmented group wrapper (keeps the container free to centre it) */
+.ah-seg { display: inline-flex; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; padding: 3px; gap: 2px; }
+.ah-seg-exam { padding: 0; border-radius: 12px; overflow: hidden; }
+.ah-seg-exam .exam-view-card { border-radius: 0 !important; }
+
+/* --- week card: top-left title, as designed --- */
+.card.wk-card { text-align: left !important; align-items: stretch !important; justify-content: flex-start !important; }
+.card.wk-card .wk-top { justify-content: flex-start !important; text-align: left; }
+.card.wk-card .wk-title { text-align: left; flex: 0 1 auto; }
+
+/* --- notes: only clear the ghost where the ghost actually is (bottom right) --- */
+.card.wk-card .wk-note { padding-right: 14cqw !important; }
+.card.wk-card .wk-foot { padding-right: 26cqw !important; }
+@container (max-width: 260px) {
+    .card.wk-card .wk-note { padding-right: 6cqw !important; }
+}
+
+/* --- hide pill: label + icon, bottom left, fades in --- */
+.card .week-hide-btn, .card .subject-hide-btn {
+    width: auto !important; height: 24px !important; padding: 0 9px !important;
+    display: inline-flex !important; align-items: center; gap: 6px;
+    background: rgba(0,0,0,0.55) !important; border: 1px solid rgba(255,255,255,0.18) !important;
+    border-radius: 999px !important; color: #c3bbd1 !important; font-size: 0.66rem !important;
+    backdrop-filter: blur(4px);
+}
+.card .week-hide-btn b, .card .subject-hide-btn b { font-weight: 600; font-family: 'Work Sans', sans-serif; letter-spacing: 0.3px; }
+.card .week-hide-btn::after, .card .subject-hide-btn::after { display: none !important; content: none !important; }
+.card .week-hide-btn:hover, .card .subject-hide-btn:hover {
+    background: var(--accent-pink) !important; border-color: var(--accent-pink) !important; color: #fff !important;
+}
+.card.wk-card .week-hide-btn { top: auto !important; bottom: 12px !important; left: 12px !important; right: auto !important; }
+.card .subject-hide-btn { top: 12px !important; right: 12px !important; left: auto !important; }
+
+/* locked cards: keep the pill usable, dim everything else */
+.card.locked > .week-hide-btn { opacity: 0 !important; }
+.card.locked:hover > .week-hide-btn { opacity: 1 !important; pointer-events: auto !important; filter: none !important; }
+@media (hover: none), (pointer: coarse) {
+    .card.locked.ah-reveal > .week-hide-btn { opacity: 1 !important; pointer-events: auto !important; }
+}
+
+
+/* ---- filter active: hide week notes ---- */
+#weeks-grid.filtered .wk-note { display: none !important; }
+
+/* ---- exam-materials (event) cards: universal mark instead of a number ---- */
+.card.wk-card.is-event .wk-ghost { font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: clamp(2.4rem, 24cqw, 4rem); }
+
+
+/* ---- timetable: collapsed subjects bar ---- */
+.tt-subjects-cell { flex: 1; min-width: 200px; justify-content: flex-end; flex-wrap: wrap; border-right: 0 !important; }
+.tt-edit-btn {
+    display: inline-flex; align-items: center; gap: 9px; background: transparent; border: 0; cursor: pointer;
+    color: var(--accent-purple); font: 600 0.74rem 'Work Sans', sans-serif; padding: 4px 2px; letter-spacing: 0.4px;
+}
+.tt-edit-btn .tt-count { padding: 4px 10px; border-radius: 999px; background: rgba(233,30,140,0.15); color: #f5a8d5; font-size: 0.7rem; }
+.tt-edit-btn i { font-size: 0.6rem; transition: transform 0.2s; }
+.tt-subjects-cell.open .tt-edit-btn i { transform: rotate(180deg); }
+.tt-subject-list { display: none; flex-basis: 100%; padding-top: 11px; margin-top: 11px; border-top: 1px solid rgba(255,255,255,0.08); }
+.tt-subjects-cell.open .tt-subject-list { display: block; }
+@media (max-width: 700px) {
+    .tt-subjects-cell { justify-content: flex-start; }
+}
+
+/* ================= v4 — exams tab day cards, underline toggle, exam-material ghosts ================= */
+
+/* ---------- Midterms / Finals: underline tabs + hidden icon button ---------- */
+#exam-view-toggle.ah-exam-toggle-wrap {
+    display: flex !important; align-items: center; justify-content: center; gap: 14px !important;
+    position: relative; max-width: 860px; margin: 0 auto 22px !important; padding: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.ah-exam-tabs { display: flex; gap: 30px; justify-content: center; }
+.ah-exam-tab { padding: 6px 2px 12px; cursor: pointer; position: relative; text-align: center; user-select: none; }
+.ah-exam-tab-lbl {
+    font-family: 'Orbitron', sans-serif; font-size: 0.82rem; font-weight: 800;
+    letter-spacing: 1px; text-transform: uppercase; color: #888; transition: color 0.2s;
+}
+.ah-exam-tab:hover .ah-exam-tab-lbl { color: #ccc; }
+.ah-exam-tab.active .ah-exam-tab-lbl { color: #fff; }
+.ah-exam-tab-cnt { font-size: 0.68rem; color: #666; margin-top: 2px; }
+.ah-exam-tab.active .ah-exam-tab-cnt { color: #007aff; }
+.ah-exam-tab.fin.active .ah-exam-tab-cnt { color: #d97706; }
+.ah-exam-tab.active::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px;
+    border-radius: 3px; background: #007aff; box-shadow: 0 0 10px #007aff;
+}
+.ah-exam-tab.fin.active::after { background: #d97706; box-shadow: 0 0 10px #d97706; }
+
+.ah-exam-hidden-icon {
+    position: absolute; right: 0; bottom: 10px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);
+    color: #999; width: 30px; height: 30px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.8rem; transition: 0.2s;
+}
+.ah-exam-hidden-icon:hover { background: rgba(255,255,255,0.08); color: #ccc; }
+.ah-exam-hidden-badge {
+    position: absolute; top: -5px; right: -5px; background: #007aff; color: #0a0012;
+    font-size: 0.55rem; font-weight: 900; min-width: 15px; height: 15px; padding: 0 3px;
+    border-radius: 999px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+}
+.ah-exam-hidden-icon.fin .ah-exam-hidden-badge { background: #d97706; }
+
+/* ---------- exam day blocks ---------- */
+.ah-exam-day {
+    background: var(--card-bg); backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(255,255,255,0.08); border-radius: 22px;
+    padding: 18px 20px; margin-bottom: 14px;
+}
+.ah-exam-day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.ah-exam-day-date { font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 800; color: #fff; }
+.ah-exam-day-rel {
+    font-size: 0.72rem; color: var(--exam-accent, #007aff);
+    background: color-mix(in srgb, var(--exam-accent, #007aff) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--exam-accent, #007aff) 30%, transparent);
+    padding: 2px 10px; border-radius: 10px; white-space: nowrap; flex-shrink: 0;
+}
+@supports not (background: color-mix(in srgb, red 12%, transparent)) {
+    .ah-exam-day-rel { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); }
+}
+
+.ah-exam-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* reserved right-hand lane so the hide button never overlaps the time/location */
+.ah-exam-chip {
+    flex: 1 1 220px; background: rgba(255,255,255,0.03);
+    border: 1.5px solid rgba(255,255,255,0.08); border-radius: 14px;
+    padding: 14px 40px 14px 16px; cursor: pointer; transition: 0.2s; position: relative;
+}
+.ah-exam-chip:hover { border-color: var(--chip-c, #007aff); background: rgba(255,255,255,0.05); }
+.ah-exam-chip.solo { flex: 1 1 100%; display: flex; align-items: center; gap: 14px; }
+.ah-exam-chip.stacked { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+
+.ah-exam-dot {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--chip-c, #007aff);
+    flex-shrink: 0; box-shadow: 0 0 8px var(--chip-c, #007aff);
+}
+.ah-exam-body { flex: 1; min-width: 0; }
+.ah-exam-name { font-weight: 700; font-size: 0.9rem; color: #fff; }
+.ah-exam-meta { font-size: 0.74rem; color: var(--text-sub); margin-top: 2px; }
+.ah-exam-right { text-align: right; flex-shrink: 0; }
+.ah-exam-time { font-family: 'Orbitron', sans-serif; font-size: 0.92rem; font-weight: 800; color: var(--chip-c, #007aff); }
+.ah-exam-loc { font-size: 0.7rem; color: #8b8397; margin-top: 2px; }
+
+.ah-exam-chip.stacked .ah-exam-top { display: flex; align-items: center; gap: 8px; width: 100%; }
+.ah-exam-chip.stacked .ah-exam-name { font-size: 0.85rem; }
+.ah-exam-chip.stacked .ah-exam-time { margin-left: auto; font-size: 0.8rem; }
+.ah-exam-chip.stacked .ah-exam-meta { padding-left: 18px; }
+
+/* grey hide button, matching the rest of the site */
+.ah-exam-hide {
+    position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
+    border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.22); color: #d0d0d0;
+    border-radius: 999px; width: 24px; height: 24px; display: flex; align-items: center;
+    justify-content: center; font-size: 0.78rem; opacity: 0; transition: 0.2s; cursor: pointer; padding: 0;
+}
+.ah-exam-chip:hover .ah-exam-hide { opacity: 1; }
+.ah-exam-hide:hover { color: #fff; border-color: rgba(255,255,255,0.34); background: rgba(255,255,255,0.08); }
+@media (hover: none), (pointer: coarse) { .ah-exam-hide { opacity: 0.65; } }
+
+@media (max-width: 600px) {
+    .ah-exam-chip { flex: 1 1 100%; }
+    .ah-exam-chip.solo { flex-wrap: wrap; }
+    .ah-exam-day { padding: 15px 14px; }
+    .ah-exam-tabs { gap: 22px; }
+}
+
+/* ---------- exam-material cards: icon ghost, same shell as week cards ---------- */
+.wk-ghost-icon {
+    position: absolute; right: -0.3cqw; bottom: -0.6cqw; z-index: 1; pointer-events: none;
+    font-size: clamp(3.4rem, 28cqw, 5.2rem); color: rgba(181, 25, 214, 0.13); line-height: 1;
+}
+.card.locked .wk-ghost-icon { color: rgba(255, 255, 255, 0.06); }
+/* exam-material cards are visually identical to week cards: same purple title,
+   same ghost tint, same plain note. Only the ghost glyph differs. */
+.card.wk-card.is-event .wk-title { color: var(--accent-purple) !important; }
+.card.wk-card.is-event .wk-ghost,
+.card.wk-card.is-event .wk-ghost-icon { color: rgba(181, 25, 214, 0.13) !important; }
+.card.wk-card.is-event .wk-note { padding-left: 0 !important; border-left: 0 !important; }
+.card.wk-card.is-event { border-left-width: 2px !important; }
+.card.locked.wk-card.is-event .wk-ghost,
+.card.locked.wk-card.is-event .wk-ghost-icon { color: rgba(255, 255, 255, 0.06) !important; }

@@ -1,4 +1,4 @@
-/* VERSION: 2026-07-03 (7.4 icons + polish b) — subject cards now show the ACTUAL loaded semester (window.__ahSemName) with its season icon, not the stale per-subject field; ahIcon FA-class passthrough; stale "Updated X ago" hidden after 30 days. If this dated line is present, you have the current file. */
+/* VERSION: 2026-09-12b — v4: exam card colours matched to weeks, exam screenshot export rebuilt, per-tab settings entries removed. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -159,14 +159,15 @@
     function applyHashRoute() {
         const raw = decodeURIComponent(String(location.hash || '').replace(/^#/, '').trim());
         if (!raw) {
-            nav('home', false);
+            ahGoToDefaultTab();
             return;
         }
 
         const lower = raw.toLowerCase();
-        const pageMap = new Set(['home', 'recent', 'schedule', 'deadlines', 'midterm', 'useful-links', 'timetable', 'directory', 'gpa', 'updates']);
+        const pageMap = new Set(['dashboard', 'home', 'recent', 'schedule', 'deadlines', 'midterm', 'useful-links', 'timetable', 'directory', 'gpa', 'updates']);
         if (pageMap.has(lower)) {
-            if (lower === 'home') nav('home', false);
+            if (lower === 'dashboard') showDashboard(false);
+            else if (lower === 'home') nav('home', false);
             else if (lower === 'recent') showRecent();
             else if (lower === 'schedule') showSchedule(false, 'home');
             else if (lower === 'deadlines') showDeadlines(false);
@@ -492,7 +493,8 @@
     }
 
     function refreshCurrentFilteredPage() {
-        if (currentPageId === 'home') init();
+        if (currentPageId === 'dashboard') { init(); renderDashboard(); }
+        else if (currentPageId === 'home') init();
         else if (currentPageId === 'recent') showRecent();
         else if (currentPageId === 'schedule') renderScheduleContent();
         else if (currentPageId === 'deadlines') showDeadlines(false);
@@ -630,7 +632,7 @@
         }
     }
 
-    const NAV_TAB_ORDER = ['home', 'schedule', 'deadlines', 'midterm', 'useful-links', 'timetable', 'directory', 'gpa'];
+    const NAV_TAB_ORDER = ['dashboard', 'home', 'schedule', 'deadlines', 'midterm', 'useful-links', 'timetable', 'directory', 'gpa'];
 
     function getPageLabel(pageId) {
         const labels = {
@@ -866,7 +868,7 @@
                 </div>`;
             const hideBtn = document.createElement('button');
             hideBtn.className = 'subject-hide-btn';
-            hideBtn.innerHTML = '<span class="eye-icon"><i class="fa-solid fa-eye"></i></span>';
+            hideBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i><b>Hide</b>';
             hideBtn.title = 'Hide subject';
             hideBtn.onclick = (ev) => {
                 ev.stopPropagation();
@@ -909,7 +911,8 @@
                     if(!currSub) { nav('home', false); return; } 
                 }
                 
-                if(event.state.page === 'home') nav('home', false);
+                if(event.state.page === 'dashboard') showDashboard(false);
+                else if(event.state.page === 'home') nav('home', false);
                 else if(event.state.page === 'recent') nav('recent', false);
                 else if(event.state.page === 'schedule') showSchedule(false, event.state.from || 'home');
                 else if(event.state.page === 'deadlines') showDeadlines(false);
@@ -941,7 +944,7 @@
         if (!hashRouteListenerBound) {
             window.addEventListener('hashchange', function() {
                 if (!window.location.hash || window.location.hash === '#') {
-                    nav('home', false);
+                    ahGoToDefaultTab();
                     return;
                 }
                 applyHashRoute();
@@ -2629,13 +2632,16 @@
         if (!filterContainer || !viewToggleContainer) return;
 
         viewToggleContainer.innerHTML = '';
+        const _segGroup = document.createElement('div');
+        _segGroup.className = 'ah-seg';
+        viewToggleContainer.appendChild(_segGroup);
         ['<i class="fa-solid fa-list"></i> List','<i class="fa-solid fa-calendar-days"></i> Calendar'].forEach((label, i) => {
             const mode = i === 0 ? 'list' : 'calendar';
             const btn = document.createElement('button');
             btn.className = 'cal-view-btn' + (scheduleViewMode === mode ? ' active' : '');
-            btn.textContent = label;
+            btn.innerHTML = label;
             btn.addEventListener('click', () => { scheduleViewMode = mode; renderScheduleWeeksGrid(); renderScheduleFilters(); });
-            viewToggleContainer.appendChild(btn);
+            _segGroup.appendChild(btn);
         });
 
         const subCodes = new Set();
@@ -3164,84 +3170,150 @@
             });
     }
 
-    // ── shared exam list renderer ────────────────────────────────────────────
+    // ── shared exam list renderer (v4: day-block cards) ──────────────────────
+    function ahRelativeDayLabel(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr + 'T00:00:00');
+        if (isNaN(d)) return '';
+        const today = new Date(); today.setHours(0,0,0,0);
+        const diff = Math.round((d - today) / 86400000);
+        if (diff === 0) return 'today';
+        if (diff === 1) return 'tomorrow';
+        if (diff > 1) return 'in ' + diff + ' days';
+        if (diff === -1) return 'yesterday';
+        return Math.abs(diff) + ' days ago';
+    }
+
     function renderExamList(container, sortedEntries, accentColor, hiddenSet, saveHiddenFn, openModalFn, openHiddenPanelFn, hiddenPanelSlotId, hiddenBtnClass, footerText) {
         container.innerHTML = '';
 
-        const hiddenCount = hiddenSet.size;
-        if (hiddenCount > 0) {
-            const hiddenBtn = document.createElement('button');
-            hiddenBtn.className = hiddenBtnClass;
-            hiddenBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Hidden (' + hiddenCount + ') — tap to manage';
-            hiddenBtn.addEventListener('click', openHiddenPanelFn);
-            container.appendChild(hiddenBtn);
-            const slot = document.createElement('div');
-            slot.id = hiddenPanelSlotId;
-            container.appendChild(slot);
+        // hidden panel mount point always exists (icon button lives in the toggle row)
+        const slot = document.createElement('div');
+        slot.id = hiddenPanelSlotId;
+        container.appendChild(slot);
+
+        // group visible exams by dateLabel, preserving sorted order
+        const groups = [];
+        const byLabel = {};
+        sortedEntries.forEach(function(entry) {
+            if (hiddenSet.has(entry.origIdx)) return;
+            const key = entry.exam.dateLabel || 'Date TBD';
+            if (!byLabel[key]) { byLabel[key] = { label: key, date: entry.exam.date || '', items: [] }; groups.push(byLabel[key]); }
+            byLabel[key].items.push(entry);
+        });
+
+        if (groups.length === 0) {
+            const empty = document.createElement('div');
+            empty.style.cssText = 'text-align:center; color:#777; padding:40px 20px; font-style:italic;';
+            empty.textContent = hiddenSet.size > 0 ? 'All exams are hidden. Use the eye button above to restore them.' : 'No exams scheduled yet.';
+            container.appendChild(empty);
+            return;
         }
 
-        let lastDate = '';
-        sortedEntries.forEach(function(entry) {
-            const exam = entry.exam;
-            const idx = entry.origIdx;
-            if (hiddenSet.has(idx)) return;
+        groups.forEach(function(group) {
+            const block = document.createElement('div');
+            block.className = 'ah-exam-day';
+            block.style.setProperty('--exam-accent', accentColor);
 
-            if (exam.dateLabel !== lastDate) {
-                const dateEl = document.createElement('div');
-                dateEl.style.cssText = "font-family:'Orbitron',sans-serif; font-size:1.1rem; letter-spacing:2px; color:" + accentColor + "; text-transform:uppercase; margin-bottom:10px; margin-top:30px; padding-left:2px; font-weight:bold;";
-                dateEl.textContent = exam.dateLabel;
-                container.appendChild(dateEl);
-                lastDate = exam.dateLabel;
+            const head = document.createElement('div');
+            head.className = 'ah-exam-day-head';
+            const dLabel = document.createElement('span');
+            dLabel.className = 'ah-exam-day-date';
+            dLabel.textContent = group.label;
+            head.appendChild(dLabel);
+            const rel = ahRelativeDayLabel(group.date);
+            if (rel) {
+                const rLabel = document.createElement('span');
+                rLabel.className = 'ah-exam-day-rel';
+                rLabel.textContent = rel;
+                head.appendChild(rLabel);
             }
+            block.appendChild(head);
 
-            let subName = exam.sub;
-            if (window.COURSE_DATA) {
-                const sObj = window.COURSE_DATA.find(function(s){ return s.code === exam.sub; });
-                if (sObj) subName = sObj.name;
-            }
+            const row = document.createElement('div');
+            row.className = 'ah-exam-row';
+            const solo = group.items.length === 1;
 
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.style.cssText = 'border-left:4px solid ' + getSubjectColor(exam.sub) + '; flex-direction:row; cursor:pointer; padding:14px 18px; margin-bottom:10px; display:flex; align-items:center;';
-            card.dataset.link = '#midterm';
-            card.addEventListener('click', (function(i){ return function(){ openModalFn(i); }; })(idx));
+            group.items.forEach(function(entry) {
+                const exam = entry.exam;
+                const idx = entry.origIdx;
+                const col = getSubjectColor(exam.sub);
 
-            const badge = document.createElement('span');
-            badge.className = 'sub-badge';
-            badge.style.cssText = 'background:' + getSubjectBg(exam.sub) + '; color:' + getSubjectColor(exam.sub) + '; min-width:52px; font-size:0.72rem; padding:5px 10px; border-radius:8px;';
-            badge.textContent = exam.sub;
+                let subName = exam.sub;
+                if (window.COURSE_DATA) {
+                    const sObj = window.COURSE_DATA.find(function(s){ return s.code === exam.sub; });
+                    if (sObj) subName = sObj.name;
+                }
 
-            const info = document.createElement('div');
-            info.style.flex = '1';
-            info.style.marginLeft = '15px';
-            const n1 = document.createElement('div');
-            n1.style.cssText = 'font-weight:600; font-size:0.95rem; color:var(--text-main);';
-            n1.textContent = subName;
-            const n2 = document.createElement('div');
-            n2.style.cssText = 'font-size:0.78rem; color:var(--text-sub); margin-top:2px;';
-            n2.textContent = exam.examCode;
-            info.appendChild(n1); info.appendChild(n2);
+                const chip = document.createElement('div');
+                chip.className = 'ah-exam-chip' + (solo ? ' solo' : ' stacked');
+                chip.style.setProperty('--chip-c', col);
+                chip.dataset.link = '#midterm';
+                chip.addEventListener('click', (function(i){ return function(){ openModalFn(i); }; })(idx));
 
-            const time = document.createElement('div');
-            time.style.cssText = "font-family:'Orbitron',sans-serif; font-size:0.9rem; font-weight:700; color:" + accentColor + "; white-space:nowrap; flex-shrink:0; margin-right:10px;";
-            time.textContent = exam.time;
+                const dot = document.createElement('span');
+                dot.className = 'ah-exam-dot';
 
-            const hideBtn = document.createElement('button');
-            hideBtn.textContent = 'Hide';
-            hideBtn.style.cssText = 'background:none; border:1px solid rgba(255,255,255,0.1); color:#555; padding:4px 8px; border-radius:8px; cursor:pointer; font-size:0.72rem; flex-shrink:0;';
-            hideBtn.addEventListener('mouseenter', function(){ hideBtn.style.color='#ff3b30'; hideBtn.style.borderColor='rgba(255,59,48,0.3)'; });
-            hideBtn.addEventListener('mouseleave', function(){ hideBtn.style.color='#555'; hideBtn.style.borderColor='rgba(255,255,255,0.1)'; });
-            hideBtn.addEventListener('click', (function(i){ return function(e){
-                e.stopPropagation();
-                const sy = window.scrollY;
-                hiddenSet.add(i);
-                saveHiddenFn();
-                renderCurrentExamView(false);
-                requestAnimationFrame(()=>window.scrollTo(0,sy));
-            }; })(idx));
+                const time = document.createElement('span');
+                time.className = 'ah-exam-time';
+                time.textContent = exam.time || '';
 
-            card.appendChild(badge); card.appendChild(info); card.appendChild(time); card.appendChild(hideBtn);
-            container.appendChild(card);
+                const nameEl = document.createElement('span');
+                nameEl.className = 'ah-exam-name';
+                nameEl.textContent = subName;
+
+                const meta = document.createElement('div');
+                meta.className = 'ah-exam-meta';
+
+                if (solo) {
+                    const body = document.createElement('div');
+                    body.className = 'ah-exam-body';
+                    meta.textContent = [exam.examCode, exam.note].filter(Boolean).join(' — ');
+                    body.appendChild(nameEl);
+                    if (meta.textContent) body.appendChild(meta);
+
+                    const right = document.createElement('div');
+                    right.className = 'ah-exam-right';
+                    right.appendChild(time);
+                    if (exam.where) {
+                        const loc = document.createElement('div');
+                        loc.className = 'ah-exam-loc';
+                        loc.textContent = exam.where;
+                        right.appendChild(loc);
+                    }
+                    chip.appendChild(dot);
+                    chip.appendChild(body);
+                    chip.appendChild(right);
+                } else {
+                    const top = document.createElement('div');
+                    top.className = 'ah-exam-top';
+                    top.appendChild(dot);
+                    top.appendChild(nameEl);
+                    top.appendChild(time);
+                    meta.textContent = [exam.examCode, exam.where].filter(Boolean).join(' · ');
+                    chip.appendChild(top);
+                    if (meta.textContent) chip.appendChild(meta);
+                }
+
+                const hideBtn = document.createElement('button');
+                hideBtn.className = 'ah-exam-hide';
+                hideBtn.title = 'Hide this exam';
+                hideBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+                hideBtn.addEventListener('click', (function(i){ return function(e){
+                    e.stopPropagation();
+                    const sy = window.scrollY;
+                    hiddenSet.add(i);
+                    saveHiddenFn();
+                    renderCurrentExamView(false);
+                    requestAnimationFrame(function(){ window.scrollTo(0, sy); });
+                }; })(idx));
+                chip.appendChild(hideBtn);
+
+                row.appendChild(chip);
+            });
+
+            block.appendChild(row);
+            container.appendChild(block);
         });
 
         const footer = document.createElement('div');
@@ -3308,7 +3380,7 @@
         slot.appendChild(panel);
     }
 
-    // ── toggle rendering ─────────────────────────────────────────────────────
+    // ── toggle rendering (v4: underline tabs + icon hidden button) ───────────
     function renderExamToggle() {
         const wrap = document.getElementById('exam-view-toggle');
         if (!wrap) return;
@@ -3329,26 +3401,37 @@
         }
 
         wrap.innerHTML = '';
+        wrap.className = 'ah-exam-toggle-wrap';
 
-        const midCard = document.createElement('div');
-        midCard.className = 'exam-view-card exam-view-card-midterms' + (examViewMode === 'midterms' ? ' active' : '');
-        midCard.innerHTML = '<div class="exam-view-card-label">Midterms</div><div class="exam-view-card-count">' + midCount + ' exam' + (midCount !== 1 ? 's' : '') + '</div>';
-        midCard.addEventListener('click', function() {
-            examViewMode = 'midterms';
-            saveExamViewMode();
-            renderCurrentExamView(false);
-        });
-        wrap.appendChild(midCard);
+        const tabs = document.createElement('div');
+        tabs.className = 'ah-exam-tabs';
 
-        const finCard = document.createElement('div');
-        finCard.className = 'exam-view-card exam-view-card-finals' + (examViewMode === 'finals' ? ' active' : '');
-        finCard.innerHTML = '<div class="exam-view-card-label">Finals</div><div class="exam-view-card-count">' + (hasFinals ? finCount + ' exam' + (finCount !== 1 ? 's' : '') : 'Coming soon') + '</div>';
-        finCard.addEventListener('click', function() {
-            examViewMode = 'finals';
-            saveExamViewMode();
-            renderCurrentExamView(false);
-        });
-        wrap.appendChild(finCard);
+        function mkTab(mode, label, countTxt, isFin) {
+            const t = document.createElement('div');
+            t.className = 'ah-exam-tab' + (isFin ? ' fin' : '') + (examViewMode === mode ? ' active' : '');
+            t.innerHTML = '<div class="ah-exam-tab-lbl">' + label + '</div><div class="ah-exam-tab-cnt">' + countTxt + '</div>';
+            t.addEventListener('click', function() {
+                examViewMode = mode;
+                saveExamViewMode();
+                renderCurrentExamView(false);
+            });
+            return t;
+        }
+
+        tabs.appendChild(mkTab('midterms', 'Midterms', midCount + ' exam' + (midCount !== 1 ? 's' : ''), false));
+        tabs.appendChild(mkTab('finals', 'Finals', hasFinals ? finCount + ' exam' + (finCount !== 1 ? 's' : '') : 'Coming soon', true));
+        wrap.appendChild(tabs);
+
+        // hidden-exams icon button, only when something is hidden
+        const activeHidden = examViewMode === 'finals' ? finalHiddenSet : midtermHiddenSet;
+        if (activeHidden && activeHidden.size > 0) {
+            const hBtn = document.createElement('button');
+            hBtn.className = 'ah-exam-hidden-icon' + (examViewMode === 'finals' ? ' fin' : '');
+            hBtn.title = 'Manage hidden exams';
+            hBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i><span class="ah-exam-hidden-badge">' + activeHidden.size + '</span>';
+            hBtn.addEventListener('click', examViewMode === 'finals' ? openFinalHiddenPanel : openMidtermHiddenPanel);
+            wrap.appendChild(hBtn);
+        }
     }
 
     // ── renders whichever view is currently active ───────────────────────────
@@ -3659,6 +3742,7 @@
     }
 
     function showWeeks(sub, push = true) {
+        try { ahTrackSubjectOpen(arguments[0]); } catch(e) {}
         if (!sub || isSubjectHidden(sub.code)) {
             nav('home', push);
             return;
@@ -4126,6 +4210,7 @@
             return;
         }
 
+        if (grid) grid.classList.toggle('filtered', filterType !== 'ALL');
         if(filterType === 'ALL') {
             let visibleCount = 0;
             sourceArr.forEach((w, i) => {
@@ -4135,21 +4220,31 @@
                 el.className = 'card' + (w.locked ? ' locked' : '');
                 el.setAttribute('data-week-index', i);
                 
-                if(isEvent) el.style.borderLeft = `4px solid var(--accent-blue)`;
+                /* exam-material cards share the week-card border; no blue stripe */
 
-                const lockIcon = w.locked ? '<div class="week-lock-icon" style="font-size:2rem; margin-bottom:10px"><i class="fa-solid fa-lock"></i></div>' : '';
-                const status = w.locked ? 'UNAVAILABLE' : 'CLICK TO VIEW';
-                const badge = isWeekNew(w) ? '<span class="badge-new">NEW!</span>' : '';
-                let customBadge = '';
-                if(w.showBadge && w.badgeText) {
-                    customBadge = `<div class="custom-badge" style="background:${w.badgeColor || '#e91e8c'}">${w.badgeText}</div>`;
-                }
+                const lockIcon = w.locked ? '<span class="wk-lock"><i class="fa-solid fa-lock"></i></span>' : '';
+                const badge = isWeekNew(w) ? '<span class="wk-new">New</span>' : '';
+                const note = (w.showBadge && w.badgeText)
+                    ? `<div class="wk-note">${w.badgeText}</div>`
+                    : '';
+                const examGhost = isEvent ? ahExamGhost(w) : null;
+                const ghostNum = isEvent ? '' : ahWeekGhostNumber(w);
+                el.classList.add('wk-card');
+                if (isEvent) el.classList.add('is-event');
                 el.style.position = 'relative';
                 el.dataset.link = buildWeekHash(currSub.code, w, isEvent);
-                el.innerHTML = `${customBadge}${lockIcon}<div style="font-family:'Orbitron'; font-size:1.5rem; color:${isEvent?'var(--accent-blue)':'var(--accent-purple)'}; margin-bottom:5px; padding-top:10px;">${w.title}${badge}</div><div style="color:#888; font-size:0.8rem">${status}</div>${getUpdatedAgoHtml(w)}`;
+                const ghostHtml = isEvent
+                    ? (examGhost.kind === 'num'
+                        ? `<span class="wk-ghost">${examGhost.value}</span>`
+                        : `<i class="fa-solid ${examGhost.value} wk-ghost-icon"></i>`)
+                    : (ghostNum ? `<span class="wk-ghost">${ghostNum}</span>` : '');
+                el.innerHTML = `${ghostHtml}${badge}
+                    <div class="wk-top"><span class="wk-title">${w.title}</span>${lockIcon}</div>
+                    ${note}
+                    <div class="wk-foot">${w.locked ? '<span class="wk-locked-txt">Unavailable</span>' : ''}${getUpdatedAgoHtml(w)}</div>`;
                 const hideBtn = document.createElement('button');
                 hideBtn.className = 'week-hide-btn';
-                hideBtn.innerHTML = '<span class="eye-icon"><i class="fa-solid fa-eye"></i></span>';
+                hideBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i><b>Hide</b>';
                 hideBtn.title = 'Hide this week from this view';
                 hideBtn.onclick = (ev) => { ev.stopPropagation(); hideWeek(currSub.code, w, isEvent ? 'events' : 'weeks'); };
                 el.appendChild(hideBtn);
@@ -4173,26 +4268,32 @@
                         const isLocked = w.locked;
                         
                         el.className = 'card' + (isLocked ? ' locked' : '');
-                        if(isEvent) el.style.borderLeft = `4px solid var(--accent-blue)`;
+                        /* exam-material cards share the week-card border; no blue stripe */
 
                         const customBadge = (w.showBadge && w.badgeText)
-                            ? `<div class="custom-badge" style="background:${w.badgeColor || '#e91e8c'}">${w.badgeText}</div>`
+                            ? `<div class="wk-note">${w.badgeText}</div>`
                             : '';
                         const resBadgeCard = isResNew(res) ? '<div style="margin-top:5px;"><span class="badge-new" style="margin-left:0;">NEW!</span></div>' : '';
                         const notesHtml = (res.desc && res.desc.trim()) ? `<div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1); color:var(--text-sub); font-size:0.9rem; line-height:1.4; white-space:pre-wrap;">${res.desc}</div>` : '';
                         
                         el.style.position = 'relative';
-                        el.innerHTML = `
-                            ${customBadge}
-                            <div style="font-size:2.5rem; margin-bottom:10px">${ahIcon(iconMap[filterType] || '📂')}</div>
-                            <div style="font-weight:bold; text-transform:uppercase;">${filterType}</div>
-                            ${resBadgeCard}
-                            <div style="color:#aaa; font-size:0.9rem; margin-top:5px;">${w.title}</div>
-                            ${notesHtml}
-                        `;
+                        el.classList.add('wk-card');
+                        if (isEvent) el.classList.add('is-event');
+                        const resIconRaw = iconMap[filterType] || 'fa-folder-open';
+                        const resIconHtml = ahIcon(resIconRaw);
+                        const ghostIcon = /class="fa-solid ([a-z0-9- ]+)"/.exec(resIconHtml);
+                        const ghostCls = ghostIcon ? ghostIcon[1] : 'fa-folder-open';
+                        const resNewMark = isResNew(res) ? '<span class="wk-new">New</span>' : '';
+                        const descHtml = (res.desc && res.desc.trim())
+                            ? `<div class="wk-note">${w.title} \u2014 ${res.desc}</div>`
+                            : `<div class="wk-note">${w.title}</div>`;
+                        el.innerHTML = `<i class="fa-solid ${ghostCls} wk-ghost-icon"></i>${resNewMark}
+                            <div class="wk-top"><span class="wk-title">${filterType}</span>${isLocked ? '<span class="wk-lock"><i class="fa-solid fa-lock"></i></span>' : ''}</div>
+                            ${descHtml}
+                            <div class="wk-foot">${isLocked ? '<span class="wk-locked-txt">Unavailable</span>' : ''}${getUpdatedAgoHtml(w)}</div>`;
                         const hideBtn = document.createElement('button');
                         hideBtn.className = 'week-hide-btn';
-                        hideBtn.innerHTML = '<span class="eye-icon"><i class="fa-solid fa-eye"></i></span>';
+                        hideBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i><b>Hide</b>';
                         hideBtn.title = 'Hide this week from this view';
                         hideBtn.onclick = (ev) => { ev.stopPropagation(); hideWeek(currSub.code, w, isEvent ? 'events' : 'weeks'); };
                         el.appendChild(hideBtn);
@@ -4230,7 +4331,7 @@
         const badgeContainer = document.getElementById('content-badge-container');
         badgeContainer.innerHTML = '';
         if (weekOrEvent.showBadge && weekOrEvent.badgeText) {
-            badgeContainer.innerHTML = `<div class="content-badge" style="background:${weekOrEvent.badgeColor || '#e91e8c'}">${weekOrEvent.badgeText}</div>`;
+            badgeContainer.innerHTML = `<div class="content-badge" style="--wk-note-c:${weekOrEvent.badgeColor || '#e91e8c'}">${weekOrEvent.badgeText}</div>`;
         }
 
         const details = document.getElementById('week-details');
@@ -4616,7 +4717,8 @@
         closeMobileMenu();
         closeAllDropdowns();
         
-        if(id === 'home') nav('home');
+        if(id === 'dashboard') showDashboard();
+        else if(id === 'home') nav('home');
         else if(id === 'recent') showRecent();
         else if(id === 'schedule') showSchedule();
         else if(id === 'deadlines') showDeadlines();
@@ -5395,6 +5497,7 @@
         if (policy.word)       actions.push({ icon: '<i class="fa-solid fa-file-word"></i>', label: 'Save Word',   fn: 'downloadContextWord()' });
         if (policy.screenshot) actions.push({ icon: '<i class="fa-solid fa-image"></i>', label: 'Screenshot',  fn: 'downloadContextScreenshot()' });
         if (policy.share)      actions.push({ icon: '<i class="fa-solid fa-share-nodes"></i>', label: 'Share',        fn: 'openShareMenu()' });
+        /* navbar auto-hide + default-tab live in the Settings panel, not here */
 
         if (!actions.length) {
             qa.innerHTML = '';
@@ -5716,30 +5819,60 @@
                 return 0;
             });
 
-            let lastDate = '';
+            const expRgb = isFinals ? '204,34,0' : '0,122,255';
             let innerHtml = `<div style="font-family:Orbitron,Arial,sans-serif;font-size:26px;font-weight:900;color:${accentColor};text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;">${titleText}</div>`;
             innerHtml += `<div style="font-size:13px;color:#888;margin-bottom:28px;letter-spacing:1px;">Spring 2026</div>`;
 
             if (sorted.length === 0) {
                 innerHtml += `<div style="text-align:center;color:#555;padding:40px 0;font-size:14px;">No exams added yet.</div>`;
             } else {
+                const expGroups = [], expByLabel = {};
                 sorted.forEach(exam => {
-                    if (exam.dateLabel !== lastDate) {
-                        innerHtml += `<div style="font-family:Orbitron,Arial,sans-serif;font-size:11px;letter-spacing:2px;color:${accentColor};text-transform:uppercase;margin-bottom:10px;margin-top:22px;font-weight:700;">${eHtml(exam.dateLabel)}</div>`;
-                        lastDate = exam.dateLabel;
-                    }
-                    let subName = exam.sub;
-                    const sObj = (window.COURSE_DATA || []).find(s => s.code === exam.sub);
-                    if (sObj) subName = sObj.name;
-                    innerHtml += `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(${isFinals?'204,34,0':'0,122,255'},0.1);border:1px solid rgba(${isFinals?'204,34,0':'0,122,255'},0.3);border-radius:10px;margin-bottom:8px;">
-                        <div style="flex:1;">
-                            <div style="color:#fff;font-weight:600;font-size:15px;">${eHtml(subName)}</div>
-                            <div style="color:#888;font-size:12px;margin-top:2px;">${eHtml(exam.examCode || '')}</div>
+                    const key = exam.dateLabel || 'Date TBD';
+                    if (!expByLabel[key]) { expByLabel[key] = { label: key, date: exam.date || '', items: [] }; expGroups.push(expByLabel[key]); }
+                    expByLabel[key].items.push(exam);
+                });
+                expGroups.forEach(group => {
+                    const solo = group.items.length === 1;
+                    const rel = ahRelativeDayLabel(group.date);
+                    innerHtml += `<div style="background:rgba(39,18,68,0.6);border:1.5px solid rgba(255,255,255,0.08);border-radius:22px;padding:18px 20px;margin-bottom:14px;">
+                        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px;">
+                            <span style="font-family:Orbitron,Arial,sans-serif;font-size:16px;font-weight:800;color:#fff;">${eHtml(group.label)}</span>
+                            ${rel ? `<span style="font-size:11px;color:${accentColor};background:rgba(${expRgb},0.12);border:1px solid rgba(${expRgb},0.3);padding:2px 10px;border-radius:10px;white-space:nowrap;">${eHtml(rel)}</span>` : ''}
                         </div>
-                        <div style="text-align:right;flex-shrink:0;">
-                            <div style="color:${accentColor};font-weight:700;font-size:14px;font-family:Orbitron,sans-serif;">${eHtml(exam.time || '')}</div>
-                        </div>
-                    </div>`;
+                        <div style="display:flex;flex-wrap:wrap;gap:10px;">`;
+                    group.items.forEach(exam => {
+                        let subName = exam.sub;
+                        const sObj = (window.COURSE_DATA || []).find(s => s.code === exam.sub);
+                        if (sObj) subName = sObj.name;
+                        const col = (typeof getSubjectColor === 'function') ? getSubjectColor(exam.sub) : accentColor;
+                        const dot = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0;"></span>`;
+                        if (solo) {
+                            const metaTxt = [exam.examCode, exam.note].filter(Boolean).join(' \u2014 ');
+                            innerHtml += `<div style="flex:1 1 100%;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
+                                ${dot}
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-weight:700;font-size:15px;color:#fff;">${eHtml(subName)}</div>
+                                    ${metaTxt ? `<div style="font-size:12px;color:#c4b5db;margin-top:2px;">${eHtml(metaTxt)}</div>` : ''}
+                                </div>
+                                <div style="text-align:right;flex-shrink:0;">
+                                    <div style="font-family:Orbitron,Arial,sans-serif;font-size:15px;font-weight:800;color:${col};">${eHtml(exam.time || '')}</div>
+                                    ${exam.where ? `<div style="font-size:11px;color:#8b8397;margin-top:2px;">${eHtml(exam.where)}</div>` : ''}
+                                </div>
+                            </div>`;
+                        } else {
+                            const metaTxt = [exam.examCode, exam.where].filter(Boolean).join(' \u00b7 ');
+                            innerHtml += `<div style="flex:1 1 220px;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;">
+                                <div style="display:flex;align-items:center;gap:8px;width:100%;">
+                                    ${dot}
+                                    <span style="font-weight:700;font-size:14px;color:#fff;">${eHtml(subName)}</span>
+                                    <span style="margin-left:auto;font-family:Orbitron,Arial,sans-serif;font-size:13px;font-weight:800;color:${col};">${eHtml(exam.time || '')}</span>
+                                </div>
+                                ${metaTxt ? `<div style="font-size:12px;color:#c4b5db;padding-left:18px;">${eHtml(metaTxt)}</div>` : ''}
+                            </div>`;
+                        }
+                    });
+                    innerHtml += `</div></div>`;
                 });
             }
             innerHtml += `<div style="text-align:center;margin-top:28px;font-size:11px;color:#555;letter-spacing:3px;">GOOD LUCK &nbsp;✦&nbsp; SPRING 2026</div>`;
@@ -6707,7 +6840,10 @@
         html += `<span class="tt-pill ${ttMode==='ramadan'?'active':''}" onclick="ttSetMode('ramadan')"><i class="fa-solid fa-moon"></i> Ramadan</span>`;
         html += '</div></div>';
         // Subject checkboxes
-        html += '<div class="tt-control-group" style="flex:1; min-width:280px;"><div class="tt-control-label">Subjects</div><div>';
+        const _ttShown = ttSelectedSubjects.length, _ttTotal = (TD.subjects || []).length;
+        html += `<div class="tt-control-group tt-subjects-cell${window.__ttSubjectsOpen ? ' open' : ''}"><div class="tt-control-label">Subjects</div>`;
+        html += `<button class="tt-edit-btn" onclick="ttToggleSubjects()"><span class="tt-count">${_ttShown} of ${_ttTotal}</span> <span class="tt-edit-word">Edit</span> <i class="fa-solid fa-chevron-down"></i></button>`;
+        html += '<div class="tt-subject-list"><div>';
         TD.subjects.forEach(sub => {
             const c = TT_SUBJECT_COLORS[sub] || { text:'#aaa' };
             const active = ttSelectedSubjects.includes(sub);
@@ -8154,22 +8290,56 @@
             const da = a.exam.date || '', db = b.exam.date || '';
             return da < db ? -1 : da > db ? 1 : 0;
         });
-        let lastDate = '', innerHtml = '', hasAny = false;
+        let innerHtml = '', hasAny = false;
+        const expGroups = [], expByLabel = {};
         sorted.forEach(({ exam, origIdx }) => {
             if (hiddenSet.has(origIdx)) return;
             hasAny = true;
-            let subName = exam.sub;
-            const sObj = (window.COURSE_DATA || []).find(s => s.code === exam.sub);
-            if (sObj) subName = sObj.name;
-            if (exam.dateLabel !== lastDate) {
-                innerHtml += `<div style="font-family:Orbitron,sans-serif;font-size:11px;letter-spacing:2px;color:${accentColor};text-transform:uppercase;margin-bottom:10px;margin-top:22px;font-weight:700;">${eHtml(exam.dateLabel)}</div>`;
-                lastDate = exam.dateLabel;
-            }
-            innerHtml += `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(${accentRgb},0.1);border:1px solid rgba(${accentRgb},0.3);border-radius:10px;margin-bottom:8px;">
-                <div style="background:rgba(${accentRgb},0.2);color:${accentColor};font-family:Orbitron,sans-serif;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;min-width:48px;text-align:center;">${eHtml(exam.sub)}</div>
-                <div style="flex:1;"><div style="color:#fff;font-weight:600;font-size:15px;">${eHtml(subName)}</div><div style="color:#888;font-size:12px;margin-top:2px;">${eHtml(exam.examCode || '')}</div></div>
-                <div style="text-align:right;flex-shrink:0;"><div style="color:${accentColor};font-weight:700;font-size:14px;font-family:Orbitron,sans-serif;">${eHtml(exam.time || '')}</div></div>
-            </div>`;
+            const key = exam.dateLabel || 'Date TBD';
+            if (!expByLabel[key]) { expByLabel[key] = { label: key, date: exam.date || '', items: [] }; expGroups.push(expByLabel[key]); }
+            expByLabel[key].items.push(exam);
+        });
+        expGroups.forEach(group => {
+            const solo = group.items.length === 1;
+            const rel = ahRelativeDayLabel(group.date);
+            innerHtml += `<div style="background:rgba(39,18,68,0.6);border:1.5px solid rgba(255,255,255,0.08);border-radius:22px;padding:18px 20px;margin-bottom:14px;">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px;">
+                    <span style="font-family:Orbitron,sans-serif;font-size:16px;font-weight:800;color:#fff;">${eHtml(group.label)}</span>
+                    ${rel ? `<span style="font-size:11px;color:${accentColor};background:rgba(${accentRgb},0.12);border:1px solid rgba(${accentRgb},0.3);padding:2px 10px;border-radius:10px;white-space:nowrap;">${eHtml(rel)}</span>` : ''}
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">`;
+            group.items.forEach(exam => {
+                let subName = exam.sub;
+                const sObj = (window.COURSE_DATA || []).find(s => s.code === exam.sub);
+                if (sObj) subName = sObj.name;
+                const col = (typeof getSubjectColor === 'function') ? getSubjectColor(exam.sub) : accentColor;
+                const dot = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0;"></span>`;
+                if (solo) {
+                    const metaTxt = [exam.examCode, exam.note].filter(Boolean).join(' \u2014 ');
+                    innerHtml += `<div style="flex:1 1 100%;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
+                        ${dot}
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-weight:700;font-size:15px;color:#fff;">${eHtml(subName)}</div>
+                            ${metaTxt ? `<div style="font-size:12px;color:#c4b5db;margin-top:2px;">${eHtml(metaTxt)}</div>` : ''}
+                        </div>
+                        <div style="text-align:right;flex-shrink:0;">
+                            <div style="font-family:Orbitron,sans-serif;font-size:15px;font-weight:800;color:${col};">${eHtml(exam.time || '')}</div>
+                            ${exam.where ? `<div style="font-size:11px;color:#8b8397;margin-top:2px;">${eHtml(exam.where)}</div>` : ''}
+                        </div>
+                    </div>`;
+                } else {
+                    const metaTxt = [exam.examCode, exam.where].filter(Boolean).join(' \u00b7 ');
+                    innerHtml += `<div style="flex:1 1 220px;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;">
+                        <div style="display:flex;align-items:center;gap:8px;width:100%;">
+                            ${dot}
+                            <span style="font-weight:700;font-size:14px;color:#fff;">${eHtml(subName)}</span>
+                            <span style="margin-left:auto;font-family:Orbitron,sans-serif;font-size:13px;font-weight:800;color:${col};">${eHtml(exam.time || '')}</span>
+                        </div>
+                        ${metaTxt ? `<div style="font-size:12px;color:#c4b5db;padding-left:18px;">${eHtml(metaTxt)}</div>` : ''}
+                    </div>`;
+                }
+            });
+            innerHtml += `</div></div>`;
         });
         if (!hasAny) innerHtml = `<div style="text-align:center;color:#555;padding:40px 0;font-size:14px;">No exams to display.</div>`;
         shell.innerHTML = innerHtml;
@@ -8683,3 +8853,521 @@
 
         nav('home', false);
     });
+
+
+    /* ===================== HOME DASHBOARD (v3) ===================== */
+    const AH_RECENT_SUBS_KEY = 'wbw_recent_subjects';
+
+    function ahTrackSubjectOpen(sub) {
+        if (!sub || !sub.code) return;
+        try {
+            let list = JSON.parse(localStorage.getItem(AH_RECENT_SUBS_KEY) || '[]');
+            list = list.filter(x => x && x.code !== sub.code);
+            list.unshift({ code: sub.code, ts: Date.now() });
+            localStorage.setItem(AH_RECENT_SUBS_KEY, JSON.stringify(list.slice(0, 8)));
+        } catch (e) {}
+    }
+
+    function ahGetRecentSubjects() {
+        try {
+            const list = JSON.parse(localStorage.getItem(AH_RECENT_SUBS_KEY) || '[]');
+            return list.map(x => {
+                const sub = (window.COURSE_DATA || []).find(s => s.code === x.code);
+                return sub && !isSubjectHidden(sub.code) ? { sub, ts: x.ts } : null;
+            }).filter(Boolean);
+        } catch (e) { return []; }
+    }
+
+    function ahAgo(ts) {
+        const d = Date.now() - ts;
+        const mins = Math.floor(d / 60000), hrs = Math.floor(mins / 60), days = Math.floor(hrs / 24);
+        if (days > 0) return days + 'd ago';
+        if (hrs > 0) return hrs + 'h ago';
+        if (mins > 0) return mins + 'm ago';
+        return 'just now';
+    }
+
+    function ahEsc(str) {
+        return String(str == null ? '' : str).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+
+    // Upcoming deadlines, same rules as the navbar dropdown.
+    function ahUpcomingDeadlines() {
+        const out = [];
+        const now = Date.now();
+        (window.SCHEDULE_DATA || []).forEach((wk, wIndex) => {
+            getVisibleScheduleTasks(wk.tasks).forEach((t) => {
+                const tIndex = (wk.tasks || []).indexOf(t);
+                const signature = buildScheduleDeadlineSignature(wIndex, tIndex, wk.week, t);
+                if (getDeadlineState(signature) !== 'active') return;
+                if (t.isCompleted) return;
+                const parsedStart = getTaskEffectiveDeadlineMeta(t, wk.week);
+                const ts = parsedStart.timestamp;
+                const compareTs = parsedStart.hasTime ? ts : getEndOfDayTimestamp(ts);
+                if (ts === 0 || compareTs <= now) {
+                    if (t.deadlineEndDate && compareTs <= now) {
+                        const pe = parseDateMeta(t.deadlineEndDate);
+                        const ce = pe.hasTime ? pe.timestamp : getEndOfDayTimestamp(pe.timestamp);
+                        if (ce > now) out.unshift({ task: t, ts, compareTs, week: wk.week, isOngoing: true });
+                    }
+                    return;
+                }
+                out.push({ task: t, ts, compareTs, week: wk.week });
+            });
+        });
+        (window.NEWS_DATA || []).forEach((n, newsIndex) => {
+            if (!n || !n.hasDeadline) return;
+            if (n.sub && isSubjectHidden(n.sub)) return;
+            const signature = buildNewsDeadlineSignature(newsIndex, n);
+            if (getDeadlineState(signature) !== 'active') return;
+            const ts = parseNewsDeadlineTs(n.deadlineDate, n.deadlineTime);
+            const hasTime = !!(n.deadlineTime && String(n.deadlineTime).trim() !== '');
+            const compareTs = hasTime ? ts : getEndOfDayTimestamp(ts);
+            if (ts === 0 || compareTs <= now) return;
+            out.push({ task: { icon: n.emoji || '📢', name: n.title || 'Announcement', sub: n.sub || 'NEWS' }, ts, compareTs, week: 'News', source: 'news' });
+        });
+        out.sort((a, b) => { if (a.isOngoing && !b.isOngoing) return -1; if (!a.isOngoing && b.isOngoing) return 1; return a.compareTs - b.compareTs; });
+        return out;
+    }
+
+    function ahDeadlineLabel(item) {
+        if (item.isOngoing) return { text: 'NOW', urgent: false, ongoing: true };
+        const diff = item.compareTs - Date.now();
+        const totalHours = diff / 3600000;
+        const fullDays = Math.floor(totalHours / 24);
+        const remain = totalHours - fullDays * 24;
+        const daysLeft = remain >= 16 ? fullDays + 1 : fullDays;
+        if (daysLeft <= 0) return { text: 'TODAY', urgent: true };
+        if (daysLeft === 1) return { text: 'TOMORROW', urgent: true };
+        return { text: daysLeft + ' days', urgent: false };
+    }
+
+    // Recently added weeks/resources (reuses the 14-day NEW rules).
+    function ahJustAdded(limit) {
+        const items = [];
+        (window.COURSE_DATA || []).forEach(sub => {
+            if (isSubjectHidden(sub.code)) return;
+            [...(sub.weeks || []), ...(sub.events || [])].forEach(wk => {
+                if (isWeekNew(wk)) items.push({ name: wk.title, sub: sub.name, subObj: sub, wkObj: wk, ts: _tsOf(wk.createdAt), icon: 'fa-calendar-plus' });
+                if (wk.resources) Object.keys(wk.resources).forEach(k => {
+                    const res = wk.resources[k];
+                    if (res && res.vis && isResNew(res)) items.push({ name: k, sub: sub.name + ' · ' + wk.title, subObj: sub, wkObj: wk, ts: _tsOf(res.createdAt), icon: 'fa-file-lines' });
+                });
+            });
+        });
+        items.sort((a, b) => b.ts - a.ts);
+        return items.slice(0, limit || 4);
+    }
+
+    function ahDashDeadlines() {
+        const list = ahUpcomingDeadlines().slice(0, 3);
+        let html = '<div class="dash-w-head"><span class="dash-w-ic"><i class="fa-solid fa-hourglass-half"></i></span><h2>Upcoming deadlines</h2><span class="dash-see" onclick="showDeadlines()">See all</span></div>';
+        if (!list.length) {
+            html += '<div class="dash-empty"><i class="fa-solid fa-circle-check"></i> All clear — nothing due.</div>';
+            return html;
+        }
+        list.forEach(item => {
+            const lab = ahDeadlineLabel(item);
+            const cls = lab.urgent ? ' urgent' : (lab.ongoing ? ' ongoing' : '');
+            html += `<div class="dash-dl${cls}" onclick="showDeadlines()">
+                <span class="dash-dl-ic"><i class="fa-solid ${lab.urgent ? 'fa-triangle-exclamation' : 'fa-clipboard-list'}"></i></span>
+                <span class="dash-dl-txt"><b>${ahEsc(item.task.name)}</b><i>${ahEsc(item.task.sub || item.week || '')}</i></span>
+                <span class="dash-dl-when">${lab.text}</span></div>`;
+        });
+        return html;
+    }
+
+    function ahDashNew() {
+        const list = ahJustAdded(4);
+        let html = '<div class="dash-w-head"><span class="dash-w-ic"><i class="fa-solid fa-bolt"></i></span><h2>Just added</h2><span class="dash-see" onclick="showRecent()">History</span></div>';
+        if (!list.length) { html += '<div class="dash-empty">Nothing new in the last while.</div>'; return html; }
+        list.forEach((it, i) => {
+            html += `<div class="dash-fd" data-dash-new="${i}">
+                <span class="dash-fd-ic"><i class="fa-solid ${it.icon}"></i></span>
+                <span class="dash-fd-txt"><b>${ahEsc(it.name)}</b><i>${ahEsc(it.sub)}</i></span>
+                <span class="badge-new">NEW</span></div>`;
+        });
+        return html;
+    }
+
+    function ahDashGpa() {
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem('wbw_gpa_state') || 'null'); } catch (e) {}
+        const rows = saved && Array.isArray(saved.rows) ? saved.rows.filter(r => r && r.grade) : [];
+        let html = '<div class="dash-w-head"><span class="dash-w-ic"><i class="fa-solid fa-graduation-cap"></i></span><h2>GPA</h2>' +
+                   (rows.length ? '<span class="dash-see" onclick="showGpa()">Open</span>' : '') + '</div>';
+        if (!rows.length) {
+            html += `<div class="dash-gpa-empty">
+                <span class="dash-gpa-ei"><i class="fa-solid fa-graduation-cap"></i></span>
+                <b>No GPA yet</b>
+                <p>Add your subjects once — it stays saved on this device.</p>
+                <button class="dash-cta" onclick="showGpa()"><i class="fa-solid fa-plus"></i> Set up my GPA</button></div>`;
+            return html;
+        }
+        const val = (saved && (saved.lastGpa || saved.gpa)) ? String(saved.lastGpa || saved.gpa) : null;
+        html += `<div class="dash-gpa">
+            <span class="dash-gpa-num">${val ? ahEsc(val) : rows.length}</span>
+            <span class="dash-gpa-info"><i>${val ? 'Saved GPA' : rows.length + ' subjects saved'}</i>
+            <button class="dash-cta sm" onclick="showGpa()"><i class="fa-solid fa-calculator"></i> Open calculator</button></span></div>`;
+        return html;
+    }
+
+    function ahDashNews() {
+        const items = (typeof getVisibleNewsItems === 'function' ? getVisibleNewsItems() : (window.NEWS_DATA || [])).slice(0, 2);
+        let seen = [];
+        try { seen = getSeenNewsKeys ? getSeenNewsKeys() : []; } catch (e) {}
+        let html = '<div class="dash-w-head"><span class="dash-w-ic"><i class="fa-solid fa-bullhorn"></i></span><h2>Announcements</h2><span class="dash-see" onclick="openNewsPanel()">See all</span></div>';
+        if (!items.length) { html += '<div class="dash-empty">No announcements yet.</div>'; return html; }
+        items.forEach((n, i) => {
+            let unread = false;
+            try { unread = getNewsItemKey && seen.indexOf(getNewsItemKey(n)) === -1; } catch (e) {}
+            const body = ahEsc(n.text || '');
+            html += `<details class="dash-an"${i === 0 ? ' open' : ''}>
+                <summary>${unread ? '<span class="dash-an-dot"></span>' : ''}<span class="dash-an-t">${ahEsc(n.title || 'Announcement')}</span>
+                <span class="dash-an-chev"><i class="fa-solid fa-chevron-down"></i></span></summary>
+                ${body ? `<div class="dash-an-body">${body}</div>` : ''}</details>`;
+        });
+        return html;
+    }
+
+    function ahDashJump() {
+        const list = ahGetRecentSubjects().slice(0, 4);
+        if (!list.length) return '';
+        let html = '<div class="dash-w-head"><span class="dash-w-ic"><i class="fa-solid fa-clock-rotate-left"></i></span><h2>Jump back in</h2></div><div class="dash-jump">';
+        list.forEach((x, i) => {
+            html += `<div class="dash-jc" data-dash-jump="${i}"><b>${ahEsc(x.sub.code)}</b><i>${ahAgo(x.ts)}</i></div>`;
+        });
+        return html + '</div>';
+    }
+
+    function renderDashboard() {
+        const dl = document.getElementById('dw-deadlines');
+        if (!dl) return;
+        const upcoming = ahUpcomingDeadlines();
+        const added = ahJustAdded(20);
+
+        const sub = document.getElementById('dash-subline');
+        if (sub) {
+            const bits = [];
+            if (upcoming.length) bits.push(upcoming.length + ' upcoming deadline' + (upcoming.length > 1 ? 's' : ''));
+            if (added.length) bits.push(added.length + ' new item' + (added.length > 1 ? 's' : ''));
+            sub.textContent = bits.length ? bits.join(' · ') : "You're all caught up";
+        }
+
+        dl.innerHTML = ahDashDeadlines();
+        document.getElementById('dw-new').innerHTML = ahDashNew();
+        document.getElementById('dw-gpa').innerHTML = ahDashGpa();
+        document.getElementById('dw-news').innerHTML = ahDashNews();
+
+        const jumpHost = document.getElementById('dw-jump');
+        const jumpHtml = ahDashJump();
+        jumpHost.innerHTML = jumpHtml;
+        jumpHost.style.display = jumpHtml ? '' : 'none';
+
+        // wire click targets that need object references
+        const addedTop = ahJustAdded(4);
+        document.querySelectorAll('[data-dash-new]').forEach(el => {
+            const it = addedTop[+el.getAttribute('data-dash-new')];
+            if (it) el.onclick = () => { currSub = it.subObj; showContentByObj(it.wkObj); };
+        });
+        const recents = ahGetRecentSubjects().slice(0, 4);
+        document.querySelectorAll('[data-dash-jump]').forEach(el => {
+            const it = recents[+el.getAttribute('data-dash-jump')];
+            if (it) el.onclick = () => showWeeks(it.sub);
+        });
+    }
+
+    function showDashboard(push = true) {
+        renderDashboard();
+        nav('dashboard', push);
+    }
+    window.showDashboard = showDashboard;
+    window.renderDashboard = renderDashboard;
+
+
+    /* ============ DEFAULT TAB (v3) ============ */
+    const AH_DEFAULT_TAB_KEY = 'wbw_default_tab';
+    const AH_DEFAULT_TABS = ['dashboard','home','schedule','deadlines','midterm','useful-links','timetable','directory','gpa'];
+
+    function ahGetDefaultTab() {
+        try {
+            const v = localStorage.getItem(AH_DEFAULT_TAB_KEY);
+            if (v && AH_DEFAULT_TABS.indexOf(v) !== -1) return v;
+        } catch (e) {}
+        return 'dashboard';
+    }
+
+    // Which tab the current view counts as (subject views belong to Subjects).
+    function ahDefaultTabCandidate() {
+        let id = (typeof getActivePageId === 'function') ? getActivePageId() : currentPageId;
+        if (id === 'weeks' || id === 'content') id = 'home';
+        return AH_DEFAULT_TABS.indexOf(id) !== -1 ? id : null;
+    }
+
+    function ahGoToTab(id, push) {
+        if (id === 'dashboard') return showDashboard(push);
+        if (id === 'home') return nav('home', push);
+        if (id === 'schedule') return showSchedule(push, 'home');
+        if (id === 'deadlines') return showDeadlines(push);
+        if (id === 'midterm') return showMidterms(push, 'home');
+        if (id === 'useful-links') return showUsefulLinks(push, currentUsefulFilter, currentUsefulSubject);
+        if (id === 'timetable') return showTimetable(push);
+        if (id === 'directory') return showDirectory(push);
+        if (id === 'gpa') return showGpa(push);
+        return showDashboard(push);
+    }
+
+    function ahGoToDefaultTab() { ahGoToTab(ahGetDefaultTab(), false); }
+
+    function ahToggleDefaultTab() {
+        const cand = ahDefaultTabCandidate();
+        if (!cand) return;
+        const wasDefault = ahGetDefaultTab() === cand;
+        try {
+            if (wasDefault) localStorage.setItem(AH_DEFAULT_TAB_KEY, 'dashboard');
+            else localStorage.setItem(AH_DEFAULT_TAB_KEY, cand);
+        } catch (e) {}
+        closeUtilsMenu();
+        renderQuickActions();
+        const names = { dashboard:'Home', home:'Subjects', schedule:'Semester Map', deadlines:'Deadlines', midterm:'Midterms / Finals', 'useful-links':'Useful Links', timetable:'Timetable', directory:'Staff', gpa:'GPA' };
+        if (typeof showToast === 'function') {
+            showToast(wasDefault
+                ? '<i class="fa-solid fa-rotate-left"></i> Default tab reset to Home'
+                : '<i class="fa-solid fa-star"></i> ' + (names[cand] || cand) + ' is now your default tab');
+        }
+    }
+    window.ahToggleDefaultTab = ahToggleDefaultTab;
+
+
+    /* ============ WEEK CARD HELPERS (v3) ============ */
+    function ahShortWeekLabel(w, isEvent) {
+        const n = (typeof extractWeekNumber === 'function') ? extractWeekNumber(w.title) : null;
+        if (n !== null && n !== undefined && !isEvent) return 'W' + n;
+        if (n !== null && n !== undefined && isEvent) return 'E' + n;
+        const t = String(w.title || '').trim();
+        return t ? t.split(/\s+/).slice(0, 2).join(' ') : (isEvent ? 'Event' : 'Week');
+    }
+
+
+    /* ============ UI CHROME (v3): navbar auto-hide, floating buttons, scrollbar ============ */
+    const AH_NAV_AUTOHIDE_KEY = 'wbw_nav_autohide';
+
+    function ahNavAutoHideOn() {
+        try { return localStorage.getItem(AH_NAV_AUTOHIDE_KEY) !== 'off'; } catch (e) { return true; }
+    }
+
+    function ahToggleNavAutoHide() {
+        const on = ahNavAutoHideOn();
+        try { localStorage.setItem(AH_NAV_AUTOHIDE_KEY, on ? 'off' : 'on'); } catch (e) {}
+        const bar = document.getElementById('main-navbar');
+        if (bar && on) bar.classList.remove('nav-hidden');
+        closeUtilsMenu();
+        renderQuickActions();
+        if (typeof showToast === 'function') {
+            showToast(on
+                ? '<i class="fa-solid fa-thumbtack"></i> Navbar stays visible'
+                : '<i class="fa-solid fa-angles-up"></i> Navbar hides while scrolling down');
+        }
+    }
+    window.ahToggleNavAutoHide = ahToggleNavAutoHide;
+
+    (function ahChromeBehaviour() {
+        let lastY = 0, idleTimer = null;
+
+        function markActive() {
+            document.body.classList.add('ah-scrolling');
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => document.body.classList.remove('ah-scrolling'), 3000);
+        }
+
+        function onScroll() {
+            const y = window.scrollY || document.documentElement.scrollTop || 0;
+            markActive();
+            const bar = document.getElementById('main-navbar');
+            if (bar) {
+                const links = document.getElementById('nav-links');
+                const menuOpen = links && links.classList.contains('open');
+                if (!ahNavAutoHideOn() || menuOpen || y < 90) bar.classList.remove('nav-hidden');
+                else if (y > lastY + 6) bar.classList.add('nav-hidden');
+                else if (y < lastY - 6) bar.classList.remove('nav-hidden');
+            }
+            lastY = y;
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('touchstart', markActive, { passive: true });
+        window.addEventListener('mousemove', function (e) {
+            if (e.clientX < 110 || e.clientX > window.innerWidth - 110 || e.clientY > window.innerHeight - 130) markActive();
+        }, { passive: true });
+    })();
+
+
+    /* ============ SETTINGS PANEL (v3) ============ */
+    function ahSettingsRows() {
+        const names = { dashboard:'Home', home:'Subjects', schedule:'Semester Map', deadlines:'Deadlines', midterm:'Midterms / Finals', 'useful-links':'Useful Links', timetable:'Timetable', directory:'Staff', gpa:'GPA' };
+        const cur = ahGetDefaultTab();
+        const opts = AH_DEFAULT_TABS.map(t => `<option value="${t}"${t === cur ? ' selected' : ''}>${names[t] || t}</option>`).join('');
+        const navOn = ahNavAutoHideOn();
+        const chromeOn = ahChromeFadeOn();
+        return `
+        <div class="ah-set-row">
+            <div class="ah-set-txt"><b>Start on</b><i>Which tab opens when you visit the site</i></div>
+            <select class="ah-set-select" onchange="ahSetDefaultTabValue(this.value)">${opts}</select>
+        </div>
+        <div class="ah-set-row">
+            <div class="ah-set-txt"><b>Auto-hide navbar</b><i>Hides while scrolling down, returns when you scroll up</i></div>
+            <button class="ah-toggle${navOn ? ' on' : ''}" onclick="ahToggleNavAutoHide(); ahRenderSettings();" aria-pressed="${navOn}"><span></span></button>
+        </div>
+        <div class="ah-set-row">
+            <div class="ah-set-txt"><b>Fade floating buttons</b><i>Dims the corner buttons until you scroll or hover</i></div>
+            <button class="ah-toggle${chromeOn ? ' on' : ''}" onclick="ahToggleChromeFade(); ahRenderSettings();" aria-pressed="${chromeOn}"><span></span></button>
+        </div>`;
+    }
+
+    function ahRenderSettings() {
+        const host = document.getElementById('ah-settings-body');
+        if (host) host.innerHTML = ahSettingsRows();
+    }
+
+    function openSettingsPanel() {
+        let panel = document.getElementById('ah-settings');
+        if (!panel) {
+            panel = document.createElement('div');
+            panel.id = 'ah-settings';
+            panel.className = 'ah-settings';
+            panel.onclick = (e) => { if (e.target === panel) closeSettingsPanel(); };
+            panel.innerHTML = `<div class="ah-settings-card">
+                <div class="ah-settings-head">
+                    <span><i class="fa-solid fa-sliders"></i> Settings</span>
+                    <button class="ah-settings-x" onclick="closeSettingsPanel()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="ah-settings-body"></div>
+            </div>`;
+            document.body.appendChild(panel);
+        }
+        ahRenderSettings();
+        panel.style.display = 'flex';
+        requestAnimationFrame(() => panel.classList.add('active'));
+    }
+
+    function closeSettingsPanel() {
+        const panel = document.getElementById('ah-settings');
+        if (!panel) return;
+        panel.classList.remove('active');
+        setTimeout(() => { panel.style.display = 'none'; }, 200);
+    }
+
+    function ahSetDefaultTabValue(v) {
+        if (AH_DEFAULT_TABS.indexOf(v) === -1) return;
+        try { localStorage.setItem(AH_DEFAULT_TAB_KEY, v); } catch (e) {}
+        if (typeof renderQuickActions === 'function') renderQuickActions();
+    }
+
+    const AH_CHROME_FADE_KEY = 'wbw_chrome_fade';
+    function ahChromeFadeOn() {
+        try { return localStorage.getItem(AH_CHROME_FADE_KEY) !== 'off'; } catch (e) { return true; }
+    }
+    function ahToggleChromeFade() {
+        const on = ahChromeFadeOn();
+        try { localStorage.setItem(AH_CHROME_FADE_KEY, on ? 'off' : 'on'); } catch (e) {}
+        document.body.classList.toggle('ah-no-fade', on);
+    }
+    function ahApplyChromePref() {
+        document.body.classList.toggle('ah-no-fade', !ahChromeFadeOn());
+    }
+
+    window.openSettingsPanel = openSettingsPanel;
+    window.closeSettingsPanel = closeSettingsPanel;
+    window.ahRenderSettings = ahRenderSettings;
+    window.ahSetDefaultTabValue = ahSetDefaultTabValue;
+    window.ahToggleChromeFade = ahToggleChromeFade;
+
+    document.addEventListener('DOMContentLoaded', ahApplyChromePref);
+    ahApplyChromePref();
+
+
+    /* ============ LONG-PRESS TO REVEAL HIDE CONTROLS (touch) ============ */
+    (function ahLongPressHide() {
+        let timer = null, startX = 0, startY = 0, target = null;
+        const CLEAR = () => { clearTimeout(timer); timer = null; target = null; };
+
+        document.addEventListener('touchstart', function (e) {
+            const card = e.target.closest && e.target.closest('.card');
+            if (!card) return;
+            if (e.target.closest('.week-hide-btn, .subject-hide-btn')) return;
+            const t = e.touches[0];
+            startX = t.clientX; startY = t.clientY; target = card;
+            timer = setTimeout(function () {
+                document.querySelectorAll('.card.ah-reveal').forEach(c => { if (c !== card) c.classList.remove('ah-reveal'); });
+                card.classList.add('ah-reveal');
+                if (navigator.vibrate) { try { navigator.vibrate(12); } catch (err) {} }
+            }, 450);
+        }, { passive: true });
+
+        document.addEventListener('touchmove', function (e) {
+            if (!timer) return;
+            const t = e.touches[0];
+            if (Math.abs(t.clientX - startX) > 10 || Math.abs(t.clientY - startY) > 10) CLEAR();
+        }, { passive: true });
+
+        document.addEventListener('touchend', CLEAR, { passive: true });
+        document.addEventListener('touchcancel', CLEAR, { passive: true });
+
+        // tapping elsewhere puts the controls away again
+        document.addEventListener('touchstart', function (e) {
+            if (e.target.closest && e.target.closest('.card')) return;
+            document.querySelectorAll('.card.ah-reveal').forEach(c => c.classList.remove('ah-reveal'));
+        }, { passive: true });
+    })();
+
+
+    /* ghost numeral for week cards: "Week 7" -> "07"; no number -> no ghost */
+    /* Exam-material ghost: Quiz/Practical repeat so they get a number ghost;
+       Midterm/Final happen once so they get a type icon instead of a meaningless "1".
+       Admin-set w.examType wins; otherwise infer from the title. */
+    function ahExamGhost(w) {
+        const explicit = (w && w.examType ? String(w.examType) : '').toLowerCase().trim();
+        const title = (w && w.title ? String(w.title) : '').trim();
+        const lower = title.toLowerCase();
+
+        let type = explicit;
+        if (!type) {
+            if (/\bfinal/.test(lower)) type = 'final';
+            else if (/\bmid ?term|\bmidterm/.test(lower)) type = 'midterm';
+            else if (/\bpractical|\blab exam/.test(lower)) type = 'practical';
+            else if (/\bquiz/.test(lower)) type = 'quiz';
+            else type = 'other';
+        }
+
+        // explicit custom icon from admin (e.g. "fa-flask") always wins
+        if (w && w.examIcon) {
+            return { kind: 'icon', value: String(w.examIcon).replace(/^fa-solid\s+/, '') };
+        }
+
+        if (type === 'midterm') return { kind: 'icon', value: 'fa-file-pen' };
+        if (type === 'final')   return { kind: 'icon', value: 'fa-flag-checkered' };
+
+        // numbered types: pull the number out of the title
+        const m = title.match(/(\d+)/);
+        if (m) return { kind: 'num', value: m[1] };
+
+        if (type === 'quiz')      return { kind: 'icon', value: 'fa-brain' };
+        if (type === 'practical') return { kind: 'icon', value: 'fa-flask' };
+        return { kind: 'icon', value: 'fa-bullseye' };
+    }
+
+    function ahWeekGhostNumber(w) {
+        const n = (typeof extractWeekNumber === 'function') ? extractWeekNumber(w.title) : null;
+        if (n === null || n === undefined || isNaN(n)) return '';
+        return String(n).padStart(2, '0');
+    }
+
+
+    /* timetable: fold the subject chips away until asked for */
+    function ttToggleSubjects() {
+        window.__ttSubjectsOpen = !window.__ttSubjectsOpen;
+        const cell = document.querySelector('.tt-subjects-cell');
+        if (cell) cell.classList.toggle('open', window.__ttSubjectsOpen);
+    }
+    window.ttToggleSubjects = ttToggleSubjects;
+
