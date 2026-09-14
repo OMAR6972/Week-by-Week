@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12f — v5b: timetable subjects import from site subjects with editable display names. */
+/* VERSION: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -6090,7 +6090,7 @@
     }
 
     function setSeenNewsKeys(keys) {
-        localStorage.setItem(NEWS_SEEN_KEY, JSON.stringify(keys));
+        try { localStorage.setItem(NEWS_SEEN_KEY, JSON.stringify(keys)); } catch (e) {}
     }
 
     function isNewsVisibleToViewer(item) {
@@ -6370,7 +6370,9 @@
         lab: { label:'LAB', bg:'rgba(52,199,89,0.12)',   border:'rgba(52,199,89,0.4)', color:'#34c759', text:'#8ee4a8' }
     };
 
-    let ttSection = localStorage.getItem('tt_section') || '3-4';
+    /* v5d: '3-4' was hardcoded, so any semester using other section names
+       started on a section that didn't exist. Resolved from real data instead. */
+    let ttSection = (function(){ try { return localStorage.getItem('tt_section'); } catch(e){ return null; } })() || null;
     let ttSelectedSubjects = (() => {
         try {
             const raw = localStorage.getItem('tt_subjects');
@@ -6381,7 +6383,7 @@
             return null;
         }
     })();
-    let ttMode = localStorage.getItem('tt_mode') || 'normal';
+    let ttMode = (function(){ try { return localStorage.getItem('tt_mode'); } catch(e){ return null; } })() || 'normal';
     let studioTodayIndex = 0;
     let studioTempDayEvents = [];
     let studioBaseDayEvents = [];
@@ -6844,17 +6846,20 @@
         if (!Array.isArray(TD.subjects)) TD.subjects = [];
         if (!Array.isArray(TD.defaultSubjects)) TD.defaultSubjects = TD.subjects.slice();
         if (!ttSelectedSubjects) ttSelectedSubjects = [...TD.defaultSubjects];
-        if (!TD.sections[ttSection]) { const _k = Object.keys(TD.sections); if (_k.length) ttSection = _k[0]; }
+        if (!ttSection || !TD.sections[ttSection]) { const _k = Object.keys(TD.sections); if (_k.length) ttSection = _k[0]; }
 
         // Controls
         const ctrls = document.getElementById('timetable-controls');
         let html = '<div class="tt-controls">';
-        // Section selector
-        html += '<div class="tt-control-group"><div class="tt-control-label">Section</div><div>';
-        Object.keys(TD.sections).forEach(s => {
-            html += `<span class="tt-pill ${ttSection===s?'active':''}" onclick="ttSetSection('${s}')">${s}</span>`;
-        });
-        html += '</div></div>';
+        // Section selector — pointless to show when the semester has only one section.
+        const _ttSecKeys = Object.keys(TD.sections);
+        if (_ttSecKeys.length > 1) {
+            html += '<div class="tt-control-group"><div class="tt-control-label">Section</div><div>';
+            _ttSecKeys.forEach(s => {
+                html += `<span class="tt-pill ${ttSection===s?'active':''}" onclick="ttSetSection('${s}')">${s}</span>`;
+            });
+            html += '</div></div>';
+        }
         // Mode selector — only rendered when the admin has Ramadan timing enabled.
         // TD.ramadanEnabled is undefined on older saved data, which we treat as ON
         // so nothing disappears for existing semesters until an admin turns it off.
@@ -6944,19 +6949,19 @@
 
     function ttSetSection(s) {
         ttSection = s;
-        localStorage.setItem('tt_section', s);
+        try { localStorage.setItem('tt_section', s); } catch (e) {}
         renderTimetable();
     }
     function ttSetMode(m) {
         ttMode = m;
-        localStorage.setItem('tt_mode', m);
+        try { localStorage.setItem('tt_mode', m); } catch (e) {}
         renderTimetable();
     }
     function ttToggleSub(sub) {
         const idx = ttSelectedSubjects.indexOf(sub);
         if (idx >= 0) ttSelectedSubjects.splice(idx, 1);
         else ttSelectedSubjects.push(sub);
-        localStorage.setItem('tt_subjects', JSON.stringify(ttSelectedSubjects));
+        try { localStorage.setItem('tt_subjects', JSON.stringify(ttSelectedSubjects)); } catch (e) {}
         renderTimetable();
     }
 
@@ -7366,7 +7371,7 @@
                 cumGpa: gpaCumGpa,
                 cumHours: gpaCumHours
             };
-            localStorage.setItem(GPA_STORAGE_KEY, JSON.stringify(state));
+            try { localStorage.setItem(GPA_STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
         } catch(e) {}
     }
 
@@ -8894,7 +8899,7 @@
             let list = JSON.parse(localStorage.getItem(AH_RECENT_SUBS_KEY) || '[]');
             list = list.filter(x => x && x.code !== sub.code);
             list.unshift({ code: sub.code, ts: Date.now() });
-            localStorage.setItem(AH_RECENT_SUBS_KEY, JSON.stringify(list.slice(0, 8)));
+            try { localStorage.setItem(AH_RECENT_SUBS_KEY, JSON.stringify(list.slice(0, 8))); } catch (e) {}
         } catch (e) {}
     }
 

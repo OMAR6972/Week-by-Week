@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12g — v5c: per-admin tab permissions (RLS-enforced) + locked tab UI. */
+/* VERSION: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
 /* Academic Hub - admin-auth.js
    Login / sign-up / password-reset gate. Only users listed in the `admins`
    table get into the dashboard. On entry it loads the LIVE data for the

@@ -1,4 +1,4 @@
-/* VERSION: 2026-07-01b — stats: + detailed clicks (resources/links/contacts), per-subject resource drill-down (7.3c). If this dated line is present, you have the current file. */
+/* VERSION: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
 /* Academic Hub - admin-stats.js  (feature 7.3)
    ---------------------------------------------------------------------------
    "📊 Stats" sidebar item + dashboard charting the anonymous usage events that
@@ -59,10 +59,18 @@
   window.__ahAdminBoot = function () {
     if (typeof _origBoot === 'function') _origBoot();
     try { injectNav(); } catch (e) {}
+    /* v5c: the Stats button is added after the permission pass runs, so
+       re-apply it here or the lock would never reach this tab. */
+    try { if (typeof window.ahApplyNavPermissions === 'function') window.ahApplyNavPermissions(); } catch (e) {}
   };
 
   // ───────────────────────────── open the panel ──────────────────────────────
   window.toggleStats = function () {
+    /* second gate: even if the click somehow gets through, don't open. */
+    if (typeof window.__ahCanEdit === 'function' && !window.__ahCanEdit('stats')) {
+      if (typeof window.ahShowLockedNotice === 'function') window.ahShowLockedNotice('stats');
+      return;
+    }
     if (typeof setView === 'function') setView('stats');
     document.querySelectorAll('.nav-btn').forEach(function (b) { b.classList.remove('active'); });
     var nb = document.getElementById('nav-stats'); if (nb) nb.classList.add('active');
@@ -204,7 +212,12 @@
 
     q.then(function (res) {
       if (res.error) {
-        status('Could not load stats: ' + res.error.message + '  (Did you run academic_hub_stats.sql?)', true);
+        var _m = res.error.message || '';
+        if (/row-level security|policy|permission denied/i.test(_m)) {
+          status('You do not have permission to view stats.', true);
+        } else {
+          status('Could not load stats: ' + _m + '  (Did you run academic_hub_stats.sql?)', true);
+        }
         return;
       }
       lastRows = res.data || [];

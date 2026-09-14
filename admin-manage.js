@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12g — v5c: per-admin tab permissions (RLS-enforced) + locked tab UI. */
+/* VERSION: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
 /* Academic Hub - admin-manage.js
    Visual "Admins" panel. Only the OWNER (super admin) sees the button.
    Lets the owner add / remove admins by email - no SQL needed. */
@@ -15,7 +15,8 @@
     { key: 'staff',         label: 'Staff Contacts' },
     { key: 'timetable',     label: 'Timetable' },
     { key: 'announcements', label: 'Announcements & Updates' },
-    { key: 'config',        label: 'Config' }
+    { key: 'config',        label: 'Config' },
+    { key: 'stats',         label: 'Stats' }
   ];
 
   // called by admin-auth.js after a successful login + boot

@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12g — v5c: per-admin tab permissions (RLS-enforced) + locked tab UI. */
+/* VERSION: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
 /* Academic Hub - admin.js (extracted from admin.html, Phase 1) */
     let cIdx = 0; let wIdx = 0; let eIdx = 0; let pIdx = 0; let schWIdx = 0; 
     let schedulePanelMode = 'weeks';
@@ -2045,7 +2045,9 @@
     }
 
     // --- TIMETABLE MANAGER ---
-    let ttAdminSection = '3-4';
+    /* v5d: was hardcoded to '3-4', which broke any semester using different
+       section names. Resolved from the real data on first use instead. */
+    let ttAdminSection = null;
     let ttAdminView = 'subject'; // 'subject' or 'day'
     let ttAdminSubject = null;
     let ttAdminDay = 0;
@@ -2081,7 +2083,7 @@
         if (!TD.subjectMeta || typeof TD.subjectMeta !== 'object') TD.subjectMeta = {};
         if (!TD.sections || typeof TD.sections !== 'object' || Object.keys(TD.sections).length === 0) TD.sections = {"1-2":[],"3-4":[]};
         if (TD.ramadanEnabled === undefined) TD.ramadanEnabled = true;
-        if (!TD.sections[ttAdminSection]) ttAdminSection = Object.keys(TD.sections)[0];
+        if (!ttAdminSection || !TD.sections[ttAdminSection]) ttAdminSection = Object.keys(TD.sections)[0] || null;
         return TD;
     }
 
@@ -2190,8 +2192,15 @@
         let midHtml = `<div class="panel-header" style="background:#ff375f; color:white; flex-direction:column; align-items:stretch; gap:8px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span>🗓️ TIMETABLE</span>
-                <div style="display:flex; gap:4px;">
-                    ${Object.keys(TD.sections).map(s => `<button class="btn" style="background:${ttAdminSection===s?'white':'rgba(255,255,255,0.2)'}; color:${ttAdminSection===s?'#ff375f':'white'}; padding:3px 12px; font-size:0.75rem;" onclick="ttAdminSection='${s}'; ttAdminDay=0; renderTimetableManager();">${s}</button>`).join('')}
+                <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+                    ${Object.keys(TD.sections).length > 1
+                        ? Object.keys(TD.sections).map(s => `<button class="btn" style="background:${ttAdminSection===s?'white':'rgba(255,255,255,0.2)'}; color:${ttAdminSection===s?'#ff375f':'white'}; padding:3px 12px; font-size:0.75rem;" onclick="ttAdminSection='${s}'; ttAdminDay=0; renderTimetableManager();">${s}</button>`).join('')
+                        : `<span style="font-size:0.72rem; opacity:.8;">Section ${ttAdminSection || '—'}</span>`}
+                    <button class="btn" title="Add section" style="background:rgba(255,255,255,0.2); color:white; padding:3px 8px; font-size:0.75rem;" onclick="ttAddSection()"><i class="fa-solid fa-plus"></i></button>
+                    <button class="btn" title="Rename this section" style="background:rgba(255,255,255,0.2); color:white; padding:3px 8px; font-size:0.75rem;" onclick="ttRenameSection()"><i class="fa-solid fa-pen"></i></button>
+                    ${Object.keys(TD.sections).length > 1
+                        ? `<button class="btn" title="Delete this section" style="background:rgba(0,0,0,0.25); color:#ffb3b3; padding:3px 8px; font-size:0.75rem;" onclick="ttDelSection()"><i class="fa-solid fa-trash"></i></button>`
+                        : ''}
                 </div>
             </div>
             <div style="display:flex; gap:4px;">
@@ -2362,6 +2371,47 @@
             };
         }).filter(function (x) { return x.label; });
     }
+
+    /* v5d: sections were fixed at 1-2 / 3-4 with no way to change them. */
+    function ttAddSection() {
+        const TD = ahEnsureTimetableData();
+        const name = prompt('Name for the new section (e.g. 1-2, A, Group 3):');
+        if (!name || !name.trim()) return;
+        const clean = name.trim();
+        if (TD.sections[clean]) { alert('A section with that name already exists.'); return; }
+        TD.sections[clean] = [];
+        ttAdminSection = clean;
+        markDirty(); renderTimetableManager(); renderTtEditor();
+    }
+    window.ttAddSection = ttAddSection;
+
+    function ttRenameSection() {
+        const TD = ahEnsureTimetableData();
+        if (!ttAdminSection) return;
+        const name = prompt('Rename section "' + ttAdminSection + '" to:', ttAdminSection);
+        if (!name || !name.trim() || name.trim() === ttAdminSection) return;
+        const clean = name.trim();
+        if (TD.sections[clean]) { alert('A section with that name already exists.'); return; }
+        const next = {};
+        Object.keys(TD.sections).forEach(k => { next[k === ttAdminSection ? clean : k] = TD.sections[k]; });
+        TD.sections = next;
+        ttAdminSection = clean;
+        markDirty(); renderTimetableManager(); renderTtEditor();
+    }
+    window.ttRenameSection = ttRenameSection;
+
+    function ttDelSection() {
+        const TD = ahEnsureTimetableData();
+        if (!ttAdminSection) return;
+        if (Object.keys(TD.sections).length <= 1) { alert('You need at least one section.'); return; }
+        const n = (TD.sections[ttAdminSection] || []).length;
+        const warn = n > 0 ? ('\n\nIts ' + n + ' timetable entr' + (n === 1 ? 'y' : 'ies') + ' will be deleted too.') : '';
+        if (!confirm('Delete section "' + ttAdminSection + '"?' + warn)) return;
+        delete TD.sections[ttAdminSection];
+        ttAdminSection = Object.keys(TD.sections)[0] || null;
+        markDirty(); renderTimetableManager(); renderTtEditor();
+    }
+    window.ttDelSection = ttDelSection;
 
     function ttOpenSubjectPicker() {
         const TD = ahEnsureTimetableData();
@@ -2930,12 +2980,13 @@
         'nav-staff':         'staff',
         'nav-timetable':     'timetable',
         'nav-announcements': 'announcements',
-        'nav-config':        'config'
+        'nav-config':        'config',
+        'nav-stats':         'stats'
     };
     const AH_AREA_LABEL = {
         subjects: 'Subjects', schedule: 'Semester Map', exams: 'Midterms / Finals',
         staff: 'Staff Contacts', timetable: 'Timetable',
-        announcements: 'Announcements', config: 'Config'
+        announcements: 'Announcements', config: 'Config', stats: 'Stats'
     };
     const AH_OWNER_CONTACT = { phone: '01016769120', email: 'omar6972@gmail.com' };
 
