@@ -2326,7 +2326,11 @@
             html += `<div style="background:#150a25; padding:15px; margin-bottom:10px; border-radius:8px; border:1px solid #333; border-left:4px solid ${typeColor};">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <span style="font-weight:bold; color:${typeColor};">${typeLabel}${entry.room ? ' · '+entry.room : ''}</span>
-                    <button class="btn btn-del" onclick="delTtEntry(${i})">✕</button>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn" style="background:#4a90e2; padding:2px 8px; font-size:0.75rem;" onclick="applyTtEntryAll(${i})">Apply to All</button>
+                        <button class="btn" style="background:#a855f7; padding:2px 8px; font-size:0.75rem;" onclick="dupTtEntry(${i})">Duplicate</button>
+                        <button class="btn btn-del" onclick="delTtEntry(${i})">✕</button>
+                    </div>
                 </div>
                 <div style="display:grid; grid-template-columns:${ttAdminView==='subject'?'1fr 1fr 1fr':'2fr 1fr 1fr'}; gap:10px;">
                     ${ttAdminView==='subject' ?
@@ -2542,6 +2546,23 @@
     function updateTtEntry(i, key, val) {
         window.TIMETABLE_DATA.sections[ttAdminSection][i][key] = val; markDirty();
     }
+    function dupTtEntry(i) {
+        const entry = window.TIMETABLE_DATA.sections[ttAdminSection][i];
+        window.TIMETABLE_DATA.sections[ttAdminSection].splice(i + 1, 0, JSON.parse(JSON.stringify(entry)));
+        markDirty(); renderTimetableManager();
+    }
+    function applyTtEntryAll(i) {
+        if(!confirm('Copy this entry to all other sections?')) return;
+        const entry = window.TIMETABLE_DATA.sections[ttAdminSection][i];
+        Object.keys(window.TIMETABLE_DATA.sections).forEach(sec => {
+            if(sec !== ttAdminSection) {
+                window.TIMETABLE_DATA.sections[sec].push(JSON.parse(JSON.stringify(entry)));
+            }
+        });
+        markDirty(); renderTimetableManager();
+    }
+    window.dupTtEntry = dupTtEntry;
+    window.applyTtEntryAll = applyTtEntryAll;
 
     // --- UPDATES/CHANGELOG MANAGER ---
     function normalizeDateInputValue(raw) {
