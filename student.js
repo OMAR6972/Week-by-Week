@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15d — v8b: My subjects is now stored per semester. */
+/* VERSION: 2026-09-15g — v10: "Start on" default tab actually works on load. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -1098,7 +1098,11 @@
                 history.replaceState({page: 'home'}, null, window.location.pathname + window.location.search);
                 history.pushState({page: 'home'}, null, initialHash);
             } else {
-                history.replaceState({page: 'home'}, null, '#home');
+                /* v10 FIX: this used to hard-code '#home', so applyHashRoute() always
+                   saw a hash and the "Start on" setting was never consulted. Point it
+                   at the chosen tab instead. */
+                const _def = ahGetDefaultTab();
+                history.replaceState({page: 'home'}, null, '#' + (_def || 'dashboard'));
             }
         }
         if (!hashRouteListenerBound) {
@@ -9426,7 +9430,16 @@
         return showDashboard(push);
     }
 
-    function ahGoToDefaultTab() { ahGoToTab(ahGetDefaultTab(), false); }
+    function ahGoToDefaultTab() {
+        const t = ahGetDefaultTab();
+        ahGoToTab(t, false);
+        /* keep the address bar honest so a refresh lands in the same place */
+        try {
+            if (t && (!location.hash || location.hash === '#' || location.hash === '#home')) {
+                history.replaceState(history.state || { page: 'home' }, null, '#' + t);
+            }
+        } catch (e) {}
+    }
 
     function ahToggleDefaultTab() {
         const cand = ahDefaultTabCandidate();
