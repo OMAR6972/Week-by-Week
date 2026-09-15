@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
+/* VERSION: 2026-09-14 — v6: timetable Import-from-another-subject, safe Apply to All, subject filter count + dropdown fixed. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -6846,6 +6846,17 @@
         if (!Array.isArray(TD.subjects)) TD.subjects = [];
         if (!Array.isArray(TD.defaultSubjects)) TD.defaultSubjects = TD.subjects.slice();
         if (!ttSelectedSubjects) ttSelectedSubjects = [...TD.defaultSubjects];
+        /* v6: the selection is remembered per device, so after a semester change it
+           still held subjects that no longer exist — which is why the counter read
+           things like "14 of 10". Keep only subjects that are actually on offer. */
+        {
+            const _valid = new Set(TD.subjects || []);
+            const _before = ttSelectedSubjects.length;
+            ttSelectedSubjects = ttSelectedSubjects.filter(x => _valid.has(x));
+            if (ttSelectedSubjects.length !== _before) {
+                try { localStorage.setItem('tt_subjects', JSON.stringify(ttSelectedSubjects)); } catch (e) {}
+            }
+        }
         if (!ttSection || !TD.sections[ttSection]) { const _k = Object.keys(TD.sections); if (_k.length) ttSection = _k[0]; }
 
         // Controls
@@ -6876,9 +6887,12 @@
         }
         // Subject checkboxes
         const _ttShown = ttSelectedSubjects.length, _ttTotal = (TD.subjects || []).length;
-        html += `<div class="tt-control-group tt-subjects-cell${window.__ttSubjectsOpen ? ' open' : ''}"><div class="tt-control-label">Subjects</div>`;
+        const _ttOpen = !!window.__ttSubjectsOpen;
+        html += `<div class="tt-control-group tt-subjects-cell${_ttOpen ? ' open' : ''}"><div class="tt-control-label">Subjects</div>`;
         html += `<button class="tt-edit-btn" onclick="ttToggleSubjects()"><span class="tt-count">${_ttShown} of ${_ttTotal}</span> <span class="tt-edit-word">Edit</span> <i class="fa-solid fa-chevron-down"></i></button>`;
-        html += '<div class="tt-subject-list"><div>';
+        /* v6: inline display as well as the class — the list was staying open on
+           setups where the stylesheet rule didn't apply, even though the arrow turned. */
+        html += `<div class="tt-subject-list" style="display:${_ttOpen ? 'block' : 'none'};"><div>`;
         TD.subjects.forEach(sub => {
             const c = TT_SUBJECT_COLORS[sub] || { text:'#aaa' };
             const active = ttSelectedSubjects.includes(sub);
@@ -9403,6 +9417,8 @@
         window.__ttSubjectsOpen = !window.__ttSubjectsOpen;
         const cell = document.querySelector('.tt-subjects-cell');
         if (cell) cell.classList.toggle('open', window.__ttSubjectsOpen);
+        const list = document.querySelector('.tt-subjects-cell .tt-subject-list');
+        if (list) list.style.display = window.__ttSubjectsOpen ? 'block' : 'none';
     }
     window.ttToggleSubjects = ttToggleSubjects;
 

@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
+/* VERSION: 2026-09-14 — v6: timetable Import-from-another-subject, safe Apply to All, subject filter count + dropdown fixed. */
 /* Academic Hub - admin.js (extracted from admin.html, Phase 1) */
     let cIdx = 0; let wIdx = 0; let eIdx = 0; let pIdx = 0; let schWIdx = 0; 
     let schedulePanelMode = 'weeks';
@@ -2328,7 +2328,7 @@
                     <span style="font-weight:bold; color:${typeColor};">${typeLabel}${entry.room ? ' · '+entry.room : ''}</span>
                     <div style="display:flex; gap:5px;">
                         <button class="btn" style="background:#4a90e2; padding:2px 8px; font-size:0.75rem;" onclick="applyTtEntryAll(${i})">Apply to All</button>
-                        <button class="btn" style="background:#a855f7; padding:2px 8px; font-size:0.75rem;" onclick="dupTtEntry(${i})">Duplicate</button>
+                        <button class="btn" style="background:#a855f7; padding:2px 8px; font-size:0.75rem;" onclick="ttOpenImportEntry(${i})" title="Copy an entry from another subject into this one">Import</button>
                         <button class="btn btn-del" onclick="delTtEntry(${i})">✕</button>
                     </div>
                 </div>
@@ -2546,22 +2546,101 @@
     function updateTtEntry(i, key, val) {
         window.TIMETABLE_DATA.sections[ttAdminSection][i][key] = val; markDirty();
     }
-    function dupTtEntry(i) {
-        const entry = window.TIMETABLE_DATA.sections[ttAdminSection][i];
-        window.TIMETABLE_DATA.sections[ttAdminSection].splice(i + 1, 0, JSON.parse(JSON.stringify(entry)));
-        markDirty(); renderTimetableManager();
-    }
-    function applyTtEntryAll(i) {
-        if(!confirm('Copy this entry to all other sections?')) return;
-        const entry = window.TIMETABLE_DATA.sections[ttAdminSection][i];
-        Object.keys(window.TIMETABLE_DATA.sections).forEach(sec => {
-            if(sec !== ttAdminSection) {
-                window.TIMETABLE_DATA.sections[sec].push(JSON.parse(JSON.stringify(entry)));
+    /* v6: "Import" replaces the old Duplicate. Duplicate copied an entry on top of
+       itself, which was pointless. This pulls an existing entry from ANOTHER subject
+       and drops a copy into the subject you are currently editing. */
+    function ttOpenImportEntry(targetIdx) {
+        const TD = ahEnsureTimetableData();
+        const days = TD.days || [];
+        const slots = (TD.timeSlots && TD.timeSlots.normal) || [];
+        const typeLabel = { lec: 'Lecture', tut: 'Tutorial', lab: 'Lab' };
+
+        // gather every entry across every section, except ones already on this subject
+        const pool = [];
+        Object.keys(TD.sections).forEach(sec => {
+            (TD.sections[sec] || []).forEach((e, idx) => {
+                if (ttAdminView === 'subject' && e.subject === ttAdminSubject && sec === ttAdminSection) return;
+                pool.push({ sec, idx, e });
+            });
+        });
+
+        if (!pool.length) { alert('There are no other entries to import yet.'); return; }
+
+        const rows = pool.map((p, n) => {
+            const e = p.e;
+            const meta = [typeLabel[e.type] || e.type, days[e.day] || '', slots[e.slot] || '', e.room || '']
+                .filter(Boolean).join(' · ');
+            return `<label style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:6px; background:#150a25; margin-bottom:6px; cursor:pointer;">
+                <input type="radio" name="ah-imp" value="${n}" style="cursor:pointer;">
+                <span style="flex:1;">
+                    <span style="color:#fff; font-size:0.82rem; font-weight:600;">${ttSubjectDisplay(e.subject)}</span>
+                    <span style="display:block; color:#8b8397; font-size:0.7rem; margin-top:1px;">${meta}</span>
+                    <span style="display:block; color:#5f5f6e; font-size:0.65rem;">from section ${p.sec}</span>
+                </span>
+            </label>`;
+        }).join('');
+
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.65); display:flex; align-items:center; justify-content:center; padding:20px;';
+        ov.innerHTML = `<div style="background:#1a0d2e; border:1px solid #3a2a4e; border-radius:12px; width:430px; max-width:94vw; max-height:82vh; display:flex; flex-direction:column; padding:20px;">
+            <div style="font-size:1rem; font-weight:700; color:#fff; margin-bottom:4px;">Import an entry</div>
+            <div style="font-size:0.76rem; color:#8b8397; margin-bottom:14px; line-height:1.5;">
+                Pick an entry from another subject. A copy lands in <b>${ttAdminView === 'subject' ? ttSubjectDisplay(ttAdminSubject) : 'this section'}</b> and you can edit it afterwards.
+            </div>
+            <div style="flex:1; overflow-y:auto; margin-bottom:14px;">${rows}</div>
+            <label style="display:flex; align-items:center; gap:9px; font-size:0.78rem; color:#ddd; margin-bottom:12px; cursor:pointer;">
+                <input type="checkbox" id="ah-imp-keepsub" checked style="cursor:pointer;">
+                <span>Change it to the subject I'm editing</span>
+            </label>
+            <div style="display:flex; gap:8px;">
+                <button class="btn" id="ah-imp-cancel" style="flex:1; background:rgba(255,255,255,0.14); color:#fff; padding:8px;">Cancel</button>
+                <button class="btn btn-add" id="ah-imp-ok" style="flex:1; padding:8px;">Import</button>
+            </div>
+        </div>`;
+        document.body.appendChild(ov);
+
+        const close = () => ov.remove();
+        ov.addEventListener('click', e => { if (e.target === ov) close(); });
+        ov.querySelector('#ah-imp-cancel').addEventListener('click', close);
+        ov.querySelector('#ah-imp-ok').addEventListener('click', function () {
+            const sel = ov.querySelector('input[name="ah-imp"]:checked');
+            if (!sel) { alert('Pick an entry first.'); return; }
+            const src = pool[parseInt(sel.value, 10)];
+            const copy = JSON.parse(JSON.stringify(src.e));
+            if (ov.querySelector('#ah-imp-keepsub').checked && ttAdminView === 'subject' && ttAdminSubject) {
+                copy.subject = ttAdminSubject;
             }
+            if (!TD.sections[ttAdminSection]) TD.sections[ttAdminSection] = [];
+            const at = (typeof targetIdx === 'number' && targetIdx >= 0) ? targetIdx + 1 : TD.sections[ttAdminSection].length;
+            TD.sections[ttAdminSection].splice(at, 0, copy);
+            markDirty(); close(); renderTimetableManager(); renderTtEditor();
+        });
+    }
+    window.ttOpenImportEntry = ttOpenImportEntry;
+    /* v6: skips sections that already have an identical entry, so pressing this
+       twice no longer stacks duplicates on every other section. */
+    function applyTtEntryAll(i) {
+        const TD = window.TIMETABLE_DATA;
+        const entry = TD.sections[ttAdminSection][i];
+        const others = Object.keys(TD.sections).filter(sec => sec !== ttAdminSection);
+        if (!others.length) { alert('There is only one section, so there is nothing to copy to.'); return; }
+
+        const same = (a, b) => a.subject === b.subject && a.type === b.type &&
+                               a.day === b.day && a.slot === b.slot && (a.room || '') === (b.room || '');
+
+        const targets = others.filter(sec => !(TD.sections[sec] || []).some(e => same(e, entry)));
+        const skipped = others.length - targets.length;
+
+        if (!targets.length) { alert('Every other section already has this entry.'); return; }
+        if (!confirm('Copy this entry to ' + targets.length + ' other section' + (targets.length === 1 ? '' : 's') + '?' +
+                     (skipped ? '\n\n' + skipped + ' already had it and will be skipped.' : ''))) return;
+
+        targets.forEach(sec => {
+            if (!TD.sections[sec]) TD.sections[sec] = [];
+            TD.sections[sec].push(JSON.parse(JSON.stringify(entry)));
         });
         markDirty(); renderTimetableManager();
     }
-    window.dupTtEntry = dupTtEntry;
     window.applyTtEntryAll = applyTtEntryAll;
 
     // --- UPDATES/CHANGELOG MANAGER ---
