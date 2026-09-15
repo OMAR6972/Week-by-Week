@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15c — v8: deadline mark-as-done (tick circle), admin per-task "students can tick off". */
+/* VERSION: 2026-09-15k — v12b: forced notifications, separate Notify permission, correct subject targeting. */
 /* Academic Hub - admin.js (extracted from admin.html, Phase 1) */
     let cIdx = 0; let wIdx = 0; let eIdx = 0; let pIdx = 0; let schWIdx = 0; 
     let schedulePanelMode = 'weeks';
@@ -3096,12 +3096,14 @@
         'nav-timetable':     'timetable',
         'nav-announcements': 'announcements',
         'nav-config':        'config',
-        'nav-stats':         'stats'
+        'nav-stats':         'stats',
+        'nav-notify':        'notify'
     };
     const AH_AREA_LABEL = {
         subjects: 'Subjects', schedule: 'Semester Map', exams: 'Midterms / Finals',
         staff: 'Staff Contacts', timetable: 'Timetable',
-        announcements: 'Announcements', config: 'Config', stats: 'Stats'
+        announcements: 'Announcements', config: 'Config', stats: 'Stats',
+        notify: 'Notify Students'
     };
     const AH_OWNER_CONTACT = { phone: '01016769120', email: 'omar6972@gmail.com' };
 

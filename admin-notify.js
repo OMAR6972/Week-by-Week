@@ -1,6 +1,5 @@
-/* VERSION: 2026-09-15j — v12: admin notification composer.
-   Adds a "Notify" button to the admin dashboard so Omar can write a message and
-   send it to students by email, separately from announcements. */
+/* VERSION: 2026-09-15k — v12b: forced notifications, separate Notify permission, correct subject targeting. */
+/* Admin notification composer: write a message and email it to students. */
 
 (function () {
   var SB = window.__ahSupabase;
@@ -34,8 +33,8 @@
 
   /* ---------------------------------------------------------- composer */
   function openComposer() {
-    if (typeof window.__ahCanEdit === 'function' && !window.__ahCanEdit('announcements')) {
-      if (typeof window.ahShowLockedNotice === 'function') window.ahShowLockedNotice('announcements');
+    if (typeof window.__ahCanEdit === 'function' && !window.__ahCanEdit('notify')) {
+      if (typeof window.ahShowLockedNotice === 'function') window.ahShowLockedNotice('notify');
       return;
     }
     if (document.getElementById('ah-notify-composer')) return;
@@ -70,6 +69,17 @@
           '</label>' +
           '<select id="ah-nc-subject" style="width:100%; margin-top:9px; padding:8px 10px; font-size:.82rem; display:none;"></select>' +
         '</div>' +
+
+        '<label id="ah-nc-force-wrap" style="display:flex; align-items:flex-start; gap:10px; background:rgba(255,179,71,.07); border:1px solid rgba(255,179,71,.3); border-radius:10px; padding:12px 13px; margin-bottom:16px; cursor:pointer;">' +
+          '<input type="checkbox" id="ah-nc-force" style="margin-top:3px; cursor:pointer;">' +
+          '<span>' +
+            '<span style="display:block; font-size:.84rem; font-weight:600; color:#e0b070;">Send this no matter what</span>' +
+            '<span style="display:block; font-size:.75rem; color:#a89070; line-height:1.5; margin-top:3px;">' +
+              'Reaches everyone with an account, including students who switched notifications off. ' +
+              'Keep it for things they genuinely must know.' +
+            '</span>' +
+          '</span>' +
+        '</label>' +
 
         '<div id="ah-nc-preview" style="background:#0f0720; border:1px solid #2a1a3e; border-radius:10px; padding:14px; margin-bottom:16px;">' +
           '<div style="font-size:.66rem; letter-spacing:1px; text-transform:uppercase; color:#8b8397; margin-bottom:8px;">Preview</div>' +
@@ -123,11 +133,13 @@
       var body = ov.querySelector('#ah-nc-body').value.trim();
       var who = ov.querySelector('input[name="ah-nc-who"]:checked').value;
       var subject = who === 'subject' ? sel.value : null;
+      var force = ov.querySelector('#ah-nc-force').checked;
 
       if (!title) { msgEl.style.color = '#ff8a80'; msgEl.textContent = 'Give it a title first.'; return; }
       if (!SB) { msgEl.style.color = '#ff8a80'; msgEl.textContent = 'No connection to the database.'; return; }
 
       var whoTxt = who === 'all' ? 'every student with an account' : 'students taking ' + subject;
+      if (force) whoTxt += ', INCLUDING anyone who turned notifications off';
       if (!confirm('Send "' + title + '" to ' + whoTxt + '?\n\nThis sends real emails and cannot be undone.')) return;
 
       sendBtn.disabled = true;
@@ -139,7 +151,8 @@
           title: title,
           body: body,
           semester: window.__ahSemester || null,
-          audience_subject: subject
+          audience_subject: subject,
+          force: force
         }).select().single();
 
         if (ins.error) throw new Error(ins.error.message);

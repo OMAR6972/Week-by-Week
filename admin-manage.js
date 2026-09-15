@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
+/* VERSION: 2026-09-15k — v12b: forced notifications, separate Notify permission, correct subject targeting. */
 /* Academic Hub - admin-manage.js
    Visual "Admins" panel. Only the OWNER (super admin) sees the button.
    Lets the owner add / remove admins by email - no SQL needed. */
@@ -16,7 +16,8 @@
     { key: 'timetable',     label: 'Timetable' },
     { key: 'announcements', label: 'Announcements & Updates' },
     { key: 'config',        label: 'Config' },
-    { key: 'stats',         label: 'Stats' }
+    { key: 'stats',         label: 'Stats' },
+    { key: 'notify',        label: 'Notify Students (emails the cohort)' }
   ];
 
   // called by admin-auth.js after a successful login + boot
