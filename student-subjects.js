@@ -1,7 +1,5 @@
-/* VERSION: 2026-09-15 — v7: "My subjects". The student says once which subjects they're
-   registered in and the whole site narrows to those. Unregistered subjects are tucked
-   away behind a toggle, never deleted. Works for guests (saved on the device) and for
-   signed-in students (saved to their account too). */
+/* VERSION: 2026-09-15b — v7b: subject sync fixed both ways, cleared on sign-out; GPA can add the current semester. */
+/* "My subjects": pick your registered subjects once; unregistered ones are tucked away, never deleted. */
 
 (function () {
   var SB = window.__ahSupabase;
@@ -33,27 +31,43 @@
     } catch (e) {}
   };
 
-  /* pull saved subjects down when someone signs in on a new device */
-  async function pullFromAccount() {
+  /* Sync on sign-in, BOTH ways.
+     The account is the source of truth when it has something saved. When it doesn't
+     — the usual case, because people pick their subjects before they ever make an
+     account — whatever is on this device gets pushed up instead of being lost. */
+  async function syncWithAccount() {
     var st = window.__ahStudent;
     if (!st || !SB) return;
+
+    var local = (window.__ahGetMySubjects && window.__ahGetMySubjects()) || { codes: null, showOthers: false, configured: false };
+
     try {
       var r = await SB.from('student_prefs').select('key, value')
         .eq('user_id', st.id).in('key', ['my_subjects', 'my_subjects_showall']);
-      if (r.error || !r.data || !r.data.length) return;
 
-      var codes = null, showAll = null;
-      r.data.forEach(function (row) {
-        if (row.key === 'my_subjects' && Array.isArray(row.value)) codes = row.value;
-        if (row.key === 'my_subjects_showall') showAll = !!row.value;
-      });
+      var remoteCodes = null, remoteShowAll = null;
+      if (!r.error && r.data) {
+        r.data.forEach(function (row) {
+          if (row.key === 'my_subjects' && Array.isArray(row.value)) remoteCodes = row.value;
+          if (row.key === 'my_subjects_showall') remoteShowAll = !!row.value;
+        });
+      }
 
-      if (codes && codes.length && window.__ahSetMySubjects) {
-        window.__ahSetMySubjects(codes, showAll === null ? undefined : showAll);
+      if (remoteCodes && remoteCodes.length) {
+        // account wins — this is what makes a second device match the first
+        if (window.__ahSetMySubjects) {
+          window.__ahSetMySubjects(remoteCodes, remoteShowAll === null ? undefined : remoteShowAll);
+        }
+      } else if (local.configured && local.codes && local.codes.length) {
+        // nothing saved to the account yet, so keep what they already chose here
+        if (window.__ahSaveStudentPref) {
+          window.__ahSaveStudentPref('my_subjects', local.codes);
+          window.__ahSaveStudentPref('my_subjects_showall', !!local.showOthers);
+        }
       }
     } catch (e) {}
   }
-  document.addEventListener('ah-student-changed', function (e) { if (e.detail) pullFromAccount(); });
+  document.addEventListener('ah-student-changed', function (e) { if (e.detail) syncWithAccount(); });
 
   /* ----------------------------------------------------------- picker modal */
   function openPicker(opts) {

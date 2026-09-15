@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15 — v7: My subjects — pick your registered subjects once, site filters to them; GPA bulk add. */
+/* VERSION: 2026-09-15b — v7b: subject sync fixed both ways, cleared on sign-out; GPA can add the current semester. */
 /* Optional by design: guests keep full access to everything, an account only adds extras. */
 
 (function () {
@@ -271,6 +271,7 @@
     back.querySelector('#ah-acct-out').addEventListener('click', async function () {
       try { await SB.auth.signOut(); } catch (e) {}
       window.__ahStudent = null;
+      if (window.__ahClearMySubjectsLocal) window.__ahClearMySubjectsLocal();
       paintButton();
       close();
       toast('Signed out. You can still browse everything.');

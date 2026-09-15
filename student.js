@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15 — v7: My subjects — pick your registered subjects once, site filters to them; GPA bulk add. */
+/* VERSION: 2026-09-15b — v7b: subject sync fixed both ways, cleared on sign-out; GPA can add the current semester. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -296,6 +296,18 @@
         myRegisteredSubjects = new Set(codes || []);
         if (typeof showOthers === 'boolean') myShowOtherSubjects = showOthers;
         saveMySubjects();
+        refreshCurrentFilteredPage();
+    };
+    /* v7b: on sign-out, forget the device copy so the next person on a shared
+       laptop doesn't inherit someone else's subject list. Their choices are safe
+       in their account and come back the moment they sign in again. */
+    window.__ahClearMySubjectsLocal = function () {
+        myRegisteredSubjects = null;
+        myShowOtherSubjects = false;
+        try {
+            localStorage.removeItem(MY_SUBJECTS_KEY);
+            localStorage.removeItem(MY_SUBJECTS_SHOWALL_KEY);
+        } catch (e) {}
         refreshCurrentFilteredPage();
     };
     window.__ahGetMySubjects = function () {
@@ -7558,6 +7570,41 @@
         gpaSaveState();
     }
 
+    /* v7b: there's no semester name in CONFIG; the active semester is in the page
+       address (?sem=fall-2026), so turn that into something readable. */
+    function ahCurrentSemesterLabel() {
+        if (window.CONFIG && window.CONFIG.semesterName) return window.CONFIG.semesterName;
+        let raw = '';
+        try { raw = new URLSearchParams(location.search).get('sem') || ''; } catch (e) {}
+        if (!raw) return 'Current Semester';
+        return raw.split('-').filter(Boolean)
+                  .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+                  .join(' ');
+    }
+
+    function gpaAddCurrentSemester() {
+        const courses = getAllCourseSubjects();
+        if (!courses.length) return;
+        const id = 'sem_' + Date.now();
+        const name = ahCurrentSemesterLabel();
+        gpaSemesters.push({
+            id: id,
+            name: name,
+            mode: 'subjects',
+            summaryGpa: '',
+            summaryHours: '',
+            subjects: courses.map(c => ({
+                id: 'cd_' + c.code + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                code: c.code, name: c.name, credits: c.credits, grade: '', pointsLost: ''
+            }))
+        });
+        renderGpaPage();
+        gpaRecalc();
+        gpaSaveState();
+        if (window.__ahToast) window.__ahToast('Added ' + name + ' with ' + courses.length + ' subjects.');
+    }
+    window.gpaAddCurrentSemester = gpaAddCurrentSemester;
+
     function toggleSemesterMode(id) {
         const sem = gpaSemesters.find(s => s.id === id);
         if (sem) {
@@ -7743,7 +7790,12 @@
 
         const addBtns = document.createElement('div');
         addBtns.style.cssText = 'display:flex; gap:10px; justify-content:center; margin-top:20px;';
-        addBtns.innerHTML = `<button class="gpa-add-btn" onclick="gpaAddSemester()">+ Add Semester</button>`;
+        /* v7b: adding the CURRENT semester as another row in the all-semesters view,
+           pre-filled with its subjects, instead of building it by hand. */
+        const _currentName = ahCurrentSemesterLabel();
+        const _canImport = getAllCourseSubjects().length > 0;
+        addBtns.innerHTML = `<button class="gpa-add-btn" onclick="gpaAddSemester()">+ Add Semester</button>` +
+            (_canImport ? `<button class="gpa-add-btn" onclick="gpaAddCurrentSemester()" style="margin-left:8px;"><i class="fa-solid fa-download"></i> Add ${_currentName}</button>` : '');
         container.appendChild(addBtns);
     }
 
