@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15c — v8: deadline mark-as-done (tick circle), admin per-task "students can tick off". */
+/* VERSION: 2026-09-15e — v9: notification settings (choosing half; sending comes next). */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -1757,4 +1757,93 @@ h1 { text-shadow: none !important; }
     .dl-done-btn::after {
         content: ''; position: absolute; inset: -9px; border-radius: 50%;
     }
+}
+
+/* ================= v9 — notification settings ================= */
+.ah-notify-card { width: 460px; }
+
+.ah-nt-guest-warn {
+    background: rgba(255,179,71,0.08); border: 1px solid rgba(255,179,71,0.28);
+    border-radius: 10px; padding: 10px 13px; font-size: 0.78rem; color: #e0b070;
+    line-height: 1.5; margin-bottom: 16px;
+}
+
+.ah-nt-tabs {
+    display: flex; gap: 4px; background: rgba(0,0,0,0.25);
+    border-radius: 12px; padding: 4px; margin-bottom: 18px;
+}
+.ah-nt-tab {
+    flex: 1; background: none; border: none; color: #999; padding: 8px 6px;
+    border-radius: 9px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+    font-family: 'Work Sans', sans-serif; transition: 0.18s;
+}
+.ah-nt-tab:hover { color: #ccc; }
+.ah-nt-tab.active { background: var(--accent-purple); color: #fff; }
+
+.ah-nt-pane { display: none; }
+.ah-nt-pane.active { display: block; }
+
+.ah-nt-row {
+    display: flex; align-items: flex-start; gap: 11px; padding: 11px 10px;
+    border-radius: 10px; cursor: pointer; transition: background 0.15s; margin-bottom: 4px;
+}
+.ah-nt-row:hover { background: rgba(255,255,255,0.04); }
+.ah-nt-row input { margin-top: 2px; cursor: pointer; accent-color: var(--accent-purple); flex-shrink: 0; }
+.ah-nt-row span { display: flex; flex-direction: column; gap: 2px; }
+.ah-nt-row b { font-size: 0.87rem; font-weight: 600; color: var(--text-main); }
+.ah-nt-row small { font-size: 0.73rem; color: var(--text-sub); line-height: 1.45; }
+
+.ah-nt-block-title {
+    font-size: 0.68rem; letter-spacing: 1px; text-transform: uppercase;
+    color: #8b8397; margin-bottom: 9px; font-weight: 700;
+}
+.ah-nt-hint { font-size: 0.72rem; color: #7d7688; line-height: 1.5; margin-top: 9px; }
+
+.ah-nt-sub-block {
+    margin: 12px 0 0; padding: 13px; border-radius: 12px;
+    background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06);
+    transition: opacity 0.2s;
+}
+
+.ah-nt-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; margin: 0 6px 6px 0; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.03);
+    color: #aaa; font-size: 0.76rem; cursor: pointer; transition: 0.15s;
+}
+.ah-nt-chip:hover { border-color: rgba(255,255,255,0.26); color: #ddd; }
+.ah-nt-chip.on {
+    background: rgba(181,25,214,0.16); border-color: var(--accent-purple); color: #fff;
+}
+.ah-nt-chip input { cursor: pointer; accent-color: var(--accent-purple); width: 13px; height: 13px; }
+.ah-nt-chip small { color: #8b8397; font-size: 0.68rem; }
+.ah-nt-chip.on small { color: #c9b3e0; }
+
+.ah-nt-seg {
+    display: flex; gap: 4px; background: rgba(0,0,0,0.25);
+    border-radius: 11px; padding: 4px;
+}
+.ah-nt-seg-btn {
+    flex: 1; background: none; border: none; color: #999; padding: 8px 4px;
+    border-radius: 8px; cursor: pointer; font-size: 0.76rem; font-weight: 600;
+    font-family: 'Work Sans', sans-serif; transition: 0.18s;
+}
+.ah-nt-seg-btn:hover { color: #ccc; }
+.ah-nt-seg-btn.active { background: var(--accent-pink); color: #fff; }
+
+.ah-nt-subjects, .ah-nt-reminders { margin-top: 4px; }
+
+.ah-nt-iphone {
+    margin-top: 14px; padding: 14px; border-radius: 12px;
+    background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.07);
+}
+.ah-nt-steps {
+    margin: 10px 0 0; padding-left: 20px; font-size: 0.78rem;
+    color: var(--text-sub); line-height: 1.75;
+}
+.ah-nt-steps b { color: #fff; }
+
+@media (max-width: 500px) {
+    .ah-notify-card { width: 100%; }
+    .ah-nt-tab { font-size: 0.74rem; }
 }

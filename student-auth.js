@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15b — v7b: subject sync fixed both ways, cleared on sign-out; GPA can add the current semester. */
+/* VERSION: 2026-09-15e — v9: notification settings (choosing half; sending comes next). */
 /* Optional by design: guests keep full access to everything, an account only adds extras. */
 
 (function () {
@@ -97,7 +97,7 @@
 
         '<div class="ah-auth-guest">' +
           'You don\'t need an account to use the site \u2014 everything stays free to browse. ' +
-          'Signing in just saves your settings and lets you get notified about new material.' +
+          'Signing in saves your settings across devices and lets notifications reach you by email.' +
         '</div>' +
       '</div>';
 
@@ -231,6 +231,7 @@
         '<div class="ah-acct-avatar">' + esc(initials(s.displayName)) + '</div>' +
         '<div class="ah-auth-title" style="text-align:center;">' + esc(s.displayName || 'Your account') + '</div>' +
         '<div class="ah-auth-sub" style="text-align:center;">' + esc(s.email) + '</div>' +
+        '<button class="ah-auth-go" id="ah-acct-notify" style="background:rgba(255,255,255,.08);">Notifications</button>' +
         '<button class="ah-auth-go" id="ah-acct-subjects" style="background:rgba(255,255,255,.08);">My subjects</button>' +
         '<button class="ah-auth-go" id="ah-acct-rename" style="background:rgba(255,255,255,.08);">Change my name</button>' +
         '<button class="ah-auth-go" id="ah-acct-out" style="background:rgba(255,59,48,.16); color:#ff8a80;">Sign out</button>' +
@@ -243,6 +244,11 @@
     function close() { back.remove(); }
     back.addEventListener('click', function (e) { if (e.target === back) close(); });
     back.querySelector('#ah-acct-x').addEventListener('click', close);
+
+    back.querySelector('#ah-acct-notify').addEventListener('click', function () {
+      close();
+      if (window.__ahOpenNotifySettings) window.__ahOpenNotifySettings();
+    });
 
     back.querySelector('#ah-acct-subjects').addEventListener('click', function () {
       close();
