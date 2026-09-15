@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15g — v10: "Start on" default tab actually works on load. */
+/* VERSION: 2026-09-15h — v10b: "Start on" now wins over the leftover tab in the address. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -1093,14 +1093,22 @@
         };
         if (!history.state) {
             const initialHash = window.location.hash;
-            const hasDeepLink = !!initialHash && initialHash !== '#' && initialHash !== '#home';
-            if (hasDeepLink) {
+            const rawHash = String(initialHash || '').replace(/^#/, '').trim().toLowerCase();
+
+            /* v10b FIX: the address keeps whatever tab you were last on, so on every
+               reload that leftover hash was treated as a shared link and "Start on"
+               lost. A plain tab name is NOT a deep link — only a real content link
+               (a subject, week or resource, which contains a "/") is. Those still win,
+               so links people send each other keep working. */
+            const isPlainTab = !rawHash || rawHash === 'home' ||
+                (rawHash.indexOf('/') === -1 &&
+                 ['dashboard','home','recent','schedule','deadlines','midterm',
+                  'useful-links','timetable','directory','gpa','updates'].indexOf(rawHash) !== -1);
+
+            if (!isPlainTab) {
                 history.replaceState({page: 'home'}, null, window.location.pathname + window.location.search);
                 history.pushState({page: 'home'}, null, initialHash);
             } else {
-                /* v10 FIX: this used to hard-code '#home', so applyHashRoute() always
-                   saw a hash and the "Start on" setting was never consulted. Point it
-                   at the chosen tab instead. */
                 const _def = ahGetDefaultTab();
                 history.replaceState({page: 'home'}, null, '#' + (_def || 'dashboard'));
             }
