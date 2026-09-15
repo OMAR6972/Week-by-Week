@@ -1,5 +1,5 @@
-/* VERSION: 2026-09-14 — v6: student accounts (email + password). Optional by design:
-   guests keep full access to everything, an account only adds extras. */
+/* VERSION: 2026-09-15 — v7: My subjects — pick your registered subjects once, site filters to them; GPA bulk add. */
+/* Optional by design: guests keep full access to everything, an account only adds extras. */
 
 (function () {
   var SB = window.__ahSupabase;
@@ -231,6 +231,7 @@
         '<div class="ah-acct-avatar">' + esc(initials(s.displayName)) + '</div>' +
         '<div class="ah-auth-title" style="text-align:center;">' + esc(s.displayName || 'Your account') + '</div>' +
         '<div class="ah-auth-sub" style="text-align:center;">' + esc(s.email) + '</div>' +
+        '<button class="ah-auth-go" id="ah-acct-subjects" style="background:rgba(255,255,255,.08);">My subjects</button>' +
         '<button class="ah-auth-go" id="ah-acct-rename" style="background:rgba(255,255,255,.08);">Change my name</button>' +
         '<button class="ah-auth-go" id="ah-acct-out" style="background:rgba(255,59,48,.16); color:#ff8a80;">Sign out</button>' +
         '<div class="ah-auth-msg" id="ah-acct-msg"></div>' +
@@ -242,6 +243,11 @@
     function close() { back.remove(); }
     back.addEventListener('click', function (e) { if (e.target === back) close(); });
     back.querySelector('#ah-acct-x').addEventListener('click', close);
+
+    back.querySelector('#ah-acct-subjects').addEventListener('click', function () {
+      close();
+      if (window.__ahOpenMySubjects) window.__ahOpenMySubjects({});
+    });
 
     back.querySelector('#ah-acct-rename').addEventListener('click', async function () {
       var n = prompt('What should we call you?', s.displayName || '');
@@ -314,6 +320,7 @@
   }
 
   window.__ahOpenSignIn = function () { openAuthModal('signin'); };
+  window.__ahToast = toast;
   window.__ahRefreshStudent = refreshSession;
 
   /* ------------------------------------------------------------------- boot */

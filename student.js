@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-14 — v6: timetable Import-from-another-subject, safe Apply to All, subject filter count + dropdown fixed. */
+/* VERSION: 2026-09-15 — v7: My subjects — pick your registered subjects once, site filters to them; GPA bulk add. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -252,6 +252,66 @@
         try { return new Set(JSON.parse(localStorage.getItem(HIDDEN_SUBJECTS_KEY) || '[]')); }
         catch(e) { return new Set(); }
     })();
+    /* v7: "My subjects" — the student says once which subjects they're registered in,
+       and the whole site narrows to those. null means they haven't chosen yet, in which
+       case nothing is filtered and the site behaves exactly as before. */
+    const MY_SUBJECTS_KEY = 'ah_my_subjects';
+    const MY_SUBJECTS_SHOWALL_KEY = 'ah_my_subjects_showall';
+
+    let myRegisteredSubjects = (() => {
+        try {
+            const raw = localStorage.getItem(MY_SUBJECTS_KEY);
+            if (raw === null) return null;              // never set up
+            const arr = JSON.parse(raw);
+            return Array.isArray(arr) ? new Set(arr) : null;
+        } catch (e) { return null; }
+    })();
+
+    let myShowOtherSubjects = (() => {
+        try { return localStorage.getItem(MY_SUBJECTS_SHOWALL_KEY) === '1'; }
+        catch (e) { return false; }
+    })();
+
+    function hasRegisteredSubjects() {
+        return myRegisteredSubjects instanceof Set && myRegisteredSubjects.size > 0;
+    }
+
+    function isSubjectUnregistered(code) {
+        if (!hasRegisteredSubjects()) return false;     // not set up = show everything
+        return !myRegisteredSubjects.has(code);
+    }
+
+    function saveMySubjects() {
+        try {
+            localStorage.setItem(MY_SUBJECTS_KEY,
+                myRegisteredSubjects ? JSON.stringify([...myRegisteredSubjects]) : JSON.stringify([]));
+            localStorage.setItem(MY_SUBJECTS_SHOWALL_KEY, myShowOtherSubjects ? '1' : '0');
+        } catch (e) {}
+        if (window.__ahSaveStudentPref) {
+            window.__ahSaveStudentPref('my_subjects', myRegisteredSubjects ? [...myRegisteredSubjects] : []);
+            window.__ahSaveStudentPref('my_subjects_showall', myShowOtherSubjects);
+        }
+    }
+    window.__ahSetMySubjects = function (codes, showOthers) {
+        myRegisteredSubjects = new Set(codes || []);
+        if (typeof showOthers === 'boolean') myShowOtherSubjects = showOthers;
+        saveMySubjects();
+        refreshCurrentFilteredPage();
+    };
+    window.__ahGetMySubjects = function () {
+        return {
+            codes: myRegisteredSubjects ? [...myRegisteredSubjects] : null,
+            showOthers: myShowOtherSubjects,
+            configured: hasRegisteredSubjects()
+        };
+    };
+    window.__ahToggleShowOtherSubjects = function (v) {
+        myShowOtherSubjects = (typeof v === 'boolean') ? v : !myShowOtherSubjects;
+        saveMySubjects();
+        refreshCurrentFilteredPage();
+        return myShowOtherSubjects;
+    };
+
     let hiddenWeekSet = (() => {
         try { return new Set(JSON.parse(localStorage.getItem(HIDDEN_WEEKS_KEY) || '[]')); }
         catch(e) { return new Set(); }
@@ -474,7 +534,11 @@
 
 
     function isSubjectHidden(code) {
-        return hiddenSubjectSet.has(code);
+        if (hiddenSubjectSet.has(code)) return true;
+        /* not one of the student's registered subjects — tucked away rather than
+           deleted, so the "show other subjects" switch brings it straight back */
+        if (!myShowOtherSubjects && isSubjectUnregistered(code)) return true;
+        return false;
     }
 
     function getVisibleCourseSubjects() {
@@ -7343,7 +7407,10 @@
 
     function getAllCourseSubjects() {
         if (!window.COURSE_DATA) return [];
-        return window.COURSE_DATA.map(s => ({ code: s.code, name: s.name, credits: parseCreditsNumber(s.credits) }));
+        /* v7: respects "My subjects" — no point suggesting courses they never took */
+        return window.COURSE_DATA
+            .filter(s => !isSubjectHidden(s.code))
+            .map(s => ({ code: s.code, name: s.name, credits: parseCreditsNumber(s.credits) }));
     }
 
     function pointsToGrade(score) {
@@ -7879,6 +7946,14 @@
                     <span style="color:#888; font-size:0.75rem;">${c.credits} cr</span>
                 </div>`;
             });
+            /* v7: one-click bulk add, so nobody adds eight subjects one at a time.
+               Once "My subjects" is set this only offers the ones they actually take. */
+            const _addable = allCourses.filter(c => !existingCodes.has(c.code));
+            if (_addable.length > 1) {
+                html = `<div class="gpa-add-menu-item" onclick="gpaAddAllCourses('${semId}')" style="border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:4px; padding-bottom:10px; color:#34c759;">
+                    <span style="font-size:1rem;"><i class="fa-solid fa-layer-group"></i></span><span>Add all ${_addable.length} subjects</span>
+                </div>` + html;
+            }
             html += `<div class="gpa-add-menu-item" onclick="gpaShowCustomAdd('${semId}')" style="border-top:1px solid rgba(255,255,255,0.08); margin-top:4px; padding-top:10px; color:#ffd700;">
                 <span style="font-size:1rem;"><i class="fa-solid fa-pen"></i></span><span>Custom subject...</span>
             </div>`;
@@ -7886,13 +7961,31 @@
         }
     }
 
-    function gpaAddCourse(semId, code) {
+    function gpaAddAllCourses(semId) {
+        const all = getAllCourseSubjects();
+        let existing;
+        if (semId === 'normal') existing = new Set(gpaSubjects.filter(s => s.code).map(s => s.code));
+        else existing = new Set(gpaSemesters.flatMap(sem => sem.subjects || []).filter(s => s.code).map(s => s.code));
+        const toAdd = all.filter(c => !existing.has(c.code));
+        toAdd.forEach(c => gpaAddCourse(semId, c.code, true));
+        const menu = document.getElementById('gpa-add-menu-' + semId);
+        if (menu) menu.classList.remove('open');
+        renderGpaPage();
+        gpaRecalc();
+        gpaSaveState();
+        if (window.__ahToast && toAdd.length) window.__ahToast('Added ' + toAdd.length + ' subjects.');
+    }
+    window.gpaAddAllCourses = gpaAddAllCourses;
+
+    function gpaAddCourse(semId, code, skipRender) {
         const course = getAllCourseSubjects().find(c => c.code === code);
         if (!course) return;
         const subList = semId === 'normal' ? gpaSubjects : gpaSemesters.find(s => s.id === semId)?.subjects;
         if (!subList) return;
-        subList.push({ id: 'cd_' + course.code + '_' + Date.now(), code: course.code, name: course.name, credits: course.credits, grade: '', pointsLost: '' });
-        document.getElementById('gpa-add-menu-' + semId).classList.remove('open');
+        subList.push({ id: 'cd_' + course.code + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), code: course.code, name: course.name, credits: course.credits, grade: '', pointsLost: '' });
+        if (skipRender) { gpaSaveState(); return; }
+        const _m = document.getElementById('gpa-add-menu-' + semId);
+        if (_m) _m.classList.remove('open');
         renderGpaPage();
         gpaRecalc();
         gpaSaveState();

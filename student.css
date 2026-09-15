@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-14 — v6: student account sign-in styling. */
+/* VERSION: 2026-09-15 — v7: My subjects — pick your registered subjects once, site filters to them; GPA bulk add. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -1646,4 +1646,70 @@ h1 { text-shadow: none !important; }
 
 @media (max-width: 480px) {
     .ah-auth-card { padding: 24px 20px 18px; }
+}
+
+/* ================= v7 — My subjects ================= */
+.ah-mysub-card { width: 420px; }
+
+.ah-mysub-tools { display: flex; align-items: center; gap: 8px; margin: 16px 0 10px; }
+.ah-mysub-mini {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+    color: #ccc; font-size: 0.72rem; padding: 5px 12px; border-radius: 999px; cursor: pointer;
+    font-family: 'Work Sans', sans-serif;
+}
+.ah-mysub-mini:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.ah-mysub-count { margin-left: auto; font-size: 0.72rem; color: #8b8397; }
+
+.ah-mysub-list {
+    max-height: 46vh; overflow-y: auto; margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 6px;
+}
+.ah-mysub-row {
+    display: flex; align-items: center; gap: 11px; padding: 9px 10px;
+    border-radius: 9px; cursor: pointer; transition: background 0.15s;
+}
+.ah-mysub-row:hover { background: rgba(255,255,255,0.04); }
+.ah-mysub-row.on { background: rgba(181,25,214,0.12); }
+.ah-mysub-cb { cursor: pointer; flex-shrink: 0; width: 15px; height: 15px; accent-color: var(--accent-purple); }
+.ah-mysub-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.ah-mysub-text { display: flex; flex-direction: column; min-width: 0; }
+.ah-mysub-code { font-family: 'Orbitron', sans-serif; font-size: 0.74rem; font-weight: 700; color: #fff; }
+.ah-mysub-name { font-size: 0.72rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ah-mysub-showall {
+    display: flex; align-items: center; gap: 9px; font-size: 0.78rem; color: var(--text-sub);
+    cursor: pointer; padding: 4px 2px;
+}
+.ah-mysub-showall input { cursor: pointer; accent-color: var(--accent-purple); }
+.ah-mysub-skip { display: block; width: 100%; text-align: center; margin-top: 11px; }
+
+/* first-run invitation bar */
+.ah-mysub-invite {
+    position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 26px);
+    z-index: 9500; opacity: 0; transition: opacity 0.3s, transform 0.3s; max-width: 94vw;
+}
+.ah-mysub-invite.in { opacity: 1; transform: translate(-50%, 0); }
+.ah-mysub-invite-in {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(22,11,38,0.97); border: 1px solid rgba(181,25,214,0.45);
+    border-radius: 999px; padding: 10px 12px 10px 20px;
+    box-shadow: 0 12px 34px rgba(0,0,0,0.45); font-size: 0.83rem; color: #e2d6f5;
+}
+.ah-mysub-invite-in > i { color: var(--accent-purple); flex-shrink: 0; }
+.ah-mysub-invite-go {
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+    border: none; color: #fff; font-weight: 700; font-size: 0.78rem;
+    padding: 7px 15px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+    font-family: 'Work Sans', sans-serif; flex-shrink: 0;
+}
+.ah-mysub-invite-go:hover { filter: brightness(1.12); }
+.ah-mysub-invite-x {
+    background: none; border: none; color: #8b8397; font-size: 1.3rem; line-height: 1;
+    cursor: pointer; padding: 0 6px; flex-shrink: 0;
+}
+.ah-mysub-invite-x:hover { color: #fff; }
+
+@media (max-width: 560px) {
+    .ah-mysub-invite-in { font-size: 0.76rem; padding: 10px 10px 10px 15px; gap: 9px; }
+    .ah-mysub-invite-in > span { flex: 1; }
 }
