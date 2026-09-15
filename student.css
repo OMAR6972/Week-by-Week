@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12b — v4: exam card colours matched to weeks, exam screenshot export rebuilt, per-tab settings entries removed. */
+/* VERSION: 2026-09-14 — v6: student account sign-in styling. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -1551,3 +1551,99 @@ h1 { text-shadow: none !important; }
 .card.wk-card.is-event { border-left-width: 2px !important; }
 .card.locked.wk-card.is-event .wk-ghost,
 .card.locked.wk-card.is-event .wk-ghost-icon { color: rgba(255, 255, 255, 0.06) !important; }
+
+/* ================= v6 — student accounts (optional sign-in) ================= */
+.ah-account-btn { margin-right: 6px; }
+.ah-account-btn.signed-in {
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+    border-color: transparent;
+}
+.ah-acct-initials { font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 0.72rem; color: #fff; letter-spacing: 0.5px; }
+
+.ah-auth-back {
+    position: fixed; inset: 0; z-index: 100000; background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 20px;
+    animation: ahAuthFade 0.18s ease;
+}
+@keyframes ahAuthFade { from { opacity: 0; } to { opacity: 1; } }
+
+.ah-auth-card {
+    position: relative; width: 380px; max-width: 94vw; max-height: 90vh; overflow-y: auto;
+    background: linear-gradient(145deg, #1d0f33, #14082a);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 28px 26px 22px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+}
+.ah-auth-x {
+    position: absolute; top: 12px; right: 14px; background: none; border: none;
+    color: #8b8397; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 4px 8px;
+}
+.ah-auth-x:hover { color: #fff; }
+
+.ah-auth-title { font-family: 'Orbitron', sans-serif; font-size: 1.15rem; font-weight: 900; color: #fff; margin-bottom: 5px; }
+.ah-auth-sub { font-size: 0.82rem; color: var(--text-sub); line-height: 1.5; margin-bottom: 18px; }
+
+.ah-auth-label {
+    display: block; font-size: 0.68rem; letter-spacing: 1px; text-transform: uppercase;
+    color: #8b8397; margin-bottom: 5px; margin-top: 12px;
+}
+.ah-auth-input {
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14);
+    color: #fff; font-size: 0.9rem; font-family: 'Work Sans', sans-serif;
+}
+.ah-auth-input:focus { outline: none; border-color: var(--accent-pink); background: rgba(0,0,0,0.42); }
+.ah-auth-input::placeholder { color: #5f5f6e; }
+
+.ah-auth-pw-wrap { position: relative; }
+.ah-auth-eye {
+    position: absolute; top: 0; bottom: 0; right: 10px; background: none; border: none;
+    color: #8b8397; cursor: pointer; font-size: 0.85rem; padding: 0 4px;
+}
+.ah-auth-eye:hover { color: #fff; }
+.ah-auth-pw-wrap .ah-auth-input { padding-right: 40px; }
+
+.ah-auth-go {
+    width: 100%; margin-top: 18px; padding: 11px; border: none; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+    color: #fff; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s;
+}
+.ah-auth-go:hover:not(:disabled) { filter: brightness(1.12); }
+.ah-auth-go:disabled { opacity: 0.55; cursor: default; }
+.ah-auth-go + .ah-auth-go { margin-top: 9px; }
+
+.ah-auth-msg { font-size: 0.8rem; margin-top: 10px; min-height: 17px; line-height: 1.45; }
+.ah-auth-msg.bad { color: #ff8a80; }
+.ah-auth-msg.ok { color: #8fd99f; }
+
+.ah-auth-link {
+    background: none; border: none; color: var(--accent-pink); font-size: 0.8rem;
+    cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 3px;
+    font-family: 'Work Sans', sans-serif;
+}
+.ah-auth-link:hover { color: #fff; }
+.ah-auth-switch { margin-top: 14px; font-size: 0.8rem; color: var(--text-sub); text-align: center; }
+
+.ah-auth-guest {
+    margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.74rem; color: #8b8397; line-height: 1.6;
+}
+
+.ah-acct-avatar {
+    width: 58px; height: 58px; border-radius: 50%; margin: 4px auto 14px;
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.15rem; color: #fff;
+}
+
+.ah-toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px);
+    background: rgba(20,10,30,0.96); border: 1px solid rgba(255,255,255,0.14);
+    color: #fff; padding: 11px 20px; border-radius: 999px; font-size: 0.84rem;
+    z-index: 100001; opacity: 0; transition: opacity 0.25s, transform 0.25s;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4); pointer-events: none; max-width: 90vw; text-align: center;
+}
+.ah-toast.in { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 480px) {
+    .ah-auth-card { padding: 24px 20px 18px; }
+}
