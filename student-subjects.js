@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15b — v7b: subject sync fixed both ways, cleared on sign-out; GPA can add the current semester. */
+/* VERSION: 2026-09-15d — v8b: My subjects is now stored per semester. */
 /* "My subjects": pick your registered subjects once; unregistered ones are tucked away, never deleted. */
 
 (function () {
@@ -42,14 +42,18 @@
     var local = (window.__ahGetMySubjects && window.__ahGetMySubjects()) || { codes: null, showOthers: false, configured: false };
 
     try {
+      var sem = window.__ahSemesterKey || 'default';
+      var kSubs = 'my_subjects::' + sem;
+      var kShow = 'my_subjects_showall::' + sem;
+
       var r = await SB.from('student_prefs').select('key, value')
-        .eq('user_id', st.id).in('key', ['my_subjects', 'my_subjects_showall']);
+        .eq('user_id', st.id).in('key', [kSubs, kShow]);
 
       var remoteCodes = null, remoteShowAll = null;
       if (!r.error && r.data) {
         r.data.forEach(function (row) {
-          if (row.key === 'my_subjects' && Array.isArray(row.value)) remoteCodes = row.value;
-          if (row.key === 'my_subjects_showall') remoteShowAll = !!row.value;
+          if (row.key === kSubs && Array.isArray(row.value)) remoteCodes = row.value;
+          if (row.key === kShow) remoteShowAll = !!row.value;
         });
       }
 
@@ -61,8 +65,8 @@
       } else if (local.configured && local.codes && local.codes.length) {
         // nothing saved to the account yet, so keep what they already chose here
         if (window.__ahSaveStudentPref) {
-          window.__ahSaveStudentPref('my_subjects', local.codes);
-          window.__ahSaveStudentPref('my_subjects_showall', !!local.showOthers);
+          window.__ahSaveStudentPref(kSubs, local.codes);
+          window.__ahSaveStudentPref(kShow, !!local.showOthers);
         }
       }
     } catch (e) {}
@@ -166,7 +170,7 @@
 
     var skipBtn = back.querySelector('#ah-mysub-skip');
     if (skipBtn) skipBtn.addEventListener('click', function () {
-      try { localStorage.setItem('ah_my_subjects_prompted', '1'); } catch (e) {}
+      try { localStorage.setItem(window.__ahMySubjectsPromptedKey || 'ah_my_subjects_prompted', '1'); } catch (e) {}
       close();
     });
 
@@ -179,7 +183,7 @@
         return;
       }
       var showOthers = back.querySelector('#ah-mysub-showothers').checked;
-      try { localStorage.setItem('ah_my_subjects_prompted', '1'); } catch (e) {}
+      try { localStorage.setItem(window.__ahMySubjectsPromptedKey || 'ah_my_subjects_prompted', '1'); } catch (e) {}
       if (window.__ahSetMySubjects) window.__ahSetMySubjects(picked, showOthers);
       close();
       if (window.__ahToast) window.__ahToast('Saved \u2014 showing your ' + picked.length + ' subject' + (picked.length === 1 ? '' : 's') + '.');
@@ -190,7 +194,7 @@
   /* ------------------------------------------------- first-run invitation */
   function maybePrompt() {
     var prompted;
-    try { prompted = localStorage.getItem('ah_my_subjects_prompted') === '1'; } catch (e) { prompted = false; }
+    try { prompted = localStorage.getItem(window.__ahMySubjectsPromptedKey || 'ah_my_subjects_prompted') === '1'; } catch (e) { prompted = false; }
     if (prompted) return;
 
     var cfg = window.__ahGetMySubjects && window.__ahGetMySubjects();
@@ -214,7 +218,7 @@
       openPicker({ firstRun: false });
     });
     bar.querySelector('#ah-mysub-invite-x').addEventListener('click', function () {
-      try { localStorage.setItem('ah_my_subjects_prompted', '1'); } catch (e) {}
+      try { localStorage.setItem(window.__ahMySubjectsPromptedKey || 'ah_my_subjects_prompted', '1'); } catch (e) {}
       bar.classList.remove('in');
       setTimeout(function () { bar.remove(); }, 300);
     });

@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15c — v8: deadline mark-as-done (tick circle), admin per-task "students can tick off". */
+/* VERSION: 2026-09-15d — v8b: My subjects is now stored per semester. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -255,8 +255,32 @@
     /* v7: "My subjects" — the student says once which subjects they're registered in,
        and the whole site narrows to those. null means they haven't chosen yet, in which
        case nothing is filtered and the site behaves exactly as before. */
-    const MY_SUBJECTS_KEY = 'ah_my_subjects';
-    const MY_SUBJECTS_SHOWALL_KEY = 'ah_my_subjects_showall';
+    /* v8b: these are stored PER SEMESTER. Storing one global list meant picking
+       your Fall subjects wiped your Spring ones and vice versa. */
+    function ahSemesterKey() {
+        try { return new URLSearchParams(location.search).get('sem') || 'default'; }
+        catch (e) { return 'default'; }
+    }
+    const AH_SEM = ahSemesterKey();
+    const MY_SUBJECTS_KEY = 'ah_my_subjects::' + AH_SEM;
+    const MY_SUBJECTS_SHOWALL_KEY = 'ah_my_subjects_showall::' + AH_SEM;
+    const MY_SUBJECTS_PROMPTED_KEY = 'ah_my_subjects_prompted::' + AH_SEM;
+    window.__ahSemesterKey = AH_SEM;
+    window.__ahMySubjectsPromptedKey = MY_SUBJECTS_PROMPTED_KEY;
+
+    /* one-time move of the old single-list storage into whichever semester is open */
+    (function migrateLegacyMySubjects() {
+        try {
+            const legacy = localStorage.getItem('ah_my_subjects');
+            if (legacy !== null && localStorage.getItem(MY_SUBJECTS_KEY) === null) {
+                localStorage.setItem(MY_SUBJECTS_KEY, legacy);
+                const legacyShow = localStorage.getItem('ah_my_subjects_showall');
+                if (legacyShow !== null) localStorage.setItem(MY_SUBJECTS_SHOWALL_KEY, legacyShow);
+            }
+            localStorage.removeItem('ah_my_subjects');
+            localStorage.removeItem('ah_my_subjects_showall');
+        } catch (e) {}
+    })();
 
     let myRegisteredSubjects = (() => {
         try {
@@ -288,8 +312,8 @@
             localStorage.setItem(MY_SUBJECTS_SHOWALL_KEY, myShowOtherSubjects ? '1' : '0');
         } catch (e) {}
         if (window.__ahSaveStudentPref) {
-            window.__ahSaveStudentPref('my_subjects', myRegisteredSubjects ? [...myRegisteredSubjects] : []);
-            window.__ahSaveStudentPref('my_subjects_showall', myShowOtherSubjects);
+            window.__ahSaveStudentPref('my_subjects::' + AH_SEM, myRegisteredSubjects ? [...myRegisteredSubjects] : []);
+            window.__ahSaveStudentPref('my_subjects_showall::' + AH_SEM, myShowOtherSubjects);
         }
     }
     window.__ahSetMySubjects = function (codes, showOthers) {
@@ -305,8 +329,14 @@
         myRegisteredSubjects = null;
         myShowOtherSubjects = false;
         try {
-            localStorage.removeItem(MY_SUBJECTS_KEY);
-            localStorage.removeItem(MY_SUBJECTS_SHOWALL_KEY);
+            /* clear every semester's copy, not just the open one — otherwise the
+               next person on a shared laptop inherits the other semesters */
+            const kill = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && (k.indexOf('ah_my_subjects') === 0)) kill.push(k);
+            }
+            kill.forEach(k => localStorage.removeItem(k));
         } catch (e) {}
         refreshCurrentFilteredPage();
     };
