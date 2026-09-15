@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15h — v10b: "Start on" now wins over the leftover tab in the address. */
+/* VERSION: 2026-09-15i — v11: per-semester settings now use the real semester name, not "default". */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -257,16 +257,62 @@
        case nothing is filtered and the site behaves exactly as before. */
     /* v8b: these are stored PER SEMESTER. Storing one global list meant picking
        your Fall subjects wiped your Spring ones and vice versa. */
+    /* v11 FIX: the semester was read from the address only, so a plain visit with
+       no ?sem= saved everything under "default" while the real data lives under
+       "fall-2026". They never matched, so reminders found nothing. The loader
+       resolves the real semester a moment after start-up, and calls
+       __ahReloadSemesterScopedPrefs() once it knows — so these are looked up live
+       rather than frozen at page load. */
     function ahSemesterKey() {
-        try { return new URLSearchParams(location.search).get('sem') || 'default'; }
-        catch (e) { return 'default'; }
+        if (window.__ahLoadedSem) return window.__ahLoadedSem;
+        try {
+            const u = new URLSearchParams(location.search).get('sem');
+            if (u) return u;
+        } catch (e) {}
+        if (window.__ahCurrentSemSlug) return window.__ahCurrentSemSlug;
+        return 'default';
     }
-    const AH_SEM = ahSemesterKey();
-    const MY_SUBJECTS_KEY = 'ah_my_subjects::' + AH_SEM;
-    const MY_SUBJECTS_SHOWALL_KEY = 'ah_my_subjects_showall::' + AH_SEM;
-    const MY_SUBJECTS_PROMPTED_KEY = 'ah_my_subjects_prompted::' + AH_SEM;
+    let AH_SEM = ahSemesterKey();
+    let MY_SUBJECTS_KEY = 'ah_my_subjects::' + AH_SEM;
+    let MY_SUBJECTS_SHOWALL_KEY = 'ah_my_subjects_showall::' + AH_SEM;
+    let MY_SUBJECTS_PROMPTED_KEY = 'ah_my_subjects_prompted::' + AH_SEM;
     window.__ahSemesterKey = AH_SEM;
     window.__ahMySubjectsPromptedKey = MY_SUBJECTS_PROMPTED_KEY;
+
+    /* Called by the data loader once the real semester name is known. Moves
+       anything saved under the old "default" name across, so nobody loses the
+       choices they already made. */
+    window.__ahReloadSemesterScopedPrefs = function () {
+        const next = ahSemesterKey();
+        if (next === AH_SEM) return;
+
+        const oldSubsKey = MY_SUBJECTS_KEY;
+        const oldShowKey = MY_SUBJECTS_SHOWALL_KEY;
+
+        AH_SEM = next;
+        MY_SUBJECTS_KEY = 'ah_my_subjects::' + AH_SEM;
+        MY_SUBJECTS_SHOWALL_KEY = 'ah_my_subjects_showall::' + AH_SEM;
+        MY_SUBJECTS_PROMPTED_KEY = 'ah_my_subjects_prompted::' + AH_SEM;
+        window.__ahSemesterKey = AH_SEM;
+        window.__ahMySubjectsPromptedKey = MY_SUBJECTS_PROMPTED_KEY;
+
+        try {
+            if (localStorage.getItem(MY_SUBJECTS_KEY) === null) {
+                const carry = localStorage.getItem(oldSubsKey);
+                if (carry !== null) {
+                    localStorage.setItem(MY_SUBJECTS_KEY, carry);
+                    const carryShow = localStorage.getItem(oldShowKey);
+                    if (carryShow !== null) localStorage.setItem(MY_SUBJECTS_SHOWALL_KEY, carryShow);
+                }
+            }
+            const raw = localStorage.getItem(MY_SUBJECTS_KEY);
+            myRegisteredSubjects = raw === null ? null : new Set(JSON.parse(raw) || []);
+            myShowOtherSubjects = localStorage.getItem(MY_SUBJECTS_SHOWALL_KEY) === '1';
+        } catch (e) {}
+
+        document.dispatchEvent(new CustomEvent('ah-semester-ready', { detail: AH_SEM }));
+        refreshCurrentFilteredPage();
+    };
 
     /* one-time move of the old single-list storage into whichever semester is open */
     (function migrateLegacyMySubjects() {
@@ -312,8 +358,8 @@
             localStorage.setItem(MY_SUBJECTS_SHOWALL_KEY, myShowOtherSubjects ? '1' : '0');
         } catch (e) {}
         if (window.__ahSaveStudentPref) {
-            window.__ahSaveStudentPref('my_subjects::' + AH_SEM, myRegisteredSubjects ? [...myRegisteredSubjects] : []);
-            window.__ahSaveStudentPref('my_subjects_showall::' + AH_SEM, myShowOtherSubjects);
+            window.__ahSaveStudentPref('my_subjects::' + ahSemesterKey(), myRegisteredSubjects ? [...myRegisteredSubjects] : []);
+            window.__ahSaveStudentPref('my_subjects_showall::' + ahSemesterKey(), myShowOtherSubjects);
         }
     }
     window.__ahSetMySubjects = function (codes, showOthers) {

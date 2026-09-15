@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15f — v9b: custom reminder timings you can add, tick and remove. */
+/* VERSION: 2026-09-15i — v11: per-semester settings now use the real semester name, not "default". */
 
 (function () {
   var SB = window.__ahSupabase;
@@ -45,7 +45,9 @@
   };
 
   /* ------------------------------------------------------------- storage */
-  function semKey() { return window.__ahSemesterKey || 'default'; }
+  function semKey() {
+    return window.__ahLoadedSem || window.__ahSemesterKey || window.__ahCurrentSemSlug || 'default';
+  }
   function lsKey()  { return 'ah_notify::' + semKey(); }
 
   function load() {
@@ -107,6 +109,7 @@
     } catch (e) {}
   }
   document.addEventListener('ah-student-changed', function (e) { if (e.detail) syncWithAccount(); });
+  document.addEventListener('ah-semester-ready', function () { syncWithAccount(); });
 
   /* ------------------------------------------------------------- helpers */
   function esc(s) {

@@ -1,4 +1,4 @@
-/* VERSION: 2026-07-01 — semesters (7.1) + auto badges/announcements (7.2) + analytics (7.3) + detailed click tracking (7.3c). If this dated line is present, you have the current file. */
+/* VERSION: 2026-09-15i — v11: per-semester settings now use the real semester name, not "default". */
 /* Academic Hub - student-data.js  (semester-aware, feature 7.1; + 7.3 analytics appended at bottom)
    --------------------------------------------------------------------------
    What this does, in order:
@@ -142,6 +142,10 @@
       if (!currentSlug && list.length) currentSlug = list[0].slug;
       // Exposed for the GPA calculator: which semester is the default, and are we on it?
       window.__ahCurrentSemSlug = currentSlug;
+      /* v11: tell the rest of the site which semester actually loaded, so
+         per-semester settings are saved under the real name instead of "default". */
+      window.__ahLoadedSem = selected || currentSlug || null;
+      try { if (window.__ahReloadSemesterScopedPrefs) window.__ahReloadSemesterScopedPrefs(); } catch (e) {}
       window.__ahIsCurrentSem = currentSlug ? (selected === currentSlug) : true;
       // Name of the semester currently loaded (for the GPA "load preset" button label)
       for (var n = 0; n < list.length; n++) { if (list[n].slug === selected) { window.__ahSemName = list[n].name; break; } }
