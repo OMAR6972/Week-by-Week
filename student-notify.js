@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15e — v9: notification settings (choosing half; sending comes next). */
+/* VERSION: 2026-09-15f — v9b: custom reminder timings you can add, tick and remove. */
 
 (function () {
   var SB = window.__ahSupabase;
@@ -39,6 +39,7 @@
        'off' = never. Whole-week is the default because per-resource is noisy. */
     resources:     'week',
     reminders:     ['1w', '1d', '1h'],
+    customReminders: [],   // [{ key:'c_5400', label:'90 minutes before', ms:5400000 }]
     deadlineCats:  null,   // null = all categories on
     subjects:      null    // null = follow "My subjects"
   };
@@ -65,6 +66,17 @@
   }
 
   window.__ahGetNotifyPrefs = load;
+
+  /* every reminder this student has available, built-in plus their own */
+  window.__ahAllReminderOptions = function () {
+    var p = load();
+    return REMINDER_OPTIONS.concat(p.customReminders || []);
+  };
+  window.__ahReminderMs = function (key) {
+    var all = window.__ahAllReminderOptions();
+    for (var i = 0; i < all.length; i++) if (all[i].key === key) return all[i].ms;
+    return null;
+  };
   window.__ahNotifyDeadlineCats = DEADLINE_CATS;
   window.__ahNotifyReminderOptions = REMINDER_OPTIONS;
 
@@ -114,6 +126,17 @@
   function subjectName(code) {
     var s = (window.COURSE_DATA || []).find(function (x) { return x.code === code; });
     return s ? (s.name || code) : code;
+  }
+
+  var UNIT_MS = { m: 60e3, h: 3600e3, d: 24 * 3600e3, w: 7 * 24 * 3600e3 };
+  var UNIT_WORD = { m: 'minute', h: 'hour', d: 'day', w: 'week' };
+
+  function customChipHtml(r, on) {
+    return '<label class="ah-nt-chip custom' + (on ? ' on' : '') + '" data-key="' + esc(r.key) + '">' +
+             '<input type="checkbox" class="nt-rem" value="' + esc(r.key) + '"' + (on ? ' checked' : '') + '>' +
+             esc(r.label) +
+             '<button type="button" class="ah-nt-chip-x" title="Remove this timing" aria-label="Remove">&times;</button>' +
+           '</label>';
   }
 
   /* --------------------------------------------------------------- panel */
@@ -210,7 +233,7 @@
         '<div class="ah-nt-pane" data-pane="when">' +
           '<div class="ah-nt-block-title">Remind me before a deadline</div>' +
           '<div class="ah-nt-hint" style="margin-top:0;">Pick as many as you want, like setting several alarms. Reminders stop as soon as you tick the task done.</div>' +
-          '<div class="ah-nt-reminders">' +
+          '<div class="ah-nt-reminders" id="nt-rem-list">' +
             REMINDER_OPTIONS.map(function (r) {
               var on = p.reminders.indexOf(r.key) > -1;
               return '<label class="ah-nt-chip' + (on ? ' on' : '') + '">' +
@@ -218,7 +241,28 @@
                        esc(r.label) +
                      '</label>';
             }).join('') +
+            (p.customReminders || []).map(function (r) {
+              var on = p.reminders.indexOf(r.key) > -1;
+              return customChipHtml(r, on);
+            }).join('') +
           '</div>' +
+
+          '<div class="ah-nt-custom">' +
+            '<div class="ah-nt-block-title">Add your own timing</div>' +
+            '<div class="ah-nt-custom-row">' +
+              '<input type="number" id="nt-cust-n" min="1" max="999" placeholder="30" class="ah-nt-cust-num">' +
+              '<select id="nt-cust-u" class="ah-nt-cust-unit">' +
+                '<option value="m">minutes</option>' +
+                '<option value="h">hours</option>' +
+                '<option value="d" selected>days</option>' +
+                '<option value="w">weeks</option>' +
+              '</select>' +
+              '<span class="ah-nt-cust-tail">before</span>' +
+              '<button type="button" class="ah-nt-cust-add" id="nt-cust-add">Add</button>' +
+            '</div>' +
+            '<div class="ah-nt-hint" id="nt-cust-msg">It joins the list above, ready to tick on or off like the rest.</div>' +
+          '</div>' +
+
           '<div class="ah-nt-hint" id="nt-rem-count"></div>' +
         '</div>' +
 
@@ -299,6 +343,56 @@
     }
     syncDeadlineBlock();
 
+    /* the student's own timings, edited live inside the panel */
+    var customs = (p.customReminders || []).slice();
+
+    function addCustom() {
+      var nEl = back.querySelector('#nt-cust-n');
+      var uEl = back.querySelector('#nt-cust-u');
+      var msgEl = back.querySelector('#nt-cust-msg');
+      var n = parseInt(nEl.value, 10);
+      var u = uEl.value;
+
+      if (!n || n < 1) { msgEl.textContent = 'Type a number first.'; nEl.focus(); return; }
+      var ms = n * UNIT_MS[u];
+      if (ms > 365 * 24 * 3600e3) { msgEl.textContent = 'That\u2019s more than a year ahead.'; return; }
+
+      var key = 'c_' + ms;
+      var exists = customs.some(function (c) { return c.key === key; }) ||
+                   REMINDER_OPTIONS.some(function (r) { return r.ms === ms; });
+      if (exists) { msgEl.textContent = 'You already have that timing.'; return; }
+
+      var label = n + ' ' + UNIT_WORD[u] + (n === 1 ? '' : 's') + ' before';
+      var r = { key: key, label: label, ms: ms };
+      customs.push(r);
+
+      /* keep the list in time order so it reads sensibly */
+      customs.sort(function (a, b) { return b.ms - a.ms; });
+
+      var listEl = back.querySelector('#nt-rem-list');
+      listEl.insertAdjacentHTML('beforeend', customChipHtml(r, true));
+      nEl.value = '';
+      msgEl.textContent = 'Added \u2014 ' + label + '.';
+      updateRemCount();
+    }
+
+    back.querySelector('#nt-cust-add').addEventListener('click', addCustom);
+    back.querySelector('#nt-cust-n').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); addCustom(); }
+    });
+
+    back.querySelector('#nt-rem-list').addEventListener('click', function (e) {
+      var x = e.target.closest('.ah-nt-chip-x');
+      if (!x) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var chip = x.closest('.ah-nt-chip');
+      var key = chip && chip.dataset.key;
+      customs = customs.filter(function (c) { return c.key !== key; });
+      if (chip) chip.remove();
+      updateRemCount();
+    });
+
     function updateRemCount() {
       var n = back.querySelectorAll('.nt-rem:checked').length;
       back.querySelector('#nt-rem-count').textContent = n === 0
@@ -333,7 +427,8 @@
         resources:     resChoice,
         resourceTypes: vals('.nt-restype'),
         deadlineCats:  vals('.nt-cat'),
-        reminders:     vals('.nt-rem'),
+        reminders:       vals('.nt-rem'),
+        customReminders: customs,
         subjects:      vals('.nt-subject')
       };
       save(next);

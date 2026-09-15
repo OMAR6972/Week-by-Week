@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15e — v9: notification settings (choosing half; sending comes next). */
+/* VERSION: 2026-09-15f — v9b: custom reminder timings you can add, tick and remove. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -1846,4 +1846,44 @@ h1 { text-shadow: none !important; }
 @media (max-width: 500px) {
     .ah-notify-card { width: 100%; }
     .ah-nt-tab { font-size: 0.74rem; }
+}
+
+/* ---- v9b: custom reminder timings ---- */
+.ah-nt-custom {
+    margin-top: 14px; padding: 13px; border-radius: 12px;
+    background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06);
+}
+.ah-nt-custom-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ah-nt-cust-num {
+    width: 70px; padding: 8px 10px; border-radius: 9px;
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14);
+    color: #fff; font-size: 0.84rem; font-family: 'Work Sans', sans-serif;
+}
+.ah-nt-cust-num:focus { outline: none; border-color: var(--accent-pink); }
+.ah-nt-cust-unit {
+    padding: 8px 10px; border-radius: 9px;
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14);
+    color: #fff; font-size: 0.84rem; font-family: 'Work Sans', sans-serif; cursor: pointer;
+}
+.ah-nt-cust-unit:focus { outline: none; border-color: var(--accent-pink); }
+.ah-nt-cust-tail { font-size: 0.82rem; color: var(--text-sub); }
+.ah-nt-cust-add {
+    margin-left: auto; padding: 8px 18px; border-radius: 9px; border: none;
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+    color: #fff; font-weight: 700; font-size: 0.8rem; cursor: pointer;
+    font-family: 'Work Sans', sans-serif;
+}
+.ah-nt-cust-add:hover { filter: brightness(1.12); }
+
+.ah-nt-chip.custom { padding-right: 6px; }
+.ah-nt-chip-x {
+    background: none; border: none; color: #8b8397; font-size: 1rem; line-height: 1;
+    cursor: pointer; padding: 0 4px; margin-left: 2px;
+}
+.ah-nt-chip-x:hover { color: #ff8a80; }
+.ah-nt-chip.on .ah-nt-chip-x { color: #c9b3e0; }
+.ah-nt-chip.on .ah-nt-chip-x:hover { color: #ff8a80; }
+
+@media (max-width: 500px) {
+    .ah-nt-cust-add { margin-left: 0; width: 100%; }
 }
