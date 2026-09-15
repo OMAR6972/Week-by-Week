@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-14 — v6: timetable Import-from-another-subject, safe Apply to All, subject filter count + dropdown fixed. */
+/* VERSION: 2026-09-15c — v8: deadline mark-as-done (tick circle), admin per-task "students can tick off". */
 /* Academic Hub - admin.js (extracted from admin.html, Phase 1) */
     let cIdx = 0; let wIdx = 0; let eIdx = 0; let pIdx = 0; let schWIdx = 0; 
     let schedulePanelMode = 'weeks';
@@ -537,6 +537,20 @@
         }
         return arr.length + 1;
     }
+
+    /* v8: whether students may tick this task off themselves. Unset falls back to
+       the task's wording, so existing data behaves sensibly with no editing:
+       a quiz or discussion happens at a fixed time and can't be finished early. */
+    const AH_NOT_COMPLETABLE = ['quiz', 'exam', 'midterm', 'final', 'discussion', 'conference', 'seminar', 'presentation', 'oral'];
+    const AH_COMPLETABLE_HINTS = ['submission', 'submit', 'assignment', 'sheet', 'report', 'task', 'delivery', 'deliverable', 'upload', 'hand in', 'handin'];
+    function ahCanDoneChecked(task) {
+        if (!task) return false;
+        if (typeof task.canDone === 'boolean') return task.canDone;
+        const hay = ((task.type || '') + ' ' + (task.name || '')).toLowerCase();
+        if (AH_COMPLETABLE_HINTS.some(w => hay.includes(w))) return true;
+        return !AH_NOT_COMPLETABLE.some(w => hay.includes(w));
+    }
+    window.ahCanDoneChecked = ahCanDoneChecked;
 
     function addMiddleItem(type) {
         if(type === 'week') { window.COURSE_DATA[cIdx].weeks.push({title:`WEEK ${ahNextTitleNumber(window.COURSE_DATA[cIdx].weeks)}`, resources:{}}); wIdx=window.COURSE_DATA[cIdx].weeks.length-1; }
@@ -1306,6 +1320,7 @@
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
                         <label style="color:#00E5FF; margin:0;">⏳ Deadline Tracker</label>
                         <div style="display:flex; align-items:center; gap:8px;">
+                            <label class="checkbox-label" style="margin:0;" title="Students see a tick circle and can mark this finished themselves. Turn off for things that happen at a fixed time, like a quiz or a discussion."><input type="checkbox" ${ahCanDoneChecked(task) ? 'checked' : ''} onchange="updateSchTask(${tIdx}, 'canDone', this.checked)"> Students can tick off</label>
                             <label class="checkbox-label" style="margin:0;"><input type="checkbox" ${task.isCompleted ? 'checked' : ''} onchange="updateSchTask(${tIdx}, 'isCompleted', this.checked)"> Mark Completed</label>
                         </div>
                     </div>

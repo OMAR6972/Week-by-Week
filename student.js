@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15b — v7b: subject sync fixed both ways, cleared on sign-out; GPA can add the current semester. */
+/* VERSION: 2026-09-15c — v8: deadline mark-as-done (tick circle), admin per-task "students can tick off". */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -369,6 +369,57 @@
     function getDeadlineState(signature) {
         return deadlineItemStates[signature] || 'active';
     }
+
+    /* v8: mark-as-done.
+       Some tasks happen at a fixed moment — a quiz, a discussion, a conference —
+       and can't be "finished" early, so they get no tick. Things you hand in can.
+       The admin decides per task via canDone; when that's never been set we fall
+       back to the task type so existing data behaves sensibly straight away. */
+    const AH_NOT_COMPLETABLE = ['quiz', 'exam', 'midterm', 'final', 'discussion', 'conference', 'seminar', 'presentation', 'oral'];
+    /* words that mean "you hand this in", which beat the fixed-time words above —
+       otherwise "Final Project Submission" would be blocked just for saying "final" */
+    const AH_COMPLETABLE_HINTS = ['submission', 'submit', 'assignment', 'sheet', 'report', 'task', 'delivery', 'deliverable', 'upload', 'hand in', 'handin'];
+
+    function canMarkDeadlineDone(task) {
+        if (!task) return false;
+        if (typeof task.canDone === 'boolean') return task.canDone;
+        const hay = ((task.type || '') + ' ' + (task.name || '')).toLowerCase();
+        if (AH_COMPLETABLE_HINTS.some(w => hay.includes(w))) return true;
+        return !AH_NOT_COMPLETABLE.some(w => hay.includes(w));
+    }
+
+    function isDeadlineDone(signature) {
+        return getDeadlineState(signature) === 'done';
+    }
+
+    function ahDeadlineSignatureFor(item) {
+        if (!item) return '';
+        if (item.source === 'news') return buildNewsDeadlineSignature(item.newsIndex, (window.NEWS_DATA || [])[item.newsIndex]);
+        const wk = (window.SCHEDULE_DATA || [])[item.wIndex];
+        const task = wk && (wk.tasks || [])[item.tIndex];
+        if (!wk || !task) return '';
+        return buildScheduleDeadlineSignature(item.wIndex, item.tIndex, wk.week, task);
+    }
+
+    function toggleDeadlineDone(source, wIndex, tIndex, newsIndex, ev) {
+        if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+        let signature = '';
+        if (source === 'news') signature = buildNewsDeadlineSignature(newsIndex, (window.NEWS_DATA || [])[newsIndex]);
+        else {
+            const wk = (window.SCHEDULE_DATA || [])[wIndex];
+            const task = wk && (wk.tasks || [])[tIndex];
+            if (!wk || !task) return;
+            signature = buildScheduleDeadlineSignature(wIndex, tIndex, wk.week, task);
+        }
+        if (!signature) return;
+        const nowDone = isDeadlineDone(signature);
+        setDeadlineState(signature, nowDone ? 'active' : 'done');
+        showToast(nowDone ? 'Marked as not done' : 'Marked as done', 'todo');
+        if (currentPageId === 'deadlines') refreshDeadlinesInPlace();
+        else refreshCurrentFilteredPage();
+        populateDeadlinesDropdown();
+    }
+    window.toggleDeadlineDone = toggleDeadlineDone;
 
     function setDeadlineState(signature, status) {
         if (!signature) return;
@@ -1644,7 +1695,7 @@
                     const signature = buildScheduleDeadlineSignature(wIndex, tIndex, wk.week, t);
                     const manualState = getDeadlineState(signature);
 
-                    if (manualState === 'completed' || manualState === 'hidden') {
+                    if (manualState === 'completed' || manualState === 'hidden' || manualState === 'done') {
                         completed.push({
                             source: 'schedule',
                             wIndex,
@@ -1696,7 +1747,7 @@
             const signature = buildNewsDeadlineSignature(newsIndex, n);
             const manualState = getDeadlineState(signature);
 
-            if (manualState === 'completed' || manualState === 'hidden') {
+            if (manualState === 'completed' || manualState === 'hidden' || manualState === 'done') {
                 completed.push({
                     source: 'news',
                     newsIndex,
@@ -2048,11 +2099,27 @@
                     ? 'event.stopPropagation();'
                     : (item.source === 'news' ? 'openNewsPanel()' : `goToScheduleTask(${item.wIndex}, ${item.tIndex})`);
                 const cardAttrs = buildDeadlineCardAttrs(item, isComp);
+
+                /* v8: a small tick circle, only for tasks that can actually be finished.
+                   Kept deliberately small so it isn't hit by accident when opening the card. */
+                const _sig = ahDeadlineSignatureFor(item);
+                const _done = _sig ? isDeadlineDone(_sig) : false;
+                const _canDone = !isComp && canMarkDeadlineDone(item.task);
+                const _doneBtn = _canDone
+                    ? `<button class="dl-done-btn${_done ? ' done' : ''}"
+                            title="${_done ? 'Mark as not done' : 'Mark as done'}"
+                            aria-label="${_done ? 'Mark as not done' : 'Mark as done'}"
+                            onclick="toggleDeadlineDone('${item.source === 'news' ? 'news' : 'schedule'}', ${item.wIndex}, ${item.tIndex}, ${item.newsIndex}, event)">
+                            <i class="fa-solid fa-check"></i>
+                       </button>`
+                    : '';
+
                 html += `
-                    <div class="card deadline-action-card ${isComp ? 'completed' : ''}" ${cardAttrs} style="border-left: 4px solid ${accentColor}; flex-direction: row; cursor: ${isComp ? 'default' : 'pointer'}; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center;" onclick="${onClick}">
+                    <div class="card deadline-action-card ${isComp ? 'completed' : ''}${_done ? ' dl-is-done' : ''}" ${cardAttrs} style="border-left: 4px solid ${accentColor}; flex-direction: row; cursor: ${isComp ? 'default' : 'pointer'}; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center;" onclick="${onClick}">
+                        ${_doneBtn}
                         <span class="sub-badge" style="background: ${bgColor}; color: ${badgeTextColor}; min-width: 52px; font-size: 0.72rem; padding: 5px 10px; border-radius:8px;">${item.task.sub}</span>
                         <div style="flex: 1; margin-left: 15px;">
-                            <div class="dl-text" style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${ahIcon(item.task.icon)} ${item.task.name}</div>
+                            <div class="dl-text dl-title" style="font-weight: 600; font-size: 0.95rem; color: var(--text-main);">${ahIcon(item.task.icon)} ${item.task.name}</div>
                             <div class="dl-text" style="font-size: 0.78rem; color: var(--text-sub); margin-top: 2px;">${subName}${item.source === 'news' ? '' : ` • Week ${item.week}`}</div>
                         </div>
                         <div style="display:flex; flex-direction:column; align-items:flex-end;">
@@ -2194,6 +2261,24 @@
 
         const actions = [];
         const addAction = (label, fn) => actions.push({ label, fn });
+
+        /* v8: the tick circle is the obvious way in, but keep it here too for
+           anyone who already knows the long-press / right-click menu. */
+        let _task = null;
+        if (source !== 'news') {
+            const _wk = (window.SCHEDULE_DATA || [])[wIndex];
+            _task = _wk && (_wk.tasks || [])[tIndex];
+        }
+        const _sigM = source === 'news'
+            ? buildNewsDeadlineSignature(newsIndex, (window.NEWS_DATA || [])[newsIndex])
+            : (_task ? buildScheduleDeadlineSignature(wIndex, tIndex, ((window.SCHEDULE_DATA || [])[wIndex] || {}).week, _task) : '');
+
+        if (stage !== 'completed' && (source === 'news' || canMarkDeadlineDone(_task))) {
+            const _isDone = _sigM && isDeadlineDone(_sigM);
+            addAction(_isDone ? 'Mark as not done' : 'Mark as done', () => {
+                toggleDeadlineDone(source, wIndex, tIndex, newsIndex, null);
+            });
+        }
 
         if (stage === 'completed') {
             addAction('Unhide', () => {

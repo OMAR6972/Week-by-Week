@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15 — v7: My subjects — pick your registered subjects once, site filters to them; GPA bulk add. */
+/* VERSION: 2026-09-15c — v8: deadline mark-as-done (tick circle), admin per-task "students can tick off". */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -1712,4 +1712,49 @@ h1 { text-shadow: none !important; }
 @media (max-width: 560px) {
     .ah-mysub-invite-in { font-size: 0.76rem; padding: 10px 10px 10px 15px; gap: 9px; }
     .ah-mysub-invite-in > span { flex: 1; }
+}
+
+/* ================= v8 — deadline mark-as-done ================= */
+/* Small on purpose: sits left of the subject badge, easy to aim for
+   deliberately but hard to catch when you just want to open the card. */
+.dl-done-btn {
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    margin-right: 13px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.22);
+    background: transparent;
+    color: transparent;
+    font-size: 0.6rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0;
+    transition: border-color 0.18s, background 0.18s, color 0.18s, transform 0.12s;
+}
+.dl-done-btn:hover {
+    border-color: var(--accent-green, #34c759);
+    color: rgba(52,199,89,0.55);
+    background: rgba(52,199,89,0.08);
+}
+.dl-done-btn:active { transform: scale(0.9); }
+.dl-done-btn.done {
+    border-color: var(--accent-green, #34c759);
+    background: var(--accent-green, #34c759);
+    color: #06210d;
+}
+.dl-done-btn.done:hover { filter: brightness(1.1); }
+
+/* a finished task recedes rather than disappearing */
+.deadline-action-card.dl-is-done { opacity: 0.62; }
+.deadline-action-card.dl-is-done .dl-title {
+    text-decoration: line-through;
+    text-decoration-color: rgba(255,255,255,0.35);
+    text-decoration-thickness: 1.5px;
+}
+
+/* bigger hit area on touch, same visual size */
+@media (hover: none), (pointer: coarse) {
+    .dl-done-btn { position: relative; }
+    .dl-done-btn::after {
+        content: ''; position: absolute; inset: -9px; border-radius: 50%;
+    }
 }
