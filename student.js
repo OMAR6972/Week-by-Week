@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19j — Your activity is shared live between browsers on the same account. Includes 19i. */
+/* VERSION: 2026-09-19k — Your activity short view: top subject / top material shown as clean tiles. Includes 19j. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -10073,14 +10073,17 @@
             const agg = ahStatsAggregate(st, '7', 'all');
             const tot = ahStatsTotals(agg);
             const topType = Object.keys(tot.types).sort((a, b) => tot.types[b] - tot.types[a])[0];
-            const hl = [];
-            if (tot.subs.length) hl.push(`<span><i class="fa-solid fa-star"></i> Most opened <b>${ahEsc(tot.subs[0])}</b></span>`);
-            if (topType) hl.push(`<span><i class="fa-solid fa-book-open"></i> Top material <b>${ahEsc(topType)}</b></span>`);
+            // two small tiles (same look as the numbers above) — styled inline so they look right on any CSS version
+            const tile = (val, label) => `<div class="dash-stat"><b style="font-size:0.95rem; overflow-wrap:anywhere;">${ahEsc(val)}</b><i>${label}</i></div>`;
+            const tiles = [];
+            if (tot.subs.length) tiles.push(tile(tot.subs[0], 'most opened subject'));
+            if (topType) tiles.push(tile(topType, 'top material'));
+            const tilesHtml = tiles.length
+                ? `<div class="dash-stat-grid" style="grid-template-columns:repeat(${tiles.length},1fr); margin-top:14px;">${tiles.join('')}</div>` : '';
             return headHtml('<span class="dash-see" onclick="ahStatsSetView({full:true})">See full details</span>') +
-                '<div class="dash-st-cap">Last 7 days</div>' +
+                '<div class="dash-st-cap" style="font-size:0.68rem; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-sub); margin:0 0 10px;">Last 7 days</div>' +
                 `<div class="dash-stat-grid">${ahStatsCell(agg.v, 'website visits')}${ahStatsCell(tot.o, 'subjects opened')}${ahStatsCell(tot.m, 'materials opened')}</div>` +
-                ahStatsBars(ahStatsBuckets(st, '7', 'all')) +
-                (hl.length ? `<div class="dash-st-hl">${hl.join('')}</div>` : '') + foot;
+                ahStatsBars(ahStatsBuckets(st, '7', 'all')) + tilesHtml + foot;
         }
 
         /* ---------- full version ---------- */

@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19h — v11g: Your activity with ranges and per-subject view. Includes v11–v11f. */
+/* VERSION: 2026-09-19i — v11h: Your activity short/full view, materials by type. Includes v11–v11g. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -2092,3 +2092,19 @@ h1 { text-shadow: none !important; }
     .dash-stat-grid.four { grid-template-columns: repeat(2, 1fr); }
     .dash-top-row b.wide { min-width: 96px; }
 }
+
+/* ================= v11h — Your activity: short view, materials by type ================= */
+.dash-st-cap { font-size: 0.68rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-sub); margin: -4px 0 10px; }
+.dash-st-hl { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: 0.78rem; color: var(--text-sub); }
+.dash-st-hl b { color: #fff; font-weight: 700; margin-left: 4px; }
+.dash-st-hl i { color: var(--accent-purple); margin-right: 3px; }
+.dash-sj { border-radius: 12px; }
+.dash-sj.open { background: rgba(255,255,255,0.03); margin: 8px -8px 0; padding: 0 8px 10px; }
+.dash-sj.open > .dash-top-row { margin-top: 0; padding-top: 8px; }
+.dash-top-row .chev { font-style: normal; color: var(--text-sub); font-size: 0.65rem; transition: transform 0.2s; flex-shrink: 0; }
+.dash-sj.open .chev { transform: rotate(180deg); }
+.dash-sj-more { margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.12); }
+.dash-sj-h { font-size: 0.66rem; letter-spacing: 1.1px; text-transform: uppercase; color: var(--text-sub); }
+.dash-st-zoom { margin-top: 10px; background: rgba(181,25,214,0.16); border: 1px solid rgba(181,25,214,0.45); color: #d9b3ff;
+    font-size: 0.74rem; font-weight: 600; padding: 7px 12px; border-radius: 9px; cursor: pointer; font-family: 'Work Sans', sans-serif; }
+.dash-st-zoom i { color: inherit; font-size: 0.68rem; margin-left: 4px; }
