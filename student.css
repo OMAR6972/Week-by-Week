@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19c — v11c: phone fixes (My subjects bar, navbar) + Jump back in hover clipping restored. */
+/* VERSION: 2026-09-19d — v11d: Home widgets rearrange mode. Includes the phone fixes and the Jump back in hover fix. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -1939,4 +1939,45 @@ h1 { text-shadow: none !important; }
     .nav-brand { font-size: 0.56rem; margin-right: 5px; }
     #ah-sem-switcher { padding: 5px 20px 5px 8px !important; font-size: 0.62rem !important; }
     .nav-settings-btn { width: 30px; height: 30px; margin-left: 4px; }
+}
+
+/* ================= v11d — Home: rearrange the cards ================= */
+.dash-w { position: relative; }
+.dash-arrange { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.dash-arr-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(233,30,140,0.28);
+    color: var(--text-sub); font-size: 0.76rem; font-weight: 600;
+    padding: 7px 14px; border-radius: 999px; cursor: pointer; transition: 0.2s;
+    font-family: 'Work Sans', sans-serif;
+}
+.dash-arr-btn i { color: inherit; font-size: 0.78rem; }
+.dash-arr-btn:hover { color: #fff; border-color: var(--accent-pink); }
+.dash-arr-btn.on { background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); border-color: transparent; color: #fff; }
+.dash-arr-hint { flex-basis: 100%; text-align: center; font-size: 0.74rem; color: var(--text-sub); }
+
+/* while rearranging: cards can't be clicked by accident, columns get a dashed outline so an empty one is still a target */
+.dash-grid.dash-edit .dash-col { min-height: 90px; border-radius: 20px; outline: 2px dashed rgba(181,25,214,0.28); outline-offset: 6px; }
+.dash-grid.dash-edit .dash-w > *:not(.dash-grip) { pointer-events: none; }
+.dash-grid.dash-edit .dash-see { visibility: hidden; }
+.dash-grip {
+    position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; z-index: 2;
+    background: rgba(181,25,214,0.2); border: 1px solid rgba(181,25,214,0.55); color: #e2c4ff;
+    cursor: grab; touch-action: none; font-size: 1rem; padding: 0;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.dash-grip:active { cursor: grabbing; }
+.dash-grip:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.dash-w.dash-dragging { opacity: 0.28; }
+.dash-ghost {
+    position: fixed; z-index: 9000; margin: 0; pointer-events: none;
+    max-height: 170px; overflow: hidden; opacity: 0.96; transform: scale(1.02) rotate(-0.6deg);
+    border-color: var(--accent-pink);
+    box-shadow: 0 22px 50px rgba(0,0,0,0.55), 0 0 26px rgba(233,30,140,0.35);
+}
+.dash-drop-line {
+    position: fixed; z-index: 8999; height: 4px; border-radius: 4px; pointer-events: none;
+    background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple));
+    box-shadow: 0 0 14px rgba(233,30,140,0.8);
 }

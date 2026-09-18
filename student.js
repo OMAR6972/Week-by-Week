@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19c — Home fixes: GPA widget now shows the real GPA from the GPA tab; Jump back in also counts weeks opened directly. */
+/* VERSION: 2026-09-19d — Home widgets can be rearranged by dragging (Rearrange button on Home). Includes the 19c Home fixes. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -4759,7 +4759,7 @@
 
         document.addEventListener('touchstart', function(e) {
             if (e.touches.length !== 1) return;
-            if (e.target && e.target.closest && e.target.closest('.modal-content, .news-panel-card, .share-sheet-card, .nav-links.open, .tt-grid-wrap')) return;
+            if (e.target && e.target.closest && e.target.closest('.modal-content, .news-panel-card, .share-sheet-card, .nav-links.open, .tt-grid-wrap, .dash-grip')) return;
             swipeStartX = e.touches[0].clientX;
             swipeStartY = e.touches[0].clientY;
             swipeStartT = Date.now();
@@ -9449,6 +9449,7 @@
     function renderDashboard() {
         const dl = document.getElementById('dw-deadlines');
         if (!dl) return;
+        try { ahDashApplyOrder(); } catch (e) {}
         const upcoming = ahUpcomingDeadlines();
         const added = ahJustAdded(20);
 
@@ -9481,6 +9482,7 @@
             const it = recents[+el.getAttribute('data-dash-jump')];
             if (it) el.onclick = () => showWeeks(it.sub);
         });
+        try { ahDashAfterRender(); } catch (e) {}
     }
 
     function showDashboard(push = true) {
@@ -9489,6 +9491,259 @@
     }
     window.showDashboard = showDashboard;
     window.renderDashboard = renderDashboard;
+
+    /* ============ HOME WIDGET REORDER (2026-09-19) ============
+       Students can drag the Home cards into any order (and between the two columns).
+       Reorder only — every card always stays; nothing is hidden. Saved on this device.
+       Drag works with mouse, finger and pen; the card itself never moves while you
+       drag (a floating copy follows your finger and a pink line shows where it will
+       land), which keeps it reliable on phones. */
+    var AH_DASH_ORDER_KEY = 'wbw_dash_order';
+    var AH_DASH_DEFAULT = [['deadlines', 'new'], ['gpa', 'news', 'jump']];
+    var ahDashEditing = false;
+    var ahDashDrag = null;
+
+    function ahDashCols() {
+        return Array.prototype.slice.call(document.querySelectorAll('#dashboard-page .dash-col'));
+    }
+    function ahDashWidgetEl(id) { return document.getElementById('dw-' + id); }
+
+    function ahDashReadOrder() {
+        try {
+            const o = JSON.parse(localStorage.getItem(AH_DASH_ORDER_KEY) || 'null');
+            if (o && Array.isArray(o.cols) && o.cols.length === 2 && o.cols.every(Array.isArray)) return o.cols;
+        } catch (e) {}
+        return null;
+    }
+
+    function ahDashCurrentLayout() {
+        return ahDashCols().map(col =>
+            Array.prototype.filter.call(col.children, ch => ch.classList.contains('dash-w') && /^dw-/.test(ch.id))
+                .map(ch => ch.id.slice(3)));
+    }
+
+    function ahDashApplyOrder(force) {
+        if (ahDashDrag) return;
+        if (!force && ahDashEditing) return;
+        const cols = ahDashCols();
+        if (cols.length < 2) return;
+        const layout = ahDashReadOrder() || AH_DASH_DEFAULT;
+        const used = {};
+        const placed = [[], []];
+        const place = (ids, ci) => ids.forEach(id => {
+            if (!used[id] && ahDashWidgetEl(id)) { used[id] = true; placed[ci].push(id); }
+        });
+        layout.forEach((ids, ci) => place(ids, ci));
+        // cards that exist but aren't in the saved layout (e.g. added in a later version) go to their default column
+        AH_DASH_DEFAULT.forEach((ids, ci) => place(ids, ci));
+        if (JSON.stringify(placed) === JSON.stringify(ahDashCurrentLayout())) return;
+        placed.forEach((ids, ci) => ids.forEach(id => cols[ci].appendChild(ahDashWidgetEl(id))));
+    }
+
+    function ahDashSaveOrder() {
+        try { localStorage.setItem(AH_DASH_ORDER_KEY, JSON.stringify({ v: 1, cols: ahDashCurrentLayout() })); } catch (e) {}
+    }
+
+    function ahDashPaintBar() {
+        const t = document.getElementById('dash-arr-toggle');
+        const r = document.getElementById('dash-arr-reset');
+        const h = document.getElementById('dash-arr-hint');
+        if (!t) return;
+        t.classList.toggle('on', ahDashEditing);
+        t.innerHTML = ahDashEditing
+            ? '<i class="fa-solid fa-check"></i><span>Done</span>'
+            : '<i class="fa-solid fa-up-down-left-right"></i><span>Rearrange</span>';
+        if (r) r.style.display = ahDashEditing ? '' : 'none';
+        if (h) h.style.display = ahDashEditing ? '' : 'none';
+    }
+
+    function ahDashEnsureBar() {
+        if (document.getElementById('dash-arrange')) return;
+        const hero = document.querySelector('#dashboard-page .dash-hero');
+        if (!hero) return;
+        const bar = document.createElement('div');
+        bar.className = 'dash-arrange';
+        bar.id = 'dash-arrange';
+        bar.innerHTML =
+            '<button type="button" class="dash-arr-btn" id="dash-arr-toggle"></button>' +
+            '<button type="button" class="dash-arr-btn" id="dash-arr-reset" style="display:none"><i class="fa-solid fa-rotate-left"></i><span>Reset order</span></button>' +
+            '<div class="dash-arr-hint" id="dash-arr-hint" style="display:none">Drag the handle on a card to move it, then press Done.</div>';
+        hero.appendChild(bar);
+        document.getElementById('dash-arr-toggle').addEventListener('click', () => ahDashSetEditing(!ahDashEditing));
+        document.getElementById('dash-arr-reset').addEventListener('click', () => {
+            try { localStorage.removeItem(AH_DASH_ORDER_KEY); } catch (e) {}
+            ahDashApplyOrder(true);
+        });
+        ahDashPaintBar();
+    }
+
+    function ahDashSetEditing(on) {
+        ahDashEditing = !!on;
+        const grid = document.querySelector('#dashboard-page .dash-grid');
+        if (grid) grid.classList.toggle('dash-edit', ahDashEditing);
+        ahDashDecorate();
+        ahDashPaintBar();
+    }
+
+    // Adds / removes the drag handle on each card that has content (re-run after every render).
+    function ahDashDecorate() {
+        document.querySelectorAll('#dashboard-page .dash-w').forEach(w => {
+            const old = w.querySelector(':scope > .dash-grip');
+            if (old) old.remove();
+            if (!ahDashEditing || !w.firstElementChild) return;
+            const g = document.createElement('button');
+            g.type = 'button';
+            g.className = 'dash-grip';
+            g.setAttribute('aria-label', 'Drag to reorder this card (or use the up and down arrow keys)');
+            g.innerHTML = '<i class="fa-solid fa-grip"></i>';
+            g.addEventListener('pointerdown', ahDashGripDown);
+            g.addEventListener('keydown', ahDashGripKey);
+            w.appendChild(g);
+        });
+    }
+
+    function ahDashAfterRender() {
+        ahDashEnsureBar();
+        ahDashDecorate();
+    }
+
+    function ahDashVisibleCards(col, except) {
+        return Array.prototype.filter.call(col.children, ch =>
+            ch.classList.contains('dash-w') && ch !== except && ch.offsetParent !== null);
+    }
+
+    function ahDashGripKey(e) {
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        e.preventDefault(); e.stopPropagation();
+        const w = e.currentTarget.closest('.dash-w');
+        if (!w || !w.parentNode) return;
+        const col = w.parentNode;
+        const sibs = ahDashVisibleCards(col);
+        const i = sibs.indexOf(w);
+        if (e.key === 'ArrowUp' && i > 0) col.insertBefore(w, sibs[i - 1]);
+        else if (e.key === 'ArrowDown' && i >= 0 && i < sibs.length - 1) col.insertBefore(w, sibs[i + 1].nextSibling);
+        else return;
+        ahDashSaveOrder();
+        const g = w.querySelector(':scope > .dash-grip');
+        if (g) g.focus();
+    }
+
+    function ahDashGripDown(e) {
+        if (!ahDashEditing || ahDashDrag) return;
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        const w = e.currentTarget.closest('.dash-w');
+        if (!w) return;
+        e.preventDefault();
+        const r = w.getBoundingClientRect();
+        const ghost = w.cloneNode(true);
+        ghost.removeAttribute('id');
+        ghost.classList.add('dash-ghost');
+        ghost.querySelectorAll('.dash-grip').forEach(g => g.remove());
+        ghost.style.width = r.width + 'px';
+        const line = document.createElement('div');
+        line.className = 'dash-drop-line';
+        line.style.display = 'none';
+        document.body.appendChild(ghost);
+        document.body.appendChild(line);
+        w.classList.add('dash-dragging');
+        ahDashDrag = { w: w, ghost: ghost, line: line, dx: e.clientX - r.left, dy: e.clientY - r.top,
+                       x: e.clientX, y: e.clientY, drop: null, raf: 0 };
+        window.addEventListener('pointermove', ahDashMove, { passive: false });
+        window.addEventListener('pointerup', ahDashUp);
+        window.addEventListener('pointercancel', ahDashCancel);
+        ahDashUpdate();
+        ahDashScrollLoop();
+    }
+
+    function ahDashMove(e) {
+        const d = ahDashDrag;
+        if (!d) return;
+        e.preventDefault();
+        d.x = e.clientX; d.y = e.clientY;
+        ahDashUpdate();
+    }
+
+    // Moves the floating copy and works out where the card would land.
+    function ahDashUpdate() {
+        const d = ahDashDrag;
+        if (!d) return;
+        d.ghost.style.left = (d.x - d.dx) + 'px';
+        d.ghost.style.top = (d.y - d.dy) + 'px';
+
+        let drop = null;
+        const el = document.elementFromPoint(d.x, d.y);
+        if (el && el.closest) {
+            const col = el.closest('#dashboard-page .dash-col');
+            const target = el.closest('#dashboard-page .dash-w');
+            if (col && target && target !== d.w) {
+                const tr = target.getBoundingClientRect();
+                drop = { ref: target, before: d.y < tr.top + tr.height / 2, col: col };
+            } else if (col && !target) {
+                // empty space inside a column: land at the nearest slot
+                let ref = null, before = true;
+                const kids = ahDashVisibleCards(col, d.w);
+                for (let i = 0; i < kids.length; i++) {
+                    const kr = kids[i].getBoundingClientRect();
+                    ref = kids[i];
+                    if (d.y < kr.top + kr.height / 2) { before = true; break; }
+                    before = false;
+                }
+                drop = { ref: ref, before: before, col: col };
+            }
+        }
+        d.drop = drop;
+
+        if (!drop) { d.line.style.display = 'none'; return; }
+        const cr = drop.col.getBoundingClientRect();
+        let top;
+        if (drop.ref) {
+            const rr = drop.ref.getBoundingClientRect();
+            top = drop.before ? rr.top - 10 : rr.bottom + 8;
+        } else {
+            top = cr.top + 6;
+        }
+        d.line.style.display = 'block';
+        d.line.style.left = cr.left + 'px';
+        d.line.style.width = cr.width + 'px';
+        d.line.style.top = top + 'px';
+    }
+
+    // Scrolls the page when the finger / mouse is held near the top or bottom edge.
+    function ahDashScrollLoop() {
+        const d = ahDashDrag;
+        if (!d) return;
+        const topEdge = 130, bottomEdge = 90, max = 18;
+        let dy = 0;
+        if (d.y < topEdge) dy = -Math.ceil((topEdge - d.y) / topEdge * max);
+        else if (d.y > window.innerHeight - bottomEdge) dy = Math.ceil((d.y - (window.innerHeight - bottomEdge)) / bottomEdge * max);
+        if (dy) { window.scrollBy(0, dy); ahDashUpdate(); }
+        d.raf = requestAnimationFrame(ahDashScrollLoop);
+    }
+
+    function ahDashEnd() {
+        const d = ahDashDrag;
+        if (!d) return null;
+        window.removeEventListener('pointermove', ahDashMove);
+        window.removeEventListener('pointerup', ahDashUp);
+        window.removeEventListener('pointercancel', ahDashCancel);
+        if (d.raf) cancelAnimationFrame(d.raf);
+        if (d.ghost.parentNode) d.ghost.parentNode.removeChild(d.ghost);
+        if (d.line.parentNode) d.line.parentNode.removeChild(d.line);
+        d.w.classList.remove('dash-dragging');
+        ahDashDrag = null;
+        return d;
+    }
+
+    function ahDashUp() {
+        const d = ahDashEnd();
+        if (!d || !d.drop) return;
+        const drop = d.drop;
+        if (drop.ref) drop.col.insertBefore(d.w, drop.before ? drop.ref : drop.ref.nextSibling);
+        else drop.col.appendChild(d.w);
+        ahDashSaveOrder();
+    }
+
+    function ahDashCancel() { ahDashEnd(); }
 
 
     /* ============ DEFAULT TAB (v3) ============ */
