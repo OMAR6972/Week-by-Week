@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19b — v11b: My subjects bar fixed on phones + phone navbar no longer overflows (hamburger always visible). */
+/* VERSION: 2026-09-19c — v11c: phone fixes (My subjects bar, navbar) + Jump back in hover clipping restored. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -909,7 +909,9 @@
 .dash-an-body { padding: 0 0 13px 16px; color: var(--text-sub); font-size: 0.83rem; line-height: 1.55; white-space: pre-wrap; }
 
 /* jump back in */
-.dash-jump { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+/* Room above/beside the cards for the hover lift and border, cancelled out by the negative margins so the layout doesn't move.
+   (overflow-x:auto forces vertical clipping, which is what was cutting the cards off — this fix had been lost.) */
+.dash-jump { display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; padding: 6px 4px 6px; margin: -6px -4px -2px; scrollbar-width: none; }
 .dash-jump::-webkit-scrollbar { display: none; }
 .dash-jc { min-width: 92px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 13px; padding: 13px 14px; cursor: pointer; transition: 0.2s; flex-shrink: 0; text-align: center; }
 .dash-jc:hover { border-color: var(--accent-pink); transform: translateY(-3px); }

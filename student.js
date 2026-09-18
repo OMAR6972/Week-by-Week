@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15i — v11: per-semester settings now use the real semester name, not "default". */
+/* VERSION: 2026-09-19c — Home fixes: GPA widget now shows the real GPA from the GPA tab; Jump back in also counts weeks opened directly. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -4569,6 +4569,7 @@
     }
 
     function showContentByObj(weekOrEvent, push = true, from = 'weeks') {
+        try { if (currSub) ahTrackSubjectOpen(currSub); } catch (e) {}
         const section = getWeekSection(weekOrEvent);
         if (currSub && isWeekHidden(currSub.code, weekOrEvent, section)) {
             const key = makeWeekHideKey(currSub.code, section, weekOrEvent.title);
@@ -9357,13 +9358,51 @@
         return html;
     }
 
+    /* Works out the GPA from the exact data the GPA tab saves (subjects / semesters /
+       cumulative GPA + hours). The old widget looked for fields that never existed
+       ("rows", "lastGpa"), so it always showed the empty state or a bare count. */
+    function ahGpaFromSaved(saved) {
+        if (!saved || typeof saved !== 'object') return null;
+        const gradeOf = (sub) => {
+            if (!sub) return null;
+            if (sub.grade) return letterToGrade(sub.grade);
+            if (sub.pointsLost !== '' && sub.pointsLost != null) return pointsToGrade(100 - Number(sub.pointsLost));
+            return null;
+        };
+        let pts = 0, crs = 0, graded = 0;
+        const addSubjects = (list) => {
+            (list || []).forEach(sub => {
+                const gi = gradeOf(sub);
+                const c = sub ? Number(sub.credits) : 0;
+                if (gi && c > 0) { pts += gi.gpa * c; crs += c; graded++; }
+            });
+        };
+        const addSummary = (g, h) => {
+            const gpa = parseFloat(g), hrs = parseInt(h, 10);
+            if (!isNaN(gpa) && !isNaN(hrs) && hrs > 0 && gpa >= 0) { pts += gpa * hrs; crs += hrs; }
+        };
+        if (saved.groupMode) {
+            (saved.semesters || []).forEach(sem => {
+                if (!sem) return;
+                if (sem.mode === 'summary') addSummary(sem.summaryGpa, sem.summaryHours);
+                else addSubjects(sem.subjects);
+            });
+        } else {
+            addSubjects(saved.subjects);
+            addSummary(saved.cumGpa, saved.cumHours);
+        }
+        if (crs <= 0) return null;
+        return { gpa: pts / crs, credits: crs, graded: graded };
+    }
+
     function ahDashGpa() {
         let saved = null;
         try { saved = JSON.parse(localStorage.getItem('wbw_gpa_state') || 'null'); } catch (e) {}
-        const rows = saved && Array.isArray(saved.rows) ? saved.rows.filter(r => r && r.grade) : [];
+        let res = null;
+        try { res = ahGpaFromSaved(saved); } catch (e) { res = null; }
         let html = '<div class="dash-w-head"><span class="dash-w-ic"><i class="fa-solid fa-graduation-cap"></i></span><h2>GPA</h2>' +
-                   (rows.length ? '<span class="dash-see" onclick="showGpa()">Open</span>' : '') + '</div>';
-        if (!rows.length) {
+                   (res ? '<span class="dash-see" onclick="showGpa()">Open</span>' : '') + '</div>';
+        if (!res) {
             html += `<div class="dash-gpa-empty">
                 <span class="dash-gpa-ei"><i class="fa-solid fa-graduation-cap"></i></span>
                 <b>No GPA yet</b>
@@ -9371,10 +9410,10 @@
                 <button class="dash-cta" onclick="showGpa()"><i class="fa-solid fa-plus"></i> Set up my GPA</button></div>`;
             return html;
         }
-        const val = (saved && (saved.lastGpa || saved.gpa)) ? String(saved.lastGpa || saved.gpa) : null;
+        const letter = getGpaLetterForValue(res.gpa);
         html += `<div class="dash-gpa">
-            <span class="dash-gpa-num">${val ? ahEsc(val) : rows.length}</span>
-            <span class="dash-gpa-info"><i>${val ? 'Saved GPA' : rows.length + ' subjects saved'}</i>
+            <span class="dash-gpa-num">${res.gpa.toFixed(2)}</span>
+            <span class="dash-gpa-info"><i>Cumulative GPA · ${ahEsc(letter.letter)}<br>${res.credits} credit hours</i>
             <button class="dash-cta sm" onclick="showGpa()"><i class="fa-solid fa-calculator"></i> Open calculator</button></span></div>`;
         return html;
     }
