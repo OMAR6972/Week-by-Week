@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19e — phone (no-hover) fixes, GPA widget wording, Rearrange button always on Home, Backup & share in Settings. Includes 19c/19d. */
+/* VERSION: 2026-09-19g — new Home card "Your activity" (personal stats, saved on the device and synced to the account). Includes 19e. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -3995,6 +3995,7 @@
 
     function showWeeks(sub, push = true) {
         try { ahTrackSubjectOpen(arguments[0]); } catch(e) {}
+        try { if (push !== false && sub && sub.code && !isSubjectHidden(sub.code)) ahStatsBump('s', sub.code); } catch(e) {}
         if (!sub || isSubjectHidden(sub.code)) {
             nav('home', push);
             return;
@@ -9455,6 +9456,7 @@
     function renderDashboard() {
         const dl = document.getElementById('dw-deadlines');
         if (!dl) return;
+        try { ahDashEnsureStatsHost(); } catch (e) {}
         try { ahDashApplyOrder(); } catch (e) {}
         const upcoming = ahUpcomingDeadlines();
         const added = ahJustAdded(20);
@@ -9471,6 +9473,8 @@
         document.getElementById('dw-new').innerHTML = ahDashNew();
         document.getElementById('dw-gpa').innerHTML = ahDashGpa();
         document.getElementById('dw-news').innerHTML = ahDashNews();
+        const statsHost = document.getElementById('dw-stats');
+        if (statsHost) statsHost.innerHTML = ahDashStats();
 
         const jumpHost = document.getElementById('dw-jump');
         const jumpHtml = ahDashJump();
@@ -9505,7 +9509,7 @@
        drag (a floating copy follows your finger and a pink line shows where it will
        land), which keeps it reliable on phones. */
     var AH_DASH_ORDER_KEY = 'wbw_dash_order';
-    var AH_DASH_DEFAULT = [['deadlines', 'new'], ['gpa', 'news', 'jump']];
+    var AH_DASH_DEFAULT = [['deadlines', 'new'], ['gpa', 'news', 'jump', 'stats']];
     var ahDashEditing = false;
     var ahDashDrag = null;
 
@@ -9750,6 +9754,108 @@
     }
 
     function ahDashCancel() { ahDashEnd(); }
+
+    /* ============ PERSONAL STATS (2026-09-19) ============
+       A private "Your activity" card: which days you used the site, how many subjects and
+       materials you opened, your streak, and your most-opened subjects. Nothing here is sent
+       to anyone — it is counted on this device, and for signed-in students it follows the
+       account like every other setting. */
+    var AH_STATS_KEY = 'wbw_my_stats';
+
+    function ahStatsRead() {
+        try {
+            const o = JSON.parse(localStorage.getItem(AH_STATS_KEY) || 'null');
+            if (o && typeof o === 'object' && o.days && o.subjects) return o;
+        } catch (e) {}
+        return { v: 1, days: {}, subjects: {} };
+    }
+    function ahDayKey(d) {
+        const x = d || new Date();
+        return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+    }
+    function ahStatsBump(kind, code) {
+        try {
+            const st = ahStatsRead();
+            const k = ahDayKey();
+            const day = st.days[k] || (st.days[k] = { s: 0, r: 0 });
+            day[kind] = (day[kind] || 0) + 1;
+            if (code) {
+                const sj = st.subjects[code] || (st.subjects[code] = { s: 0, r: 0 });
+                sj[kind] = (sj[kind] || 0) + 1;
+            }
+            const keys = Object.keys(st.days).sort();          // keep about four months of days
+            while (keys.length > 120) delete st.days[keys.shift()];
+            localStorage.setItem(AH_STATS_KEY, JSON.stringify(st));
+        } catch (e) {}
+    }
+    // a material opened inside a week
+    document.addEventListener('click', function (e) {
+        try {
+            if (e.target && e.target.closest && e.target.closest('#resources-grid .card')) {
+                ahStatsBump('r', (typeof currSub !== 'undefined' && currSub && currSub.code) ? currSub.code : null);
+            }
+        } catch (err) {}
+    }, true);
+
+    function ahDashEnsureStatsHost() {
+        if (document.getElementById('dw-stats')) return;
+        const cols = document.querySelectorAll('#dashboard-page .dash-col');
+        if (cols.length < 2) return;
+        const host = document.createElement('div');
+        host.className = 'dash-w';
+        host.id = 'dw-stats';
+        cols[1].appendChild(host);
+    }
+
+    function ahDashStats() {
+        const st = ahStatsRead();
+        const head = '<div class="dash-w-head"><span class="dash-w-ic"><i class="fa-solid fa-chart-simple"></i></span><h2>Your activity</h2></div>';
+        const dayKeys = Object.keys(st.days);
+        const total = dayKeys.reduce((n, k) => n + (st.days[k].s || 0) + (st.days[k].r || 0), 0);
+        if (!total) {
+            return head + '<div class="dash-empty">Open a subject or a material and your activity will show up here. It stays private to you.</div>';
+        }
+        const now = new Date();
+        const last7 = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+            const rec = st.days[ahDayKey(d)] || { s: 0, r: 0 };
+            last7.push({ d: d, n: (rec.s || 0) + (rec.r || 0), r: rec.r || 0 });
+        }
+        const activeDays = last7.filter(x => x.n > 0).length;
+        const materials = last7.reduce((n, x) => n + x.r, 0);
+
+        // streak: consecutive active days, counting back from today (or from yesterday if today is still empty)
+        let streak = 0;
+        const has = (d) => { const r = st.days[ahDayKey(d)]; return !!(r && ((r.s || 0) + (r.r || 0)) > 0); };
+        let cur = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (!has(cur)) cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() - 1);
+        while (has(cur) && streak < 400) { streak++; cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() - 1); }
+
+        const maxDay = Math.max.apply(null, last7.map(x => x.n).concat([1]));
+        const letters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        const bars = last7.map((x, i) => {
+            const h = x.n ? Math.max(8, Math.round(x.n / maxDay * 44)) : 3;
+            const isToday = i === 6;
+            return `<div class="dash-bar${x.n ? ' on' : ''}${isToday ? ' today' : ''}"><span class="col" style="height:${h}px"></span><em>${letters[x.d.getDay()]}</em></div>`;
+        }).join('');
+
+        const subs = Object.keys(st.subjects)
+            .map(code => ({ code: code, n: (st.subjects[code].s || 0) + (st.subjects[code].r || 0) }))
+            .filter(x => x.n > 0 && !isSubjectHidden(x.code))
+            .sort((a, b) => b.n - a.n).slice(0, 3);
+        const topMax = subs.length ? subs[0].n : 1;
+        const top = subs.map(x => `<div class="dash-top-row"><b>${ahEsc(x.code)}</b><span class="dash-top-track"><span style="width:${Math.max(6, Math.round(x.n / topMax * 100))}%"></span></span><i>${x.n}</i></div>`).join('');
+
+        return head +
+            `<div class="dash-stat-grid">
+                <div class="dash-stat"><b>${activeDays}<small>/7</small></b><i>days active this week</i></div>
+                <div class="dash-stat"><b>${streak}</b><i>day streak</i></div>
+                <div class="dash-stat"><b>${materials}</b><i>materials opened this week</i></div>
+            </div>
+            <div class="dash-bars">${bars}</div>` +
+            (top ? `<div class="dash-top"><div class="dash-top-h">Most opened</div>${top}</div>` : '');
+    }
 
     /* the Rearrange button is a permanent part of the Home page — put it there straight away */
     try { ahDashEnsureBar(); } catch (e) {}

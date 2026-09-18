@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19e — every setting saved on the device, account is the master, export / import. */
+/* VERSION: 2026-09-19g — also keeps the private activity stats with the account. */
 /* Guests: settings live in this browser (localStorage), exactly as before.
    Signed in: every setting is also saved to the account, and on sign-in the ACCOUNT wins and
    overwrites what is on the device. Anyone can export their settings as a code / file and
@@ -26,7 +26,8 @@
     examViewMode: 'look', wbw_default_tab: 'look', wbw_nav_autohide: 'look', wbw_chrome_fade: 'look',
     wbw_dash_order: 'home',
     tt_section: 'timetable', tt_mode: 'timetable', tt_subjects: 'timetable',
-    wbw_gpa_state: 'gpa'
+    wbw_gpa_state: 'gpa',
+    wbw_my_stats: 'stats'
   };
   /* values that are plain text rather than JSON */
   var PLAIN = { examViewMode: 1, wbw_default_tab: 1, wbw_nav_autohide: 1, wbw_chrome_fade: 1, tt_section: 1, tt_mode: 1 };
@@ -49,7 +50,8 @@
     deadlines: 'Deadline ticks',
     timetable: 'Timetable choices',
     look:      'Start tab & appearance',
-    seen:      'Read announcements & recent subjects'
+    seen:      'Read announcements & recent subjects',
+    stats:     'Your activity stats'
   };
 
   function info(key) {
@@ -289,6 +291,7 @@
     var data = {};
     allKeys().forEach(function (k) {
       var i = info(k);
+      if (i.g === 'stats') return;                 // personal — never shared
       if (!includeGpa && i.g === 'gpa') return;
       var v = LS.getItem(k);
       if (v !== null) data[k] = v;
@@ -326,7 +329,7 @@
     var good = {}, skipped = 0;
     Object.keys(bundle.data).forEach(function (k) {
       var v = bundle.data[k], i = info(k);
-      if (!i || typeof v !== 'string' || v.length > 400000) { skipped++; return; }
+      if (!i || i.g === 'stats' || typeof v !== 'string' || v.length > 400000) { skipped++; return; }
       if (i.kind === 'flag') { if (v !== '0' && v !== '1') { skipped++; return; } }
       else if (!i.plain) { try { JSON.parse(v); } catch (e) { skipped++; return; } }
       good[k] = v;

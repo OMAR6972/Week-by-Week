@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19e — v11e: no-hover (phone) styling, backup & share, tooltips. Includes v11–v11d. */
+/* VERSION: 2026-09-19g — v11f: Home "Your activity" card. Includes v11–v11e. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -2046,3 +2046,24 @@ h1 { text-shadow: none !important; }
 .ah-bk-btn i { color: inherit; }
 .ah-bk-btn.main { background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); border-color: transparent; color: #fff; }
 .ah-bk-btn:active { filter: brightness(1.15); }
+
+/* ================= v11f — Home: "Your activity" ================= */
+.dash-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.dash-stat { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 13px; padding: 12px 6px; text-align: center; min-width: 0; }
+.dash-stat b { display: block; font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 1.35rem; line-height: 1.1;
+    background: linear-gradient(135deg, var(--accent-pink), var(--accent-blue)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.dash-stat b small { font-size: 0.7rem; opacity: 0.8; }
+.dash-stat i { display: block; font-style: normal; font-size: 0.68rem; color: var(--text-sub); margin-top: 6px; line-height: 1.3; }
+.dash-bars { display: flex; align-items: flex-end; gap: 7px; height: 66px; margin-top: 16px; }
+.dash-bar { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 5px; height: 100%; }
+.dash-bar .col { display: block; width: 100%; max-width: 30px; border-radius: 6px 6px 3px 3px; background: rgba(255,255,255,0.08); }
+.dash-bar.on .col { background: linear-gradient(180deg, var(--accent-pink), var(--accent-purple)); }
+.dash-bar.today em { color: #fff; font-weight: 700; }
+.dash-bar em { font-style: normal; font-size: 0.62rem; color: var(--text-sub); }
+.dash-top { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.07); }
+.dash-top-h { font-size: 0.68rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-sub); margin-bottom: 4px; }
+.dash-top-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.dash-top-row b { font-family: 'Orbitron', sans-serif; font-size: 0.74rem; color: var(--accent-purple); min-width: 44px; }
+.dash-top-track { flex: 1; height: 7px; border-radius: 6px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.dash-top-track span { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple)); }
+.dash-top-row i { font-style: normal; font-size: 0.74rem; color: var(--text-sub); min-width: 22px; text-align: right; }
