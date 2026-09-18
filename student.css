@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19 — v11: My subjects invitation bar fixed on phones (was squashed to half width). */
+/* VERSION: 2026-09-19b — v11b: My subjects bar fixed on phones + phone navbar no longer overflows (hamburger always visible). */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -1898,4 +1898,43 @@ h1 { text-shadow: none !important; }
 
 @media (max-width: 500px) {
     .ah-nt-cust-add { margin-left: 0; width: 100%; }
+}
+
+/* ================= v11b — phone navbar: everything fits, hamburger always visible =================
+   Cause: on a phone the row held the logo (with a 30px gap), the semester picker
+   (with a 16px gap), the account button, the settings button AND the hamburger.
+   Added together that is wider than a 360px screen, so the hamburger was pushed
+   off the right edge. Fix: tighter spacing, the right-hand buttons grouped at the
+   right edge, and — as a safety net — the logo and picker are allowed to shrink
+   while the buttons never can. */
+@media (max-width: 768px) {
+    .navbar { padding: 0 12px; gap: 0; }
+    .nav-brand {
+        transform: none; font-size: 0.72rem; letter-spacing: -0.3px;
+        margin-right: 8px; flex: 0 1 auto; min-width: 0; overflow: hidden;
+    }
+    #ah-sem-switcher-wrap { margin-right: 0 !important; flex: 0 1 auto !important; min-width: 0; }
+    #ah-sem-switcher {
+        max-width: 100% !important; width: 100%; min-width: 0; text-overflow: ellipsis;
+        padding: 5px 24px 5px 11px !important; font-size: 0.68rem !important;
+        background-position: right 8px center, 0 0 !important;
+    }
+    /* first button after the (hidden) link list pushes the whole button group to the right edge */
+    .nav-links + .nav-settings-btn { margin-left: auto; }
+    .nav-settings-btn { flex-shrink: 0; margin-left: 6px; }
+    .ah-account-btn { margin-right: 0; }
+    .nav-links + .nav-settings-btn.ah-account-btn { margin-left: auto; }
+    .nav-hamburger { flex-shrink: 0; margin-left: 4px; padding: 6px; font-size: 1.3rem; }
+}
+@media (max-width: 400px) {
+    .navbar { padding: 0 10px; }
+    .nav-brand { font-size: 0.62rem; margin-right: 6px; }
+    #ah-sem-switcher { padding: 5px 22px 5px 9px !important; font-size: 0.66rem !important; }
+    .nav-settings-btn { width: 32px; height: 32px; margin-left: 5px; }
+    .nav-hamburger { margin-left: 3px; padding: 5px; font-size: 1.25rem; }
+}
+@media (max-width: 340px) {
+    .nav-brand { font-size: 0.56rem; margin-right: 5px; }
+    #ah-sem-switcher { padding: 5px 20px 5px 8px !important; font-size: 0.62rem !important; }
+    .nav-settings-btn { width: 30px; height: 30px; margin-left: 4px; }
 }
