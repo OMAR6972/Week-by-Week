@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15e — v9: notification settings (choosing half; sending comes next). */
+/* VERSION: 2026-09-19e — account menu: Backup & share; sign-out takes settings off the device. */
 /* Optional by design: guests keep full access to everything, an account only adds extras. */
 
 (function () {
@@ -233,6 +233,7 @@
         '<div class="ah-auth-sub" style="text-align:center;">' + esc(s.email) + '</div>' +
         '<button class="ah-auth-go" id="ah-acct-notify" style="background:rgba(255,255,255,.08);">Notifications</button>' +
         '<button class="ah-auth-go" id="ah-acct-subjects" style="background:rgba(255,255,255,.08);">My subjects</button>' +
+        '<button class="ah-auth-go" id="ah-acct-backup" style="background:rgba(255,255,255,.08);">Backup &amp; share settings</button>' +
         '<button class="ah-auth-go" id="ah-acct-rename" style="background:rgba(255,255,255,.08);">Change my name</button>' +
         '<button class="ah-auth-go" id="ah-acct-out" style="background:rgba(255,59,48,.16); color:#ff8a80;">Sign out</button>' +
         '<div class="ah-auth-msg" id="ah-acct-msg"></div>' +
@@ -255,6 +256,11 @@
       if (window.__ahOpenMySubjects) window.__ahOpenMySubjects({});
     });
 
+    back.querySelector('#ah-acct-backup').addEventListener('click', function () {
+      close();
+      if (window.__ahOpenBackup) window.__ahOpenBackup();
+    });
+
     back.querySelector('#ah-acct-rename').addEventListener('click', async function () {
       var n = prompt('What should we call you?', s.displayName || '');
       if (n === null) return;
@@ -275,12 +281,15 @@
     });
 
     back.querySelector('#ah-acct-out').addEventListener('click', async function () {
+      // make sure the last changes reached the account before we leave it
+      try { if (window.__ahFlushSettings) await window.__ahFlushSettings(); } catch (e) {}
       try { await SB.auth.signOut(); } catch (e) {}
       window.__ahStudent = null;
       if (window.__ahClearMySubjectsLocal) window.__ahClearMySubjectsLocal();
+      if (window.__ahClearSettingsLocal) window.__ahClearSettingsLocal();   // shared phone / laptop: settings stay in the account, not on the device
       paintButton();
       close();
-      toast('Signed out. You can still browse everything.');
+      toast('Signed out. Your settings stay in your account.');
     });
   }
 

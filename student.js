@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19d — Home widgets can be rearranged by dragging (Rearrange button on Home). Includes the 19c Home fixes. */
+/* VERSION: 2026-09-19e — phone (no-hover) fixes, GPA widget wording, Rearrange button always on Home, Backup & share in Settings. Includes 19c/19d. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -4953,7 +4953,7 @@
     }
 
     function navFromBar(id) {
-        if (isMobile()) {
+        if (isMobile() || ahIsTouchOnly()) {
             const navLink = document.querySelector('.nav-link[data-nav="' + id + '"]');
             if (navLink && navLink.querySelector('.nav-chevron')) {
                 const item = navLink.closest('.nav-item');
@@ -5035,6 +5035,8 @@
     }
 
     function isMobile() { return window.innerWidth <= 768; }
+    /* phones and tablets have no hover, so anything that used to open on hover opens on tap instead */
+    function ahIsTouchOnly() { try { return window.matchMedia('(hover: none)').matches; } catch (e) { return false; } }
 
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.navbar') && !e.target.closest('.nav-overlay')) closeAllDropdowns();
@@ -5083,6 +5085,11 @@
                     const item = m.target;
                     if (item.classList.contains('dd-open')) {
                         const dd = item.querySelector('.nav-dropdown');
+                        if (dd && !isMobile()) {   // wide touch screens (tablets, phones on their side) place it here — there is no hover to do it
+                            const rect = item.getBoundingClientRect();
+                            dd.style.top  = (rect.bottom + 8) + 'px';
+                            dd.style.left = (rect.left + rect.width / 2) + 'px';
+                        }
                         populateDropdownIfNeeded(dd);
                     }
                 }
@@ -9410,10 +9417,9 @@
                 <button class="dash-cta" onclick="showGpa()"><i class="fa-solid fa-plus"></i> Set up my GPA</button></div>`;
             return html;
         }
-        const letter = getGpaLetterForValue(res.gpa);
         html += `<div class="dash-gpa">
             <span class="dash-gpa-num">${res.gpa.toFixed(2)}</span>
-            <span class="dash-gpa-info"><i>Cumulative GPA · ${ahEsc(letter.letter)}<br>${res.credits} credit hours</i>
+            <span class="dash-gpa-info"><i>Cumulative GPA<br>${res.credits} credit hours</i>
             <button class="dash-cta sm" onclick="showGpa()"><i class="fa-solid fa-calculator"></i> Open calculator</button></span></div>`;
         return html;
     }
@@ -9745,6 +9751,10 @@
 
     function ahDashCancel() { ahDashEnd(); }
 
+    /* the Rearrange button is a permanent part of the Home page — put it there straight away */
+    try { ahDashEnsureBar(); } catch (e) {}
+    document.addEventListener('DOMContentLoaded', function () { try { ahDashEnsureBar(); } catch (e) {} });
+
 
     /* ============ DEFAULT TAB (v3) ============ */
     const AH_DEFAULT_TAB_KEY = 'wbw_default_tab';
@@ -9891,7 +9901,20 @@
         <div class="ah-set-row">
             <div class="ah-set-txt"><b>Fade floating buttons</b><i>Dims the corner buttons until you scroll or hover</i></div>
             <button class="ah-toggle${chromeOn ? ' on' : ''}" onclick="ahToggleChromeFade(); ahRenderSettings();" aria-pressed="${chromeOn}"><span></span></button>
+        </div>
+        <div class="ah-set-row">
+            <div class="ah-set-txt"><b>Backup &amp; share</b><i>Export all your settings as a code or file, or import someone else's</i></div>
+            <button class="ah-set-btn" onclick="closeSettingsPanel(); if (window.__ahOpenBackup) window.__ahOpenBackup();">Open</button>
+        </div>
+        <div class="ah-set-row">
+            <div class="ah-set-txt"><b>Where your settings are saved</b><i>${ahEsc(ahSyncText())}</i></div>
+            ${window.__ahStudent ? '' : '<button class="ah-set-btn" onclick="closeSettingsPanel(); if (window.__ahOpenSignIn) window.__ahOpenSignIn();">Sign in</button>'}
         </div>`;
+    }
+
+    function ahSyncText() {
+        try { if (window.__ahSyncStatus) return window.__ahSyncStatus().text; } catch (e) {}
+        return 'Saved on this device.';
     }
 
     function ahRenderSettings() {
@@ -9954,6 +9977,67 @@
 
     document.addEventListener('DOMContentLoaded', ahApplyChromePref);
     ahApplyChromePref();
+
+
+    /* ============ PHONES & TABLETS: NO HOVER (2026-09-19) ============
+       1. When you tap on a phone, the browser pretends a mouse moved over the thing. Our hover
+          colours then stuck on whatever was tapped last. Those pretend mouse events are dropped.
+       2. Tooltips (the little text that appears on hover) can't appear on a phone, so a
+          long-press on a small button now shows its label. */
+    (function ahNoHoverHelpers() {
+        const noHover = () => { try { return window.matchMedia('(hover: none)').matches; } catch (e) { return false; } };
+
+        ['mouseover', 'mouseout', 'mouseenter', 'mouseleave'].forEach(type => {
+            document.addEventListener(type, function (e) { if (noHover()) e.stopImmediatePropagation(); }, true);
+        });
+
+        let tipTimer = null, tipEl = null, tipHide = null, tx = 0, ty = 0;
+        function killTimer() { clearTimeout(tipTimer); tipTimer = null; }
+        function hideTip() {
+            clearTimeout(tipHide);
+            if (tipEl) { tipEl.remove(); tipEl = null; }
+        }
+        function showTip(target, text) {
+            hideTip();
+            const tip = document.createElement('div');
+            tip.className = 'ah-tip';
+            tip.textContent = text;
+            document.body.appendChild(tip);
+            const r = target.getBoundingClientRect();
+            const tw = tip.offsetWidth, th = tip.offsetHeight;
+            let left = r.left + r.width / 2 - tw / 2;
+            left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+            let top = r.bottom + 10;
+            if (top + th > window.innerHeight - 8) top = r.top - th - 10;
+            tip.style.left = left + 'px';
+            tip.style.top = Math.max(8, top) + 'px';
+            requestAnimationFrame(() => tip.classList.add('in'));
+            tipEl = tip;
+            tipHide = setTimeout(hideTip, 2400);
+            if (navigator.vibrate) { try { navigator.vibrate(8); } catch (err) {} }
+        }
+
+        document.addEventListener('touchstart', function (e) {
+            killTimer();
+            hideTip();
+            if (!noHover() || e.touches.length !== 1) return;
+            const t = e.target.closest && e.target.closest('[title]');
+            if (!t) return;
+            const r = t.getBoundingClientRect();
+            if (r.width > 170 || r.height > 70) return;          // small controls only, not whole cards
+            const text = t.getAttribute('title');
+            if (!text) return;
+            tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+            tipTimer = setTimeout(() => showTip(t, text), 480);
+        }, { passive: true });
+        document.addEventListener('touchmove', function (e) {
+            if (!tipTimer) return;
+            const p = e.touches[0];
+            if (Math.abs(p.clientX - tx) > 10 || Math.abs(p.clientY - ty) > 10) killTimer();
+        }, { passive: true });
+        document.addEventListener('touchend', killTimer, { passive: true });
+        document.addEventListener('touchcancel', killTimer, { passive: true });
+    })();
 
 
     /* ============ LONG-PRESS TO REVEAL HIDE CONTROLS (touch) ============ */
