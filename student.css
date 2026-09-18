@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19g — v11f: Home "Your activity" card. Includes v11–v11e. */
+/* VERSION: 2026-09-19h — v11g: Your activity with ranges and per-subject view. Includes v11–v11f. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -2067,3 +2067,28 @@ h1 { text-shadow: none !important; }
 .dash-top-track { flex: 1; height: 7px; border-radius: 6px; background: rgba(255,255,255,0.06); overflow: hidden; }
 .dash-top-track span { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple)); }
 .dash-top-row i { font-style: normal; font-size: 0.74rem; color: var(--text-sub); min-width: 22px; text-align: right; }
+
+/* ================= v11g — Your activity: ranges, subject picker, lists ================= */
+.dash-st-ctl { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.dash-st-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
+.dash-st-chips::-webkit-scrollbar { display: none; }
+.dash-st-chip { flex-shrink: 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: var(--text-sub);
+    font-size: 0.72rem; font-weight: 600; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-family: 'Work Sans', sans-serif; }
+.dash-st-chip.on { background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple)); border-color: transparent; color: #fff; }
+.dash-st-sel { background: rgba(255,255,255,0.06); border: 1px solid rgba(233,30,140,0.3); color: #fff; border-radius: 10px;
+    padding: 8px 12px; font-size: 0.82rem; font-family: 'Work Sans', sans-serif; width: 100%; }
+.dash-st-sel option { background: #1a0d2e; color: #fff; }
+.dash-stat-grid.four { grid-template-columns: repeat(4, 1fr); }
+.dash-stat-grid.four .dash-stat b { font-size: 1.15rem; }
+.dash-bars.dense { gap: 3px; }
+.dash-bars.dense .dash-bar .col { max-width: 14px; }
+.dash-top-h span { text-transform: none; letter-spacing: 0; opacity: 0.7; }
+.dash-top-row b.wide { min-width: 108px; font-family: 'Work Sans', sans-serif; font-size: 0.8rem; color: #fff; font-weight: 600; }
+.dash-top-row i.two { min-width: 78px; font-size: 0.7rem; }
+.dash-top-row.tap { cursor: pointer; }
+.dash-st-none { font-size: 0.78rem; color: var(--text-sub); padding: 6px 0 2px; }
+.dash-st-foot { margin-top: 14px; font-size: 0.68rem; color: var(--text-sub); text-align: center; }
+@media (max-width: 420px) {
+    .dash-stat-grid.four { grid-template-columns: repeat(2, 1fr); }
+    .dash-top-row b.wide { min-width: 96px; }
+}

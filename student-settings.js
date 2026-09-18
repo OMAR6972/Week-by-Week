@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19g — also keeps the private activity stats with the account. */
+/* VERSION: 2026-09-19h — keeps the activity stats and the chosen stats view with the account. */
 /* Guests: settings live in this browser (localStorage), exactly as before.
    Signed in: every setting is also saved to the account, and on sign-in the ACCOUNT wins and
    overwrites what is on the device. Anyone can export their settings as a code / file and
@@ -27,7 +27,7 @@
     wbw_dash_order: 'home',
     tt_section: 'timetable', tt_mode: 'timetable', tt_subjects: 'timetable',
     wbw_gpa_state: 'gpa',
-    wbw_my_stats: 'stats'
+    wbw_my_stats: 'stats', wbw_stats_view: 'stats'
   };
   /* values that are plain text rather than JSON */
   var PLAIN = { examViewMode: 1, wbw_default_tab: 1, wbw_nav_autohide: 1, wbw_chrome_fade: 1, tt_section: 1, tt_mode: 1 };

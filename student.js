@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19g — new Home card "Your activity" (personal stats, saved on the device and synced to the account). Includes 19e. */
+/* VERSION: 2026-09-19h — Your activity: today / 7 / 30 / 90 days / all time, everything or per subject, site visits + subject opens + each tab. Includes 19e. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -3995,7 +3995,7 @@
 
     function showWeeks(sub, push = true) {
         try { ahTrackSubjectOpen(arguments[0]); } catch(e) {}
-        try { if (push !== false && sub && sub.code && !isSubjectHidden(sub.code)) ahStatsBump('s', sub.code); } catch(e) {}
+        try { if (push !== false && sub && sub.code && !isSubjectHidden(sub.code)) ahStatsBump('o', sub.code); } catch(e) {}
         if (!sub || isSubjectHidden(sub.code)) {
             nav('home', push);
             return;
@@ -4571,6 +4571,7 @@
 
     function showContentByObj(weekOrEvent, push = true, from = 'weeks') {
         try { if (currSub) ahTrackSubjectOpen(currSub); } catch (e) {}
+        try { if (push !== false && currSub && currSub.code && currentPageId !== 'weeks' && currentPageId !== 'content') ahStatsBump('o', currSub.code); } catch (e) {}   // arrived straight at a week (e.g. from Just added)
         const section = getWeekSection(weekOrEvent);
         if (currSub && isWeekHidden(currSub.code, weekOrEvent, section)) {
             const key = makeWeekHideKey(currSub.code, section, weekOrEvent.title);
@@ -4928,6 +4929,7 @@
         const fromPageId = currentPageId;
         if (!alreadyHere) cleanupHeavyViewDom(fromPageId);
         currentPageId = id;
+        try { ahStatsTab(id); } catch (e) {}
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); 
         document.getElementById(id+'-page').classList.add('active'); 
         window.scrollTo(0,0);
@@ -9756,46 +9758,190 @@
     function ahDashCancel() { ahDashEnd(); }
 
     /* ============ PERSONAL STATS (2026-09-19) ============
-       A private "Your activity" card: which days you used the site, how many subjects and
-       materials you opened, your streak, and your most-opened subjects. Nothing here is sent
-       to anyone — it is counted on this device, and for signed-in students it follows the
-       account like every other setting. */
+       A private "Your activity" card. It counts, for this student only:
+         - website visits (a new visit = coming back after 30+ quiet minutes, or a new tab)
+         - each time a subject is opened, and each material opened inside it
+         - each time each tab (Home, Subjects, Semester Map, Deadlines ...) is opened
+       and can show it for today / 7 / 30 / 90 days / all time, for everything or one subject.
+       Nothing is sent anywhere: it is counted on this device, and for signed-in students it
+       follows the account like every other setting. About 100 days of day-by-day history are
+       kept; the all-time totals are kept forever. */
     var AH_STATS_KEY = 'wbw_my_stats';
+    var AH_STATS_VIEW_KEY = 'wbw_stats_view';
+    var AH_TAB_LABELS = { dashboard: 'Home', home: 'Subjects', schedule: 'Semester Map', deadlines: 'Deadlines',
+                          midterm: 'Midterms / Finals', 'useful-links': 'Useful Links', timetable: 'Timetable',
+                          directory: 'Staff', gpa: 'GPA', updates: 'Updates', recent: 'History' };
+    var AH_STATS_RANGES = [['today', 'Today'], ['7', '7 days'], ['30', '30 days'], ['90', '90 days'], ['all', 'All time']];
 
-    function ahStatsRead() {
-        try {
-            const o = JSON.parse(localStorage.getItem(AH_STATS_KEY) || 'null');
-            if (o && typeof o === 'object' && o.days && o.subjects) return o;
-        } catch (e) {}
-        return { v: 1, days: {}, subjects: {} };
-    }
     function ahDayKey(d) {
         const x = d || new Date();
         return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
     }
-    function ahStatsBump(kind, code) {
+    function ahDaysAgo(n) {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate() - n);
+    }
+    function ahStatsEmpty() { return { v: 2, since: ahDayKey(), days: {}, all: { v: 0, d: 0, t: {}, s: {} } }; }
+
+    function ahStatsRead() {
+        try {
+            const o = JSON.parse(localStorage.getItem(AH_STATS_KEY) || 'null');
+            if (o && o.v === 2 && o.days && o.all) {
+                o.all.t = o.all.t || {}; o.all.s = o.all.s || {};
+                return o;
+            }
+            if (o && o.v === 1 && o.subjects) {             // the first, simpler version: keep its lifetime totals
+                const n = ahStatsEmpty();
+                Object.keys(o.subjects).forEach(c => { n.all.s[c] = { o: o.subjects[c].s || 0, m: o.subjects[c].r || 0 }; });
+                return n;
+            }
+        } catch (e) {}
+        return ahStatsEmpty();
+    }
+
+    /* kind: 'v' website visit | 't' tab opened (key = tab id) | 'o' subject opened | 'm' material opened (key = subject code) */
+    function ahStatsBump(kind, key) {
         try {
             const st = ahStatsRead();
-            const k = ahDayKey();
-            const day = st.days[k] || (st.days[k] = { s: 0, r: 0 });
-            day[kind] = (day[kind] || 0) + 1;
-            if (code) {
-                const sj = st.subjects[code] || (st.subjects[code] = { s: 0, r: 0 });
-                sj[kind] = (sj[kind] || 0) + 1;
-            }
-            const keys = Object.keys(st.days).sort();          // keep about four months of days
-            while (keys.length > 120) delete st.days[keys.shift()];
+            const dk = ahDayKey();
+            let day = st.days[dk];
+            if (!day) { day = st.days[dk] = { v: 0, t: {}, s: {} }; st.all.d = (st.all.d || 0) + 1; }
+            [day, st.all].forEach(r => {
+                r.t = r.t || {}; r.s = r.s || {};
+                if (kind === 'v') r.v = (r.v || 0) + 1;
+                else if (kind === 't' && key) r.t[key] = (r.t[key] || 0) + 1;
+                else if ((kind === 'o' || kind === 'm') && key) {
+                    const sj = r.s[key] || (r.s[key] = { o: 0, m: 0 });
+                    sj[kind] = (sj[kind] || 0) + 1;
+                }
+            });
+            const keys = Object.keys(st.days).sort();          // keep about 100 days of day-by-day history
+            while (keys.length > 100) delete st.days[keys.shift()];
             localStorage.setItem(AH_STATS_KEY, JSON.stringify(st));
         } catch (e) {}
     }
+
+    /* ---- what gets counted ---- */
+    var ahStatsLastTab = null;
+    function ahStatsTab(id) {
+        if (id === 'weeks' || id === 'content') { ahStatsLastTab = null; return; }   // inside a subject, not a tab
+        if (id === ahStatsLastTab) return;
+        ahStatsLastTab = id;
+        ahStatsBump('t', id);
+    }
+    function ahStatsVisitCheck() {
+        try {
+            const now = Date.now();
+            let last = 0;
+            try { last = +sessionStorage.getItem('ah_visit_ts') || 0; } catch (e) {}
+            if (!last || now - last > 30 * 60 * 1000) ahStatsBump('v');
+            try { sessionStorage.setItem('ah_visit_ts', String(now)); } catch (e) {}
+        } catch (e) {}
+    }
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') ahStatsVisitCheck();
+        else { try { sessionStorage.setItem('ah_visit_ts', String(Date.now())); } catch (e) {} }
+    });
+    ahStatsVisitCheck();
+
     // a material opened inside a week
     document.addEventListener('click', function (e) {
         try {
             if (e.target && e.target.closest && e.target.closest('#resources-grid .card')) {
-                ahStatsBump('r', (typeof currSub !== 'undefined' && currSub && currSub.code) ? currSub.code : null);
+                if (typeof currSub !== 'undefined' && currSub && currSub.code) ahStatsBump('m', currSub.code);
             }
         } catch (err) {}
     }, true);
+
+    /* ---- reading it back ---- */
+    function ahStatsView() {
+        try {
+            const v = JSON.parse(localStorage.getItem(AH_STATS_VIEW_KEY) || 'null');
+            if (v && AH_STATS_RANGES.some(r => r[0] === v.range)) return { range: v.range, scope: typeof v.scope === 'string' ? v.scope : 'all' };
+        } catch (e) {}
+        return { range: '7', scope: 'all' };
+    }
+    function ahStatsSetView(patch) {
+        const v = Object.assign(ahStatsView(), patch || {});
+        try { localStorage.setItem(AH_STATS_VIEW_KEY, JSON.stringify(v)); } catch (e) {}
+        const host = document.getElementById('dw-stats');
+        if (host) { host.innerHTML = ahDashStats(); try { ahDashDecorate(); } catch (e) {} }
+    }
+    window.ahStatsSetView = ahStatsSetView;
+
+    function ahStatsRangeDays(range) { return range === 'today' ? 1 : range === '7' ? 7 : range === '30' ? 30 : range === '90' ? 90 : 0; }
+    function ahStatsDayTotal(r) {      // everything counted on one day
+        if (!r) return 0;
+        let n = r.v || 0;
+        Object.keys(r.t || {}).forEach(k => { n += r.t[k]; });
+        Object.keys(r.s || {}).forEach(c => { n += (r.s[c].o || 0) + (r.s[c].m || 0); });
+        return n;
+    }
+    function ahStatsDayActivity(r, scope) {   // what the little bars show
+        if (!r) return 0;
+        if (scope !== 'all') { const sj = (r.s || {})[scope]; return sj ? (sj.o || 0) + (sj.m || 0) : 0; }
+        let n = 0;
+        Object.keys(r.t || {}).forEach(k => { n += r.t[k]; });
+        Object.keys(r.s || {}).forEach(c => { n += (r.s[c].o || 0) + (r.s[c].m || 0); });
+        return n;
+    }
+
+    function ahStatsAggregate(st, range, scope) {
+        const out = { v: 0, t: {}, s: {}, days: 0 };
+        const add = (r) => {
+            out.v += r.v || 0;
+            Object.keys(r.t || {}).forEach(k => { out.t[k] = (out.t[k] || 0) + r.t[k]; });
+            Object.keys(r.s || {}).forEach(c => {
+                const a = out.s[c] || (out.s[c] = { o: 0, m: 0 });
+                a.o += r.s[c].o || 0; a.m += r.s[c].m || 0;
+            });
+        };
+        const n = ahStatsRangeDays(range);
+        const dayHasScope = (r) => scope === 'all' ? ahStatsDayTotal(r) > 0 : ahStatsDayActivity(r, scope) > 0;
+        if (!n) {
+            add(st.all);
+            out.days = scope === 'all' ? (st.all.d || 0) : Object.keys(st.days).filter(k => dayHasScope(st.days[k])).length;
+        } else {
+            for (let i = 0; i < n; i++) {
+                const r = st.days[ahDayKey(ahDaysAgo(i))];
+                if (!r) continue;
+                add(r);
+                if (dayHasScope(r)) out.days++;
+            }
+        }
+        return out;
+    }
+
+    function ahStatsBuckets(st, range, scope) {   // [{label, n, hot}] for the little bar chart
+        const letters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        const out = [];
+        if (range === '7' || range === '30') {
+            const n = range === '7' ? 7 : 30;
+            for (let i = n - 1; i >= 0; i--) {
+                const d = ahDaysAgo(i);
+                out.push({ label: n === 7 ? letters[d.getDay()] : (i % 5 === 0 ? String(d.getDate()) : ''),
+                           n: ahStatsDayActivity(st.days[ahDayKey(d)], scope), hot: i === 0 });
+            }
+        } else if (range === '90') {
+            for (let w = 12; w >= 0; w--) {
+                let sum = 0;
+                for (let i = 0; i < 7; i++) {
+                    const back = w * 7 + i;
+                    if (back < 90) sum += ahStatsDayActivity(st.days[ahDayKey(ahDaysAgo(back))], scope);
+                }
+                out.push({ label: w % 4 === 0 ? (w === 0 ? 'now' : w + 'w') : '', n: sum, hot: w === 0 });
+            }
+        }
+        return out;
+    }
+
+    function ahStatsStreak(st) {
+        const has = (n) => ahStatsDayTotal(st.days[ahDayKey(ahDaysAgo(n))]) > 0;
+        const start = has(0) ? 0 : 1;              // today still empty? count from yesterday
+        let streak = 0;
+        while (start + streak < 400 && has(start + streak)) streak++;
+        return streak;
+    }
 
     function ahDashEnsureStatsHost() {
         if (document.getElementById('dw-stats')) return;
@@ -9809,52 +9955,65 @@
 
     function ahDashStats() {
         const st = ahStatsRead();
+        const view = ahStatsView();
         const head = '<div class="dash-w-head"><span class="dash-w-ic"><i class="fa-solid fa-chart-simple"></i></span><h2>Your activity</h2></div>';
-        const dayKeys = Object.keys(st.days);
-        const total = dayKeys.reduce((n, k) => n + (st.days[k].s || 0) + (st.days[k].r || 0), 0);
-        if (!total) {
-            return head + '<div class="dash-empty">Open a subject or a material and your activity will show up here. It stays private to you.</div>';
+        const everCounted = ahStatsDayTotal(st.all) + (st.all.d || 0);
+        if (!everCounted) {
+            return head + '<div class="dash-empty">Open a subject or a tab and your activity will show up here. It stays private to you.</div>';
         }
-        const now = new Date();
-        const last7 = [];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-            const rec = st.days[ahDayKey(d)] || { s: 0, r: 0 };
-            last7.push({ d: d, n: (rec.s || 0) + (rec.r || 0), r: rec.r || 0 });
+
+        // subjects the student can actually pick (hidden ones are left out)
+        const codes = (window.COURSE_DATA || []).map(s => s.code).filter(c => c && !isSubjectHidden(c));
+        let scope = view.scope;
+        if (scope !== 'all' && codes.indexOf(scope) === -1) scope = 'all';
+        const range = view.range;
+
+        const chips = AH_STATS_RANGES.map(r =>
+            `<button type="button" class="dash-st-chip${r[0] === range ? ' on' : ''}" onclick="ahStatsSetView({range:'${r[0]}'})">${r[1]}</button>`).join('');
+        const opts = ['<option value="all"' + (scope === 'all' ? ' selected' : '') + '>Everything</option>']
+            .concat(codes.map(c => `<option value="${ahEsc(c)}"${c === scope ? ' selected' : ''}>${ahEsc(c)}</option>`)).join('');
+        const controls = `<div class="dash-st-ctl"><div class="dash-st-chips">${chips}</div>
+            <select class="dash-st-sel" onchange="ahStatsSetView({scope:this.value})" aria-label="Show activity for">${opts}</select></div>`;
+
+        const agg = ahStatsAggregate(st, range, scope);
+        const cell = (num, label) => `<div class="dash-stat"><b>${num}</b><i>${label}</i></div>`;
+        const rangeWord = range === 'today' ? 'today' : range === 'all' ? 'all time' : 'in ' + range + ' days';
+
+        let grid = '', lists = '';
+        if (scope === 'all') {
+            const shown = Object.keys(agg.s).filter(c => !isSubjectHidden(c));      // subjects you hid don't count
+            const subsOpened = shown.reduce((n, c) => n + agg.s[c].o, 0);
+            const mats = shown.reduce((n, c) => n + agg.s[c].m, 0);
+            grid = `<div class="dash-stat-grid four">${cell(agg.v, 'website visits')}${cell(subsOpened, 'subjects opened')}${cell(mats, 'materials opened')}${cell(agg.days, 'days active')}</div>`;
+
+            const tabs = Object.keys(AH_TAB_LABELS).map(id => ({ id: id, n: agg.t[id] || 0 })).filter(x => x.n > 0).sort((a, b) => b.n - a.n);
+            const tabMax = tabs.length ? tabs[0].n : 1;
+            const tabRows = tabs.map(x => `<div class="dash-top-row"><b class="wide">${ahEsc(AH_TAB_LABELS[x.id])}</b><span class="dash-top-track"><span style="width:${Math.max(6, Math.round(x.n / tabMax * 100))}%"></span></span><i>${x.n}</i></div>`).join('');
+            lists += `<div class="dash-top"><div class="dash-top-h">Tabs opened</div>${tabRows || '<div class="dash-st-none">No tabs opened ' + rangeWord + '.</div>'}</div>`;
+
+            const subs = Object.keys(agg.s).filter(c => !isSubjectHidden(c) && (agg.s[c].o + agg.s[c].m) > 0)
+                .sort((a, b) => (agg.s[b].o + agg.s[b].m) - (agg.s[a].o + agg.s[a].m)).slice(0, 6);
+            const subMax = subs.length ? (agg.s[subs[0]].o + agg.s[subs[0]].m) : 1;
+            const subRows = subs.map(c => `<div class="dash-top-row tap" onclick="ahStatsSetView({scope:'${ahEsc(c)}'})"><b>${ahEsc(c)}</b><span class="dash-top-track"><span style="width:${Math.max(6, Math.round((agg.s[c].o + agg.s[c].m) / subMax * 100))}%"></span></span><i class="two">${agg.s[c].o}\u00d7 \u00b7 ${agg.s[c].m} mat.</i></div>`).join('');
+            lists += `<div class="dash-top"><div class="dash-top-h">Subjects <span>(tap one to zoom in)</span></div>${subRows || '<div class="dash-st-none">No subjects opened ' + rangeWord + '.</div>'}</div>`;
+        } else {
+            const sj = agg.s[scope] || { o: 0, m: 0 };
+            grid = `<div class="dash-stat-grid">${cell(sj.o, 'times opened')}${cell(sj.m, 'materials opened')}${cell(agg.days, 'days active')}</div>`;
         }
-        const activeDays = last7.filter(x => x.n > 0).length;
-        const materials = last7.reduce((n, x) => n + x.r, 0);
 
-        // streak: consecutive active days, counting back from today (or from yesterday if today is still empty)
-        let streak = 0;
-        const has = (d) => { const r = st.days[ahDayKey(d)]; return !!(r && ((r.s || 0) + (r.r || 0)) > 0); };
-        let cur = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        if (!has(cur)) cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() - 1);
-        while (has(cur) && streak < 400) { streak++; cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() - 1); }
+        const buckets = ahStatsBuckets(st, range, scope);
+        let bars = '';
+        if (buckets.length) {
+            const mx = Math.max.apply(null, buckets.map(b => b.n).concat([1]));
+            bars = `<div class="dash-bars${buckets.length > 14 ? ' dense' : ''}">` + buckets.map(b => {
+                const h = b.n ? Math.max(8, Math.round(b.n / mx * 44)) : 3;
+                return `<div class="dash-bar${b.n ? ' on' : ''}${b.hot ? ' today' : ''}"><span class="col" style="height:${h}px"></span><em>${b.label}</em></div>`;
+            }).join('') + '</div>';
+        }
 
-        const maxDay = Math.max.apply(null, last7.map(x => x.n).concat([1]));
-        const letters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-        const bars = last7.map((x, i) => {
-            const h = x.n ? Math.max(8, Math.round(x.n / maxDay * 44)) : 3;
-            const isToday = i === 6;
-            return `<div class="dash-bar${x.n ? ' on' : ''}${isToday ? ' today' : ''}"><span class="col" style="height:${h}px"></span><em>${letters[x.d.getDay()]}</em></div>`;
-        }).join('');
-
-        const subs = Object.keys(st.subjects)
-            .map(code => ({ code: code, n: (st.subjects[code].s || 0) + (st.subjects[code].r || 0) }))
-            .filter(x => x.n > 0 && !isSubjectHidden(x.code))
-            .sort((a, b) => b.n - a.n).slice(0, 3);
-        const topMax = subs.length ? subs[0].n : 1;
-        const top = subs.map(x => `<div class="dash-top-row"><b>${ahEsc(x.code)}</b><span class="dash-top-track"><span style="width:${Math.max(6, Math.round(x.n / topMax * 100))}%"></span></span><i>${x.n}</i></div>`).join('');
-
-        return head +
-            `<div class="dash-stat-grid">
-                <div class="dash-stat"><b>${activeDays}<small>/7</small></b><i>days active this week</i></div>
-                <div class="dash-stat"><b>${streak}</b><i>day streak</i></div>
-                <div class="dash-stat"><b>${materials}</b><i>materials opened this week</i></div>
-            </div>
-            <div class="dash-bars">${bars}</div>` +
-            (top ? `<div class="dash-top"><div class="dash-top-h">Most opened</div>${top}</div>` : '');
+        const streak = ahStatsStreak(st);
+        const foot = `<div class="dash-st-foot">${streak ? '\ud83d\udd25 ' + streak + '-day streak \u00b7 ' : ''}counting since ${ahEsc(st.since || ahDayKey())}</div>`;
+        return head + controls + grid + bars + lists + foot;
     }
 
     /* the Rearrange button is a permanent part of the Home page — put it there straight away */
