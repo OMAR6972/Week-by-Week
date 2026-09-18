@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15k — v12b: forced notifications, separate Notify permission, correct subject targeting. */
+/* VERSION: 2026-09-19f — exam materials: type selector (Midterm / Final / Practical / Quiz / Other) with auto-numbering and an icon picker for Other. */
 /* Academic Hub - admin.js (extracted from admin.html, Phase 1) */
     let cIdx = 0; let wIdx = 0; let eIdx = 0; let pIdx = 0; let schWIdx = 0; 
     let schedulePanelMode = 'weeks';
@@ -476,7 +476,7 @@
                 el.addEventListener('dragstart', (e) => handleDragStart(e, i, 'event'));
                 el.addEventListener('dragover', handleDragOver);
                 el.addEventListener('drop', (e) => handleDrop(e, i, 'event'));
-                el.innerHTML = `<span class="drag-handle">☰</span><div style="flex:1">${ev.title}</div><button class="btn-move" onclick="moveItem(event, 'event', ${i}, -1)">▲</button><button class="btn-move" onclick="moveItem(event, 'event', ${i}, 1)">▼</button><button class="btn btn-del" onclick="delMiddleItem(event, 'event', ${i})">✕</button>`;
+                el.innerHTML = `<span class="drag-handle">☰</span><div style="flex:1"><i class="fa-solid ${ahExamIconOf(ev)}" style="color:var(--accent-blue); width:18px; text-align:center; margin-right:6px;"></i>${ev.title}</div><button class="btn-move" onclick="moveItem(event, 'event', ${i}, -1)">▲</button><button class="btn-move" onclick="moveItem(event, 'event', ${i}, 1)">▼</button><button class="btn btn-del" onclick="delMiddleItem(event, 'event', ${i})">✕</button>`;
                 el.onclick = (e) => { if(e.target.tagName !== 'BUTTON') { eIdx = i; renderMiddleColumn(); renderEditor(); } };
                 listContainer.appendChild(el);
             });
@@ -552,9 +552,168 @@
     }
     window.ahCanDoneChecked = ahCanDoneChecked;
 
+    /* ================= exam materials: type selector =================
+       Midterm / Final / Practical / Quiz / Other. The type decides what the student's card shows behind the title:
+       Quiz + Practical repeat, so they auto-name ("Quiz 1", "Quiz 2", "Practical 1") and that number is the card's
+       big faded background. Midterm + Final happen once, so they get an icon. Other = your own name + an icon you pick. */
+    const AH_EXAM_TYPES = [
+        { key: 'midterm',   label: 'Midterm',   icon: 'fa-file-pen' },
+        { key: 'final',     label: 'Final',     icon: 'fa-flag-checkered' },
+        { key: 'practical', label: 'Practical', icon: 'fa-flask' },
+        { key: 'quiz',      label: 'Quiz',      icon: 'fa-brain' },
+        { key: 'other',     label: 'Other',     icon: 'fa-shapes' }
+    ];
+    const AH_EXAM_ICON_POOL = [
+        'fa-bullseye', 'fa-clipboard-check', 'fa-pen-ruler', 'fa-compass-drafting', 'fa-calculator', 'fa-code', 'fa-laptop-code',
+        'fa-microscope', 'fa-atom', 'fa-dna', 'fa-flask-vial', 'fa-microchip', 'fa-network-wired', 'fa-gears',
+        'fa-book-open', 'fa-scroll', 'fa-file-lines', 'fa-list-check', 'fa-square-poll-vertical', 'fa-circle-question',
+        'fa-lightbulb', 'fa-puzzle-piece', 'fa-person-chalkboard', 'fa-people-group', 'fa-headphones', 'fa-microphone',
+        'fa-trophy', 'fa-star'
+    ];
+
+    function ahExamInferType(ev) {
+        const lower = String((ev && ev.title) || '').toLowerCase();
+        if (/\bfinal/.test(lower)) return 'final';
+        if (/\bmid ?term|\bmidterm/.test(lower)) return 'midterm';
+        if (/\bpractical|\blab exam/.test(lower)) return 'practical';
+        if (/\bquiz/.test(lower)) return 'quiz';
+        return 'other';
+    }
+    function ahExamTypeOf(ev) {
+        const t = ev && ev.examType ? String(ev.examType).toLowerCase() : '';
+        return AH_EXAM_TYPES.some(x => x.key === t) ? t : ahExamInferType(ev);
+    }
+    function ahExamIconOf(ev) {
+        if (ev && ev.examIcon) return String(ev.examIcon).replace(/^fa-solid\s+/, '');
+        const t = ahExamTypeOf(ev);
+        if (t === 'other') return 'fa-bullseye';
+        const m = AH_EXAM_TYPES.find(x => x.key === t);
+        return m ? m.icon : 'fa-bullseye';
+    }
+    function ahExamTitleNumber(ev) {
+        const m = String((ev && ev.title) || '').match(/(\d+)/);
+        return m ? parseInt(m[1], 10) : null;
+    }
+    /* next number for a repeating type = highest number already used by that type + 1 */
+    function ahExamNextNumber(sub, type, except) {
+        let max = 0;
+        ((sub && sub.events) || []).forEach(ev => {
+            if (ev === except || ahExamTypeOf(ev) !== type) return;
+            const n = ahExamTitleNumber(ev);
+            if (n !== null && !isNaN(n)) max = Math.max(max, n);
+        });
+        return max + 1;
+    }
+    function ahExamAutoTitle(type, sub, ev) {
+        if (type === 'quiz')      return 'Quiz ' + ahExamNextNumber(sub, 'quiz', ev);
+        if (type === 'practical') return 'Practical ' + ahExamNextNumber(sub, 'practical', ev);
+        if (type === 'midterm')   return 'Midterm';
+        if (type === 'final')     return 'Final';
+        return null;
+    }
+    function ahCurrentExam() {
+        const sub = window.COURSE_DATA[cIdx];
+        const ev = sub && sub.events ? sub.events[eIdx] : null;
+        return { sub: sub, ev: ev };
+    }
+
+    function ahSetExamType(type) {
+        const c = ahCurrentExam();
+        if (!c.ev || !AH_EXAM_TYPES.some(x => x.key === type)) return;
+        const wasExplicit = String(c.ev.examType || '').toLowerCase() === type;
+        c.ev.examType = type;
+        if (type === 'other') { if (!c.ev.examIcon) c.ev.examIcon = 'fa-bullseye'; }
+        else delete c.ev.examIcon;
+        if (!wasExplicit) {
+            const t = String(c.ev.title || '').trim();
+            /* only rename titles that are still a plain auto-name; a title you wrote yourself is never touched */
+            const plain = !t || /^(quiz|practical|mid\s*-?\s*term|final|exam)(\s+exam)?\s*\d*$/i.test(t);
+            const wasSameKind = ahExamInferType(c.ev) === type && ahExamTitleNumber(c.ev) !== null;
+            if (plain && !wasSameKind) {
+                const nt = ahExamAutoTitle(type, c.sub, c.ev);
+                if (nt) c.ev.title = nt;
+            }
+        }
+        markDirty(); renderMiddleColumn(); renderEditor();
+    }
+    function ahExamUseAutoName() {
+        const c = ahCurrentExam();
+        if (!c.ev) return;
+        const nt = ahExamAutoTitle(ahExamTypeOf(c.ev), c.sub, c.ev);
+        if (nt) c.ev.title = nt;
+        markDirty(); renderMiddleColumn(); renderEditor();
+    }
+    function ahExamPickIcon(icon) {
+        const c = ahCurrentExam();
+        if (!c.ev || AH_EXAM_ICON_POOL.indexOf(icon) === -1) return;
+        c.ev.examType = 'other';
+        c.ev.examIcon = icon;
+        markDirty(); renderMiddleColumn(); renderEditor();
+    }
+
+    function ahExamHintHtml(item, sub) {
+        const type = ahExamTypeOf(item);
+        const meta = AH_EXAM_TYPES.find(x => x.key === type);
+        if (type === 'quiz' || type === 'practical') {
+            const n = ahExamTitleNumber(item);
+            if (n !== null && !isNaN(n)) {
+                return 'The card shows the number <b style="color:#fff;">' + n + '</b> as its big faded background.' +
+                    (n > 10 ? ' <span style="color:#ff9f0a;">Numbers above 10 look cramped \u2014 1 to 10 works best.</span>' : '');
+            }
+            const auto = ahExamAutoTitle(type, sub, item);
+            return 'There is no number in the title, so the card shows an icon instead. ' +
+                '<button type="button" class="btn btn-add" style="font-size:0.75rem; padding:3px 10px; margin-left:4px;" onclick="ahExamUseAutoName()">Rename to ' + auto + '</button>';
+        }
+        if (type === 'midterm' || type === 'final') {
+            return 'The card shows the <i class="fa-solid ' + meta.icon + '"></i> ' + meta.label + ' icon \u2014 no number, since there is only one.';
+        }
+        return 'Type a name in the box below and pick an icon \u2014 it becomes the card\u2019s big faded background.';
+    }
+    function ahExamRefreshHint() {
+        const el = document.getElementById('ah-exam-hint');
+        const c = ahCurrentExam();
+        if (el && c.ev) el.innerHTML = ahExamHintHtml(c.ev, c.sub);
+    }
+
+    function ahExamTypeSection(item, sub) {
+        const cur = ahExamTypeOf(item);
+        const chips = AH_EXAM_TYPES.map(t => {
+            const on = cur === t.key;
+            return '<button type="button" onclick="ahSetExamType(\'' + t.key + '\')" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;' +
+                'border:1px solid ' + (on ? '#4a90e2' : '#444') + ';background:' + (on ? 'linear-gradient(135deg,#4a90e2,#a855f7)' : '#0a0012') + ';' +
+                'color:' + (on ? '#fff' : '#bbb') + ';font-weight:' + (on ? '700' : '500') + ';cursor:pointer;font-size:0.82rem;">' +
+                '<i class="fa-solid ' + t.icon + '"></i>' + t.label + '</button>';
+        }).join('');
+
+        let icons = '';
+        if (cur === 'other') {
+            const chosen = item.examIcon ? String(item.examIcon).replace(/^fa-solid\s+/, '') : 'fa-bullseye';
+            icons = '<label style="margin-top:12px;display:block;">Card icon <span style="font-size:0.75rem;color:#888;font-weight:normal;">(pick one)</span></label>' +
+                '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">' +
+                AH_EXAM_ICON_POOL.map(ic => {
+                    const on = chosen === ic;
+                    return '<button type="button" title="' + ic.replace('fa-', '') + '" onclick="ahExamPickIcon(\'' + ic + '\')" style="width:38px;height:38px;border-radius:9px;' +
+                        'border:1px solid ' + (on ? '#4a90e2' : '#444') + ';background:' + (on ? 'rgba(74,144,226,0.28)' : '#0a0012') + ';color:' + (on ? '#fff' : '#bbb') + ';cursor:pointer;font-size:1rem;">' +
+                        '<i class="fa-solid ' + ic + '"></i></button>';
+                }).join('') + '</div>';
+        }
+
+        return '<div style="background:#150a25; padding:12px; border-radius:8px; margin-bottom:12px;">' +
+            '<label style="font-weight:bold; color:var(--accent-blue);">Exam type</label>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">' + chips + '</div>' +
+            '<div id="ah-exam-hint" style="font-size:0.78rem;color:#9a92ad;line-height:1.5;margin-top:10px;">' + ahExamHintHtml(item, sub) + '</div>' +
+            (item.examType ? '' : '<div style="font-size:0.72rem;color:#6f6a80;margin-top:4px;">Guessed from the title \u2014 click a type to lock it in.</div>') +
+            icons +
+            '</div>';
+    }
+    window.ahSetExamType = ahSetExamType;
+    window.ahExamUseAutoName = ahExamUseAutoName;
+    window.ahExamPickIcon = ahExamPickIcon;
+    window.ahExamRefreshHint = ahExamRefreshHint;
+
     function addMiddleItem(type) {
         if(type === 'week') { window.COURSE_DATA[cIdx].weeks.push({title:`WEEK ${ahNextTitleNumber(window.COURSE_DATA[cIdx].weeks)}`, resources:{}}); wIdx=window.COURSE_DATA[cIdx].weeks.length-1; }
-        else if(type === 'event') { window.COURSE_DATA[cIdx].events.push({title:`Quiz ${window.COURSE_DATA[cIdx].events.length+1}`, resources:{}}); eIdx=window.COURSE_DATA[cIdx].events.length-1; }
+        else if(type === 'event') { const _sub = window.COURSE_DATA[cIdx]; _sub.events.push({title:`Quiz ${ahExamNextNumber(_sub, 'quiz')}`, examType:'quiz', resources:{}}); eIdx=_sub.events.length-1; }
         else if(type === 'playlist') { window.COURSE_DATA[cIdx].playlists.push({title:`New Link`, link:"#", icon:"🔗", note:"", badges:[]}); pIdx=window.COURSE_DATA[cIdx].playlists.length-1; }
         renderMiddleColumn(); renderEditor();
     }
@@ -625,7 +784,8 @@
                 html += `
                 <div class="form-section">
                     <h3 style="color:${isEvent ? 'var(--accent-blue)' : 'var(--accent-pink)'}">${isEvent ? 'Event Details' : 'Week Details'}</h3>
-                    <label>Title</label><input type="text" value="${item.title}" oninput="updateData('${subViewMode}', 'title', this.value)" onblur="renderMiddleColumn()">
+                    ${isEvent ? ahExamTypeSection(item, sub) : ''}
+                    <label>${isEvent && ahExamTypeOf(item) === 'other' ? 'Name' : 'Title'}</label><input type="text" value="${item.title}" oninput="updateData('${subViewMode}', 'title', this.value)${isEvent ? '; ahExamRefreshHint()' : ''}" onblur="renderMiddleColumn()">
                     
                     <div class="checkbox-row" style="background:#150a25; padding:10px; border-radius:8px;">
                         <label class="checkbox-label"><input type="checkbox" ${item.locked ? 'checked' : ''} onchange="updateData('${subViewMode}', 'locked', this.checked)"> Locked</label>
