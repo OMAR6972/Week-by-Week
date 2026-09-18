@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15f — v9b: custom reminder timings you can add, tick and remove. */
+/* VERSION: 2026-09-19 — v11: My subjects invitation bar fixed on phones (was squashed to half width). */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -1683,12 +1683,17 @@ h1 { text-shadow: none !important; }
 .ah-mysub-showall input { cursor: pointer; accent-color: var(--accent-purple); }
 .ah-mysub-skip { display: block; width: 100%; text-align: center; margin-top: 11px; }
 
-/* first-run invitation bar */
+/* first-run invitation bar
+   v11: the old bar was centred with left:50% and no width, which capped it at
+   half the screen on phones. It now spans the screen with side margins and
+   centres itself, so the text sits on one or two calm lines. */
 .ah-mysub-invite {
-    position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 26px);
-    z-index: 9500; opacity: 0; transition: opacity 0.3s, transform 0.3s; max-width: 94vw;
+    position: fixed; left: 12px; right: 12px; bottom: 22px;
+    width: fit-content; max-width: 560px; margin: 0 auto;
+    transform: translateY(26px);
+    z-index: 9500; opacity: 0; transition: opacity 0.3s, transform 0.3s;
 }
-.ah-mysub-invite.in { opacity: 1; transform: translate(-50%, 0); }
+.ah-mysub-invite.in { opacity: 1; transform: translateY(0); }
 .ah-mysub-invite-in {
     display: flex; align-items: center; gap: 12px;
     background: rgba(22,11,38,0.97); border: 1px solid rgba(181,25,214,0.45);
@@ -1696,6 +1701,7 @@ h1 { text-shadow: none !important; }
     box-shadow: 0 12px 34px rgba(0,0,0,0.45); font-size: 0.83rem; color: #e2d6f5;
 }
 .ah-mysub-invite-in > i { color: var(--accent-purple); flex-shrink: 0; }
+.ah-mysub-invite-in > span { min-width: 0; }
 .ah-mysub-invite-go {
     background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
     border: none; color: #fff; font-weight: 700; font-size: 0.78rem;
@@ -1709,8 +1715,14 @@ h1 { text-shadow: none !important; }
 }
 .ah-mysub-invite-x:hover { color: #fff; }
 
+/* Phones: a soft rounded card (not a pill), lifted above the bottom-left
+   news button so nothing sits on top of anything else. */
 @media (max-width: 560px) {
-    .ah-mysub-invite-in { font-size: 0.76rem; padding: 10px 10px 10px 15px; gap: 9px; }
+    .ah-mysub-invite { bottom: 76px; width: auto; max-width: none; }
+    .ah-mysub-invite-in {
+        border-radius: 18px; font-size: 0.78rem; line-height: 1.35;
+        padding: 11px 8px 11px 14px; gap: 10px;
+    }
     .ah-mysub-invite-in > span { flex: 1; }
 }
 
