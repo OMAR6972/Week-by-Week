@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19e — account menu: Backup & share; sign-out takes settings off the device. */
+/* VERSION: 2026-09-19l — Back button on screens opened from the account menu. */
 /* Optional by design: guests keep full access to everything, an account only adds extras. */
 
 (function () {
@@ -216,6 +216,28 @@
     setTimeout(function () { emailEl.focus(); }, 60);
   }
 
+  /* "Back" for a screen that was opened from another screen (the account menu, Settings).
+     Puts a Back button at the top of the new screen that closes it and reopens the one before. */
+  window.__ahAddBack = function (modalId, backFn) {
+    var tries = 0;
+    (function attempt() {
+      var m = document.getElementById(modalId);
+      if (!m) { if (++tries < 12) setTimeout(attempt, 40); return; }
+      var card = m.querySelector('.ah-auth-card');
+      if (!card || card.querySelector('.ah-back-btn')) return;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ah-back-btn';
+      b.setAttribute('aria-label', 'Back');
+      b.innerHTML = '<i class="fa-solid fa-arrow-left"></i> Back';
+      b.addEventListener('click', function () {
+        m.remove();
+        try { backFn(); } catch (e) {}
+      });
+      card.insertBefore(b, card.firstChild);
+    })();
+  };
+
   /* --------------------------------------------------------- account panel */
   function openAccountPanel() {
     if (document.getElementById('ah-acct-modal')) return;
@@ -248,17 +270,26 @@
 
     back.querySelector('#ah-acct-notify').addEventListener('click', function () {
       close();
-      if (window.__ahOpenNotifySettings) window.__ahOpenNotifySettings();
+      if (window.__ahOpenNotifySettings) {
+        window.__ahOpenNotifySettings();
+        window.__ahAddBack('ah-notify-modal', openAccountPanel);
+      }
     });
 
     back.querySelector('#ah-acct-subjects').addEventListener('click', function () {
       close();
-      if (window.__ahOpenMySubjects) window.__ahOpenMySubjects({});
+      if (window.__ahOpenMySubjects) {
+        window.__ahOpenMySubjects({});
+        window.__ahAddBack('ah-mysub-modal', openAccountPanel);
+      }
     });
 
     back.querySelector('#ah-acct-backup').addEventListener('click', function () {
       close();
-      if (window.__ahOpenBackup) window.__ahOpenBackup();
+      if (window.__ahOpenBackup) {
+        window.__ahOpenBackup();
+        window.__ahAddBack('ah-bk-modal', openAccountPanel);
+      }
     });
 
     back.querySelector('#ah-acct-rename').addEventListener('click', async function () {

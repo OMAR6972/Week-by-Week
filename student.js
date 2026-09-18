@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19k — Your activity short view: top subject / top material shown as clean tiles. Includes 19j. */
+/* VERSION: 2026-09-19l — Back button from Backup & share to Settings. Includes 19k. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -10293,7 +10293,7 @@
         </div>
         <div class="ah-set-row">
             <div class="ah-set-txt"><b>Backup &amp; share</b><i>Export all your settings as a code or file, or import someone else's</i></div>
-            <button class="ah-set-btn" onclick="closeSettingsPanel(); if (window.__ahOpenBackup) window.__ahOpenBackup();">Open</button>
+            <button class="ah-set-btn" onclick="closeSettingsPanel(); if (window.__ahOpenBackup) { window.__ahOpenBackup(); if (window.__ahAddBack) window.__ahAddBack('ah-bk-modal', openSettingsPanel); }">Open</button>
         </div>
         <div class="ah-set-row">
             <div class="ah-set-txt"><b>Where your settings are saved</b><i>${ahEsc(ahSyncText())}</i></div>

@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19i — v11h: Your activity short/full view, materials by type. Includes v11–v11g. */
+/* VERSION: 2026-09-19l — v11i: Back button on account sub-screens. Includes v11–v11h. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -2108,3 +2108,14 @@ h1 { text-shadow: none !important; }
 .dash-st-zoom { margin-top: 10px; background: rgba(181,25,214,0.16); border: 1px solid rgba(181,25,214,0.45); color: #d9b3ff;
     font-size: 0.74rem; font-weight: 600; padding: 7px 12px; border-radius: 9px; cursor: pointer; font-family: 'Work Sans', sans-serif; }
 .dash-st-zoom i { color: inherit; font-size: 0.68rem; margin-left: 4px; }
+
+/* ================= v11i — Back button on screens opened from the account menu / Settings ================= */
+.ah-back-btn {
+    display: inline-flex; align-items: center; gap: 7px; margin: 0 0 14px;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14); color: #e2d6f5;
+    border-radius: 999px; padding: 7px 14px 7px 11px; font-size: 0.78rem; font-weight: 600;
+    font-family: 'Work Sans', sans-serif; cursor: pointer;
+}
+.ah-back-btn i { color: inherit; font-size: 0.72rem; }
+.ah-back-btn:active { background: rgba(233,30,140,0.25); }
+@media (hover: hover) { .ah-back-btn:hover { color: #fff; border-color: var(--accent-pink); } }
