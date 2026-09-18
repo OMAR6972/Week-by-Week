@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19h — keeps the activity stats and the chosen stats view with the account. */
+/* VERSION: 2026-09-19j — stats shared live between browsers on the same account (pulled when you come back, every minute, and when Home opens). */
 /* Guests: settings live in this browser (localStorage), exactly as before.
    Signed in: every setting is also saved to the account, and on sign-in the ACCOUNT wins and
    overwrites what is on the device. Anyone can export their settings as a code / file and
@@ -132,6 +132,33 @@
     try { return deepEqual(JSON.parse(a), JSON.parse(b)); } catch (e) { return false; }
   }
 
+  /* The activity stats are the one exception to "account overwrites the device": each browser
+     counts into its own slot inside the value, and joining two copies keeps every slot (the
+     newer copy of a slot wins). That way two browsers used at the same time never wipe each
+     other's counts, and a browser that signs in adds its history to the account. */
+  function mergeStats(a, b) {
+    var A = null, B = null;
+    try { A = JSON.parse(a); } catch (e) {}
+    try { B = JSON.parse(b); } catch (e) {}
+    var ok = function (x) { return x && x.v === 3 && x.dev && typeof x.dev === 'object'; };
+    if (!ok(A)) return ok(B) ? b : a;
+    if (!ok(B)) return a;
+    var out = { v: 3, dev: {} }, ids = {};
+    Object.keys(A.dev).forEach(function (k) { ids[k] = 1; });
+    Object.keys(B.dev).forEach(function (k) { ids[k] = 1; });
+    Object.keys(ids).forEach(function (id) {
+      var x = A.dev[id], y = B.dev[id];
+      if (!x) out.dev[id] = y;
+      else if (!y) out.dev[id] = x;
+      else {
+        var qx = x.q || 0, qy = y.q || 0;
+        out.dev[id] = (qy > qx || (qy === qx && (y.u || 0) > (x.u || 0))) ? y : x;
+      }
+    });
+    return JSON.stringify(out);
+  }
+  var MERGERS = { wbw_my_stats: mergeStats };
+
   /* ============================================================ account sync */
   var ready = false;          // true once this sign-in has been reconciled with the account
   var pending = {};           // local keys waiting to be saved to the account
@@ -140,11 +167,13 @@
   var status = { state: 'guest', at: 0 };
   var lastUser = null, lastReconcile = 0;
 
+  var timerDelay = 0;
   function queue(key) {
     if (!ready || !window.__ahStudent || !SB) return;
     pending[key] = true;
-    clearTimeout(timer);
-    timer = setTimeout(flush, 900);
+    var i = info(key);
+    var d = (i && i.g === 'stats') ? 4000 : 900;      // counting activity happens a lot; save it in bigger batches
+    if (!timer || d < timerDelay) { clearTimeout(timer); timerDelay = d; timer = setTimeout(flush, d); }
   }
 
   async function flush() {
@@ -157,16 +186,34 @@
 
     var now = new Date().toISOString();
     var rows = [];
-    keys.forEach(function (k) {
-      var i = info(k);
-      if (!i) return;
-      var raw = LS.getItem(k);
-      rows.push({
-        user_id: st.id, key: i.remote,
-        value: raw === null ? { del: true } : toRemote(k, raw),
-        updated_at: now
-      });
-    });
+    try {
+      for (var n = 0; n < keys.length; n++) {
+        var k = keys[n], i = info(k);
+        if (!i) continue;
+        var raw = LS.getItem(k);
+        if (raw !== null && MERGERS[k]) {
+          // join with what the account already has (another browser may have counted meanwhile)
+          var rr = await SB.from('student_prefs').select('value').eq('user_id', st.id).eq('key', i.remote).maybeSingle();
+          if (rr.error) throw rr.error;
+          var rv = rr.data && rr.data.value;
+          if (rv && typeof rv.raw === 'string') {
+            var joined = MERGERS[k](raw, rv.raw);
+            if (joined !== raw) { origSet.call(LS, k, joined); raw = joined; }
+          }
+        }
+        rows.push({
+          user_id: st.id, key: i.remote,
+          value: raw === null ? { del: true } : toRemote(k, raw),
+          updated_at: now
+        });
+      }
+    } catch (e) {
+      fails++;
+      status = { state: 'error', at: Date.now(), msg: String((e && e.message) || e) };
+      try { console.warn('[settings] could not prepare the save:', status.msg); } catch (x) {}
+      if (fails < 3) { keys.forEach(function (k2) { pending[k2] = true; }); timer = setTimeout(flush, 15000); timerDelay = 15000; }
+      return;
+    }
     if (!rows.length) return;
 
     status = { state: 'syncing', at: Date.now() };
@@ -232,6 +279,13 @@
     var changed = 0;
     Object.keys(remote).forEach(function (k) {
       var m = remote[k], cur = LS.getItem(k);
+      if (MERGERS[k]) {
+        if (m.raw === null) { if (cur !== null) pending[k] = true; return; }
+        var merged = cur === null ? m.raw : MERGERS[k](cur, m.raw);
+        if (!sameRaw(merged, cur)) origSet.call(LS, k, merged);   // no reload needed: the page reads these live
+        if (!sameRaw(merged, m.raw)) pending[k] = true;           // this browser knew something the account did not
+        return;
+      }
       if (m.raw === null) {
         if (cur !== null) { origRemove.call(LS, k); changed++; }
       } else if (!sameRaw(cur, m.raw)) {
@@ -247,6 +301,34 @@
     lastUser = st.id; lastReconcile = Date.now();
     if (changed) maybeReload();                            // screens read settings at start-up, so reload once
   }
+
+  /* Two browsers on the same account share ONE set of stats: this pulls what the other browser
+     counted and joins it with this one (nothing is ever lost or doubled), then tells the page. */
+  var lastPull = 0;
+  async function pullStats(force) {
+    var st = window.__ahStudent;
+    if (!st || !SB || !ready) return;
+    if (!force && Date.now() - lastPull < 15000) return;
+    lastPull = Date.now();
+    try {
+      var rr = await SB.from('student_prefs').select('value').eq('user_id', st.id).eq('key', 'ls::wbw_my_stats').maybeSingle();
+      if (!rr || rr.error || !rr.data) return;
+      var rv = rr.data.value;
+      if (!rv || typeof rv.raw !== 'string') return;
+      var cur = LS.getItem('wbw_my_stats');                       // read AFTER the wait, so a count made meanwhile is kept
+      var merged = cur === null ? rv.raw : mergeStats(cur, rv.raw);
+      if (!sameRaw(merged, cur)) {
+        origSet.call(LS, 'wbw_my_stats', merged);
+        document.dispatchEvent(new CustomEvent('ah-stats-updated'));
+      }
+      if (!sameRaw(merged, rv.raw)) queue('wbw_my_stats');        // this browser knew something the account did not
+    } catch (e) {}
+  }
+  window.__ahPullStats = pullStats;
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') pullStats();
+  });
+  setInterval(function () { if (document.visibilityState === 'visible') pullStats(); }, 60000);
 
   function onStudent(st) {
     if (!st) {
@@ -269,6 +351,7 @@
      They are safe in the account and come back when they sign in again. */
   window.__ahClearSettingsLocal = function () {
     allKeys().forEach(function (k) { origRemove.call(LS, k); });
+    try { origRemove.call(LS, 'ah_device_id'); } catch (e) {}       // the next person here is a new "browser" for the stats
     ready = false; pending = {}; lastUser = null;
     status = { state: 'guest', at: 0 };
     setTimeout(function () { location.reload(); }, 1600);

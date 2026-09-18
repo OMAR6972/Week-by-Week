@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19h — Your activity: today / 7 / 30 / 90 days / all time, everything or per subject, site visits + subject opens + each tab. Includes 19e. */
+/* VERSION: 2026-09-19j — Your activity is shared live between browsers on the same account. Includes 19i. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -4612,6 +4612,7 @@
                     const el = document.createElement('div');
                     el.className = 'card';
                     el.style.position = 'relative';
+                    el.dataset.res = key;
                     el.innerHTML = `<div style="font-size:2.5rem; margin-bottom:10px">${icon}</div><div style="font-weight:bold; text-transform:uppercase">${key}</div>${resBadgeCard}`;
                     el.onclick = () => {
                         if(val.link && val.link !== "#") window.open(val.link, "_blank");
@@ -9617,6 +9618,7 @@
     function ahDashAfterRender() {
         ahDashEnsureBar();
         ahDashDecorate();
+        try { if (window.__ahPullStats) window.__ahPullStats(); } catch (e) {}   // opening Home: fetch what the other browsers counted
     }
 
     function ahDashVisibleCards(col, except) {
@@ -9758,20 +9760,24 @@
     function ahDashCancel() { ahDashEnd(); }
 
     /* ============ PERSONAL STATS (2026-09-19) ============
-       A private "Your activity" card. It counts, for this student only:
-         - website visits (a new visit = coming back after 30+ quiet minutes, or a new tab)
-         - each time a subject is opened, and each material opened inside it
-         - each time each tab (Home, Subjects, Semester Map, Deadlines ...) is opened
-       and can show it for today / 7 / 30 / 90 days / all time, for everything or one subject.
-       Nothing is sent anywhere: it is counted on this device, and for signed-in students it
-       follows the account like every other setting. About 100 days of day-by-day history are
-       kept; the all-time totals are kept forever. */
+       A private "Your activity" card. For this student only it counts:
+         - website visits (a new visit = back after 30+ quiet minutes, or a new tab)
+         - each time a subject is opened, and each material opened inside it - with its TYPE
+           (Lecture, Slides, Alternative ...)
+         - each time each tab (Home, Subjects, Semester Map ...) is opened
+       Short summary by default; "See full details" opens today / 7 / 30 / 90 days / all time,
+       everything or one subject, tabs, subjects and materials-by-type.
+       Guests: counted in this browser only. Signed in: kept in the account. Every browser
+       counts into its own slot and the account adds the slots together, so two browsers used
+       at the same time never overwrite each other. About 100 days of day-by-day history are
+       kept; all-time totals are kept forever. */
     var AH_STATS_KEY = 'wbw_my_stats';
     var AH_STATS_VIEW_KEY = 'wbw_stats_view';
     var AH_TAB_LABELS = { dashboard: 'Home', home: 'Subjects', schedule: 'Semester Map', deadlines: 'Deadlines',
                           midterm: 'Midterms / Finals', 'useful-links': 'Useful Links', timetable: 'Timetable',
                           directory: 'Staff', gpa: 'GPA', updates: 'Updates', recent: 'History' };
     var AH_STATS_RANGES = [['today', 'Today'], ['7', '7 days'], ['30', '30 days'], ['90', '90 days'], ['all', 'All time']];
+    var ahStatsOpenRows = {};
 
     function ahDayKey(d) {
         const x = d || new Date();
@@ -9781,43 +9787,99 @@
         const now = new Date();
         return new Date(now.getFullYear(), now.getMonth(), now.getDate() - n);
     }
-    function ahStatsEmpty() { return { v: 2, since: ahDayKey(), days: {}, all: { v: 0, d: 0, t: {}, s: {} } }; }
-
-    function ahStatsRead() {
+    function ahDeviceId() {          // which browser this is; never synced, forgotten on sign-out
         try {
-            const o = JSON.parse(localStorage.getItem(AH_STATS_KEY) || 'null');
-            if (o && o.v === 2 && o.days && o.all) {
-                o.all.t = o.all.t || {}; o.all.s = o.all.s || {};
-                return o;
-            }
-            if (o && o.v === 1 && o.subjects) {             // the first, simpler version: keep its lifetime totals
-                const n = ahStatsEmpty();
-                Object.keys(o.subjects).forEach(c => { n.all.s[c] = { o: o.subjects[c].s || 0, m: o.subjects[c].r || 0 }; });
-                return n;
-            }
-        } catch (e) {}
-        return ahStatsEmpty();
+            let id = localStorage.getItem('ah_device_id');
+            if (!id) { id = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); localStorage.setItem('ah_device_id', id); }
+            return id;
+        } catch (e) { return 'dx'; }
     }
 
-    /* kind: 'v' website visit | 't' tab opened (key = tab id) | 'o' subject opened | 'm' material opened (key = subject code) */
-    function ahStatsBump(kind, key) {
+    /* ---- storage: { v:3, dev:{ <browser>: { q, s, u, pd, days:{}, all:{} } } } ---- */
+    function ahStatsRaw() {
         try {
-            const st = ahStatsRead();
+            const o = JSON.parse(localStorage.getItem(AH_STATS_KEY) || 'null');
+            if (o && o.v === 3 && o.dev && typeof o.dev === 'object') return o;
+            const id = ahDeviceId();
+            if (o && o.v === 2 && o.days && o.all) {        // the previous version becomes this browser's slot
+                const dev = {};
+                dev[id] = { q: 1, s: o.since || ahDayKey(), u: Date.now(), pd: Math.max(0, (o.all.d || 0) - Object.keys(o.days).length),
+                            days: o.days, all: { v: o.all.v || 0, t: o.all.t || {}, s: o.all.s || {} } };
+                return { v: 3, dev: dev };
+            }
+            if (o && o.v === 1 && o.subjects) {
+                const all = { v: 0, t: {}, s: {} };
+                Object.keys(o.subjects).forEach(c => { all.s[c] = { o: o.subjects[c].s || 0, m: o.subjects[c].r || 0, r: {} }; });
+                const dev = {};
+                dev[id] = { q: 1, s: ahDayKey(), u: Date.now(), pd: 0, days: {}, all: all };
+                return { v: 3, dev: dev };
+            }
+        } catch (e) {}
+        return { v: 3, dev: {} };
+    }
+
+    function ahStatsAddRec(dst, src) {       // dst += src
+        if (!src) return;
+        dst.v = (dst.v || 0) + (src.v || 0);
+        dst.t = dst.t || {}; dst.s = dst.s || {};
+        Object.keys(src.t || {}).forEach(k => { dst.t[k] = (dst.t[k] || 0) + src.t[k]; });
+        Object.keys(src.s || {}).forEach(c => {
+            const b = src.s[c];
+            const a = dst.s[c] || (dst.s[c] = { o: 0, m: 0, r: {} });
+            a.r = a.r || {};
+            a.o += b.o || 0; a.m += b.m || 0;
+            Object.keys(b.r || {}).forEach(n => { a.r[n] = (a.r[n] || 0) + b.r[n]; });
+            if (b.l && (!a.l || b.l > a.l)) a.l = b.l;
+        });
+    }
+
+    /* everything this account (or this guest browser) has counted, all browsers added together */
+    function ahStatsRead() {
+        const raw = ahStatsRaw();
+        const out = { since: null, days: {}, all: { v: 0, t: {}, s: {} }, pd: 0 };
+        Object.keys(raw.dev).forEach(id => {
+            const d = raw.dev[id];
+            if (!d) return;
+            if (d.s && (!out.since || d.s < out.since)) out.since = d.s;
+            out.pd += d.pd || 0;
+            ahStatsAddRec(out.all, d.all);
+            Object.keys(d.days || {}).forEach(k => {
+                const t = out.days[k] || (out.days[k] = { v: 0, t: {}, s: {} });
+                ahStatsAddRec(t, d.days[k]);
+            });
+        });
+        return out;
+    }
+
+    /* kind: 'v' website visit | 't' tab opened (key = tab id) | 'o' subject opened (key = code)
+             | 'm' material opened (key = code, type = Lecture / Slides / ...) */
+    function ahStatsBump(kind, key, type) {
+        try {
+            const raw = ahStatsRaw();
+            const id = ahDeviceId();
             const dk = ahDayKey();
-            let day = st.days[dk];
-            if (!day) { day = st.days[dk] = { v: 0, t: {}, s: {} }; st.all.d = (st.all.d || 0) + 1; }
-            [day, st.all].forEach(r => {
+            const dv = raw.dev[id] || (raw.dev[id] = { q: 0, s: dk, u: 0, pd: 0, days: {}, all: { v: 0, t: {}, s: {} } });
+            const day = dv.days[dk] || (dv.days[dk] = { v: 0, t: {}, s: {} });
+            [day, dv.all].forEach(r => {
                 r.t = r.t || {}; r.s = r.s || {};
                 if (kind === 'v') r.v = (r.v || 0) + 1;
                 else if (kind === 't' && key) r.t[key] = (r.t[key] || 0) + 1;
                 else if ((kind === 'o' || kind === 'm') && key) {
-                    const sj = r.s[key] || (r.s[key] = { o: 0, m: 0 });
+                    const sj = r.s[key] || (r.s[key] = { o: 0, m: 0, r: {} });
+                    sj.r = sj.r || {};
                     sj[kind] = (sj[kind] || 0) + 1;
+                    sj.l = dk;
+                    if (kind === 'm' && type) sj.r[type] = (sj.r[type] || 0) + 1;
                 }
             });
-            const keys = Object.keys(st.days).sort();          // keep about 100 days of day-by-day history
-            while (keys.length > 100) delete st.days[keys.shift()];
-            localStorage.setItem(AH_STATS_KEY, JSON.stringify(st));
+            dv.q = (dv.q || 0) + 1; dv.u = Date.now();
+            const keys = Object.keys(dv.days).sort();              // keep about 100 days of day-by-day history
+            while (keys.length > 100) {
+                const old = keys.shift();
+                if (ahStatsDayTotal(dv.days[old]) > 0) dv.pd = (dv.pd || 0) + 1;   // still counts as an active day in all-time
+                delete dv.days[old];
+            }
+            localStorage.setItem(AH_STATS_KEY, JSON.stringify(raw));
         } catch (e) {}
     }
 
@@ -9844,11 +9906,12 @@
     });
     ahStatsVisitCheck();
 
-    // a material opened inside a week
+    // a material opened inside a week (only cards that really have a link)
     document.addEventListener('click', function (e) {
         try {
-            if (e.target && e.target.closest && e.target.closest('#resources-grid .card')) {
-                if (typeof currSub !== 'undefined' && currSub && currSub.code) ahStatsBump('m', currSub.code);
+            const card = e.target && e.target.closest ? e.target.closest('#resources-grid .card') : null;
+            if (card && card.dataset.link && typeof currSub !== 'undefined' && currSub && currSub.code) {
+                ahStatsBump('m', currSub.code, card.dataset.res || null);
             }
         } catch (err) {}
     }, true);
@@ -9857,17 +9920,27 @@
     function ahStatsView() {
         try {
             const v = JSON.parse(localStorage.getItem(AH_STATS_VIEW_KEY) || 'null');
-            if (v && AH_STATS_RANGES.some(r => r[0] === v.range)) return { range: v.range, scope: typeof v.scope === 'string' ? v.scope : 'all' };
+            if (v) return { range: AH_STATS_RANGES.some(r => r[0] === v.range) ? v.range : '7',
+                            scope: typeof v.scope === 'string' ? v.scope : 'all', full: !!v.full };
         } catch (e) {}
-        return { range: '7', scope: 'all' };
+        return { range: '7', scope: 'all', full: false };
+    }
+    function ahStatsRepaint() {
+        const host = document.getElementById('dw-stats');
+        if (host) { host.innerHTML = ahDashStats(); try { ahDashDecorate(); } catch (e) {} }
     }
     function ahStatsSetView(patch) {
         const v = Object.assign(ahStatsView(), patch || {});
         try { localStorage.setItem(AH_STATS_VIEW_KEY, JSON.stringify(v)); } catch (e) {}
-        const host = document.getElementById('dw-stats');
-        if (host) { host.innerHTML = ahDashStats(); try { ahDashDecorate(); } catch (e) {} }
+        ahStatsRepaint();
     }
+    // another browser on the same account counted something: show it here too
+    document.addEventListener('ah-stats-updated', function () {
+        try { if (currentPageId === 'dashboard') ahStatsRepaint(); } catch (e) {}
+    });
+    function ahStatsToggleRow(code) { ahStatsOpenRows[code] = !ahStatsOpenRows[code]; ahStatsRepaint(); }
     window.ahStatsSetView = ahStatsSetView;
+    window.ahStatsToggleRow = ahStatsToggleRow;
 
     function ahStatsRangeDays(range) { return range === 'today' ? 1 : range === '7' ? 7 : range === '30' ? 30 : range === '90' ? 90 : 0; }
     function ahStatsDayTotal(r) {      // everything counted on one day
@@ -9888,27 +9961,35 @@
 
     function ahStatsAggregate(st, range, scope) {
         const out = { v: 0, t: {}, s: {}, days: 0 };
-        const add = (r) => {
-            out.v += r.v || 0;
-            Object.keys(r.t || {}).forEach(k => { out.t[k] = (out.t[k] || 0) + r.t[k]; });
-            Object.keys(r.s || {}).forEach(c => {
-                const a = out.s[c] || (out.s[c] = { o: 0, m: 0 });
-                a.o += r.s[c].o || 0; a.m += r.s[c].m || 0;
-            });
-        };
         const n = ahStatsRangeDays(range);
-        const dayHasScope = (r) => scope === 'all' ? ahStatsDayTotal(r) > 0 : ahStatsDayActivity(r, scope) > 0;
+        const dayHas = (r) => scope === 'all' ? ahStatsDayTotal(r) > 0 : ahStatsDayActivity(r, scope) > 0;
         if (!n) {
-            add(st.all);
-            out.days = scope === 'all' ? (st.all.d || 0) : Object.keys(st.days).filter(k => dayHasScope(st.days[k])).length;
+            ahStatsAddRec(out, st.all);
+            out.days = scope === 'all'
+                ? Object.keys(st.days).filter(k => ahStatsDayTotal(st.days[k]) > 0).length + (st.pd || 0)
+                : Object.keys(st.days).filter(k => dayHas(st.days[k])).length;
         } else {
             for (let i = 0; i < n; i++) {
                 const r = st.days[ahDayKey(ahDaysAgo(i))];
                 if (!r) continue;
-                add(r);
-                if (dayHasScope(r)) out.days++;
+                ahStatsAddRec(out, r);
+                if (dayHas(r)) out.days++;
             }
         }
+        return out;
+    }
+
+    /* totals over the subjects the student can see (hidden ones don't count) */
+    function ahStatsTotals(agg) {
+        const codes = Object.keys(agg.s).filter(c => !isSubjectHidden(c));
+        const out = { o: 0, m: 0, types: {}, subs: [] };
+        codes.forEach(c => {
+            const x = agg.s[c];
+            out.o += x.o; out.m += x.m;
+            Object.keys(x.r || {}).forEach(n => { out.types[n] = (out.types[n] || 0) + x.r[n]; });
+            if (x.o + x.m > 0) out.subs.push(c);
+        });
+        out.subs.sort((a, b) => (agg.s[b].o + agg.s[b].m) - (agg.s[a].o + agg.s[a].m));
         return out;
     }
 
@@ -9953,16 +10034,56 @@
         cols[1].appendChild(host);
     }
 
+    /* ---- drawing it ---- */
+    function ahStatsCell(num, label) { return `<div class="dash-stat"><b>${num}</b><i>${label}</i></div>`; }
+    function ahStatsBars(buckets) {
+        if (!buckets.length) return '';
+        const mx = Math.max.apply(null, buckets.map(b => b.n).concat([1]));
+        return `<div class="dash-bars${buckets.length > 14 ? ' dense' : ''}">` + buckets.map(b => {
+            const h = b.n ? Math.max(8, Math.round(b.n / mx * 44)) : 3;
+            return `<div class="dash-bar${b.n ? ' on' : ''}${b.hot ? ' today' : ''}"><span class="col" style="height:${h}px"></span><em>${b.label}</em></div>`;
+        }).join('') + '</div>';
+    }
+    function ahStatsBarRow(label, n, max, extra) {
+        return `<div class="dash-top-row"><b class="wide">${ahEsc(label)}</b><span class="dash-top-track"><span style="width:${Math.max(6, Math.round(n / (max || 1) * 100))}%"></span></span><i>${n}${extra || ''}</i></div>`;
+    }
+    /* Lecture / Slides / Alternative ... with counts (openings from before types were recorded are shown as one line) */
+    function ahStatsTypeRows(rMap, total) {
+        const list = Object.keys(rMap || {}).map(n => ({ n: n, c: rMap[n] })).sort((a, b) => b.c - a.c);
+        const known = list.reduce((n, x) => n + x.c, 0);
+        if (total > known) list.push({ n: 'Earlier (type not recorded)', c: total - known });
+        if (!list.length) return '<div class="dash-st-none">No materials opened in this period.</div>';
+        const mx = Math.max.apply(null, list.map(x => x.c));
+        return list.map(x => ahStatsBarRow(x.n, x.c, mx)).join('');
+    }
+
     function ahDashStats() {
         const st = ahStatsRead();
         const view = ahStatsView();
-        const head = '<div class="dash-w-head"><span class="dash-w-ic"><i class="fa-solid fa-chart-simple"></i></span><h2>Your activity</h2></div>';
-        const everCounted = ahStatsDayTotal(st.all) + (st.all.d || 0);
-        if (!everCounted) {
-            return head + '<div class="dash-empty">Open a subject or a tab and your activity will show up here. It stays private to you.</div>';
+        const headHtml = (toggle) => '<div class="dash-w-head"><span class="dash-w-ic"><i class="fa-solid fa-chart-simple"></i></span><h2>Your activity</h2>' + (toggle || '') + '</div>';
+
+        if (!Object.keys(st.days).length && !ahStatsDayTotal(st.all)) {
+            return headHtml('') + '<div class="dash-empty">Open a subject or a tab and your activity will show up here. It stays private to you.</div>';
+        }
+        const streak = ahStatsStreak(st);
+        const foot = `<div class="dash-st-foot">${streak ? '\ud83d\udd25 ' + streak + '-day streak \u00b7 ' : ''}counting since ${ahEsc(st.since || ahDayKey())}</div>`;
+
+        /* ---------- short version ---------- */
+        if (!view.full) {
+            const agg = ahStatsAggregate(st, '7', 'all');
+            const tot = ahStatsTotals(agg);
+            const topType = Object.keys(tot.types).sort((a, b) => tot.types[b] - tot.types[a])[0];
+            const hl = [];
+            if (tot.subs.length) hl.push(`<span><i class="fa-solid fa-star"></i> Most opened <b>${ahEsc(tot.subs[0])}</b></span>`);
+            if (topType) hl.push(`<span><i class="fa-solid fa-book-open"></i> Top material <b>${ahEsc(topType)}</b></span>`);
+            return headHtml('<span class="dash-see" onclick="ahStatsSetView({full:true})">See full details</span>') +
+                '<div class="dash-st-cap">Last 7 days</div>' +
+                `<div class="dash-stat-grid">${ahStatsCell(agg.v, 'website visits')}${ahStatsCell(tot.o, 'subjects opened')}${ahStatsCell(tot.m, 'materials opened')}</div>` +
+                ahStatsBars(ahStatsBuckets(st, '7', 'all')) +
+                (hl.length ? `<div class="dash-st-hl">${hl.join('')}</div>` : '') + foot;
         }
 
-        // subjects the student can actually pick (hidden ones are left out)
+        /* ---------- full version ---------- */
         const codes = (window.COURSE_DATA || []).map(s => s.code).filter(c => c && !isSubjectHidden(c));
         let scope = view.scope;
         if (scope !== 'all' && codes.indexOf(scope) === -1) scope = 'all';
@@ -9976,44 +10097,44 @@
             <select class="dash-st-sel" onchange="ahStatsSetView({scope:this.value})" aria-label="Show activity for">${opts}</select></div>`;
 
         const agg = ahStatsAggregate(st, range, scope);
-        const cell = (num, label) => `<div class="dash-stat"><b>${num}</b><i>${label}</i></div>`;
-        const rangeWord = range === 'today' ? 'today' : range === 'all' ? 'all time' : 'in ' + range + ' days';
+        const rangeWord = range === 'today' ? 'today' : range === 'all' ? 'in total' : 'in the last ' + range + ' days';
+        let body = '';
 
-        let grid = '', lists = '';
         if (scope === 'all') {
-            const shown = Object.keys(agg.s).filter(c => !isSubjectHidden(c));      // subjects you hid don't count
-            const subsOpened = shown.reduce((n, c) => n + agg.s[c].o, 0);
-            const mats = shown.reduce((n, c) => n + agg.s[c].m, 0);
-            grid = `<div class="dash-stat-grid four">${cell(agg.v, 'website visits')}${cell(subsOpened, 'subjects opened')}${cell(mats, 'materials opened')}${cell(agg.days, 'days active')}</div>`;
+            const tot = ahStatsTotals(agg);
+            body += `<div class="dash-stat-grid four">${ahStatsCell(agg.v, 'website visits')}${ahStatsCell(tot.o, 'subjects opened')}${ahStatsCell(tot.m, 'materials opened')}${ahStatsCell(agg.days, 'days active')}</div>`;
+            body += ahStatsBars(ahStatsBuckets(st, range, 'all'));
 
             const tabs = Object.keys(AH_TAB_LABELS).map(id => ({ id: id, n: agg.t[id] || 0 })).filter(x => x.n > 0).sort((a, b) => b.n - a.n);
-            const tabMax = tabs.length ? tabs[0].n : 1;
-            const tabRows = tabs.map(x => `<div class="dash-top-row"><b class="wide">${ahEsc(AH_TAB_LABELS[x.id])}</b><span class="dash-top-track"><span style="width:${Math.max(6, Math.round(x.n / tabMax * 100))}%"></span></span><i>${x.n}</i></div>`).join('');
-            lists += `<div class="dash-top"><div class="dash-top-h">Tabs opened</div>${tabRows || '<div class="dash-st-none">No tabs opened ' + rangeWord + '.</div>'}</div>`;
+            body += `<div class="dash-top"><div class="dash-top-h">Tabs opened</div>` +
+                (tabs.length ? tabs.map(x => ahStatsBarRow(AH_TAB_LABELS[x.id], x.n, tabs[0].n)).join('') : `<div class="dash-st-none">No tabs opened ${rangeWord}.</div>`) + '</div>';
 
-            const subs = Object.keys(agg.s).filter(c => !isSubjectHidden(c) && (agg.s[c].o + agg.s[c].m) > 0)
-                .sort((a, b) => (agg.s[b].o + agg.s[b].m) - (agg.s[a].o + agg.s[a].m)).slice(0, 6);
-            const subMax = subs.length ? (agg.s[subs[0]].o + agg.s[subs[0]].m) : 1;
-            const subRows = subs.map(c => `<div class="dash-top-row tap" onclick="ahStatsSetView({scope:'${ahEsc(c)}'})"><b>${ahEsc(c)}</b><span class="dash-top-track"><span style="width:${Math.max(6, Math.round((agg.s[c].o + agg.s[c].m) / subMax * 100))}%"></span></span><i class="two">${agg.s[c].o}\u00d7 \u00b7 ${agg.s[c].m} mat.</i></div>`).join('');
-            lists += `<div class="dash-top"><div class="dash-top-h">Subjects <span>(tap one to zoom in)</span></div>${subRows || '<div class="dash-st-none">No subjects opened ' + rangeWord + '.</div>'}</div>`;
+            body += `<div class="dash-top"><div class="dash-top-h">Subjects <span>(tap one for its materials)</span></div>`;
+            if (!tot.subs.length) body += `<div class="dash-st-none">No subjects opened ${rangeWord}.</div>`;
+            const subMax = tot.subs.length ? agg.s[tot.subs[0]].o + agg.s[tot.subs[0]].m : 1;
+            tot.subs.forEach(c => {
+                const x = agg.s[c], open = !!ahStatsOpenRows[c], code = ahEsc(c);
+                body += `<div class="dash-sj${open ? ' open' : ''}">
+                    <div class="dash-top-row tap" onclick="ahStatsToggleRow('${code}')"><b>${code}</b><span class="dash-top-track"><span style="width:${Math.max(6, Math.round((x.o + x.m) / subMax * 100))}%"></span></span><i class="two">${x.o}\u00d7 \u00b7 ${x.m} mat.</i><em class="chev"><i class="fa-solid fa-chevron-down"></i></em></div>`;
+                if (open) {
+                    body += `<div class="dash-sj-more"><div class="dash-sj-h">Materials in ${code}</div>${ahStatsTypeRows(x.r, x.m)}
+                        <button type="button" class="dash-st-zoom" onclick="ahStatsSetView({scope:'${code}'})">Zoom into ${code} <i class="fa-solid fa-arrow-right"></i></button></div>`;
+                }
+                body += '</div>';
+            });
+            body += '</div>';
+
+            body += `<div class="dash-top"><div class="dash-top-h">Materials by type <span>(all subjects)</span></div>${ahStatsTypeRows(tot.types, tot.m)}</div>`;
         } else {
-            const sj = agg.s[scope] || { o: 0, m: 0 };
-            grid = `<div class="dash-stat-grid">${cell(sj.o, 'times opened')}${cell(sj.m, 'materials opened')}${cell(agg.days, 'days active')}</div>`;
+            const sj = agg.s[scope] || { o: 0, m: 0, r: {} };
+            const third = range === 'all'
+                ? ahStatsCell(sj.l ? ahEsc(sj.l) : '\u2014', 'last opened')
+                : ahStatsCell(agg.days, 'days active');
+            body += `<div class="dash-stat-grid">${ahStatsCell(sj.o, 'times opened')}${ahStatsCell(sj.m, 'materials opened')}${third}</div>`;
+            body += ahStatsBars(ahStatsBuckets(st, range, scope));
+            body += `<div class="dash-top"><div class="dash-top-h">Materials in ${ahEsc(scope)} by type</div>${ahStatsTypeRows(sj.r, sj.m)}</div>`;
         }
-
-        const buckets = ahStatsBuckets(st, range, scope);
-        let bars = '';
-        if (buckets.length) {
-            const mx = Math.max.apply(null, buckets.map(b => b.n).concat([1]));
-            bars = `<div class="dash-bars${buckets.length > 14 ? ' dense' : ''}">` + buckets.map(b => {
-                const h = b.n ? Math.max(8, Math.round(b.n / mx * 44)) : 3;
-                return `<div class="dash-bar${b.n ? ' on' : ''}${b.hot ? ' today' : ''}"><span class="col" style="height:${h}px"></span><em>${b.label}</em></div>`;
-            }).join('') + '</div>';
-        }
-
-        const streak = ahStatsStreak(st);
-        const foot = `<div class="dash-st-foot">${streak ? '\ud83d\udd25 ' + streak + '-day streak \u00b7 ' : ''}counting since ${ahEsc(st.since || ahDayKey())}</div>`;
-        return head + controls + grid + bars + lists + foot;
+        return headHtml('<span class="dash-see" onclick="ahStatsSetView({full:false})">Show less</span>') + controls + body + foot;
     }
 
     /* the Rearrange button is a permanent part of the Home page — put it there straight away */
