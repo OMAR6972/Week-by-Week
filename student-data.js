@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15i — v11: per-semester settings now use the real semester name, not "default". */
+/* VERSION: 2026-09-19b — v19: says when the real semester data is in (the timetable waits for it). Previously: 2026-09-15i — v11. */
 /* Academic Hub - student-data.js  (semester-aware, feature 7.1; + 7.3 analytics appended at bottom)
    --------------------------------------------------------------------------
    What this does, in order:
@@ -59,6 +59,11 @@
       try { if (JSON.stringify(window[k]) !== JSON.stringify(payload[k])) changed = true; }
       catch (e) { changed = true; }
     });
+
+    /* v19: from here on the real semester's data is in place (the timetable waits for this before it
+       checks a student's saved choices). When nothing changed there is no LIVE_UPDATE, so say it here. */
+    window.__ahTimetableLive = true;
+    if (!changed) { try { if (window.__ahReloadTimetablePrefs) window.__ahReloadTimetablePrefs(true); } catch (e) {} }
 
     if (changed) {
       window.postMessage({ type: 'LIVE_UPDATE', payload: payload }, '*'); // app's own handler re-renders

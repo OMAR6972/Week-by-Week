@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19p — v16c: default Home order = Deadlines, Notifications, Just added, Announcements | GPA, Jump back in, Your activity. Also: GPA card now stretches across the card with a progress bar. Includes v16 (notification bell hooks) and 19l. */
+/* VERSION: 2026-09-19q — v19: the timetable no longer loses a signed-in student's saved section and subjects on reload. Includes v16c (GPA card, default Home order, bell hooks) and 19l. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -7106,19 +7106,30 @@
         if (!Array.isArray(TD.timeSlots.ramadan)) TD.timeSlots.ramadan = [];
         if (!Array.isArray(TD.subjects)) TD.subjects = [];
         if (!Array.isArray(TD.defaultSubjects)) TD.defaultSubjects = TD.subjects.slice();
-        if (!ttSelectedSubjects) ttSelectedSubjects = [...TD.defaultSubjects];
-        /* v6: the selection is remembered per device, so after a semester change it
-           still held subjects that no longer exist — which is why the counter read
-           things like "14 of 10". Keep only subjects that are actually on offer. */
-        {
-            const _valid = new Set(TD.subjects || []);
-            const _before = ttSelectedSubjects.length;
-            ttSelectedSubjects = ttSelectedSubjects.filter(x => _valid.has(x));
-            if (ttSelectedSubjects.length !== _before) {
-                try { localStorage.setItem('tt_subjects', JSON.stringify(ttSelectedSubjects)); } catch (e) {}
+        /* v19: the page first draws with the timetable that is built into the site (an older
+           semester), and only a moment later swaps in the real one. Checking a student's saved
+           section and subjects against the built-in copy threw them away — and the empty choice
+           was then saved over the real one. So nothing is checked, changed or saved until the
+           real timetable is in (window.__ahTimetableLive). */
+        const _ttReal = !window.__ahSupabase || !!window.__ahTimetableLive;
+        if (_ttReal) {
+            if (!ttSelectedSubjects) ttSelectedSubjects = [...TD.defaultSubjects];
+            /* v6: the selection is remembered per device, so after a semester change it
+               still held subjects that no longer exist — which is why the counter read
+               things like "14 of 10". Keep only subjects that are actually on offer. */
+            {
+                const _valid = new Set(TD.subjects || []);
+                const _before = ttSelectedSubjects.length;
+                /* a semester with no timetable published yet offers nothing to check against: keep the saved choice */
+                if (_valid.size) ttSelectedSubjects = ttSelectedSubjects.filter(x => _valid.has(x));
+                if (ttSelectedSubjects.length !== _before) {
+                    try { localStorage.setItem('tt_subjects', JSON.stringify(ttSelectedSubjects)); } catch (e) {}
+                }
             }
+            if (!ttSection || !TD.sections[ttSection]) { const _k = Object.keys(TD.sections); if (_k.length) ttSection = _k[0]; }
+        } else if (!ttSelectedSubjects) {
+            ttSelectedSubjects = [];      // only so this first quick draw has something to work with; re-read from storage once the real data is in
         }
-        if (!ttSection || !TD.sections[ttSection]) { const _k = Object.keys(TD.sections); if (_k.length) ttSection = _k[0]; }
 
         // Controls
         const ctrls = document.getElementById('timetable-controls');
@@ -7221,6 +7232,19 @@
         grid += '</tbody>';
         document.getElementById('timetable-grid').innerHTML = grid;
     }
+
+    /* v19: pick up the saved section / subjects / mode from storage again (the values held in memory can be stale) */
+    function ahTtReloadSaved(rerender) {
+        try { ttSection = localStorage.getItem('tt_section') || null; } catch (e) {}
+        try {
+            const raw = localStorage.getItem('tt_subjects');
+            const parsed = raw ? JSON.parse(raw) : null;
+            ttSelectedSubjects = Array.isArray(parsed) ? parsed : null;
+        } catch (e) { ttSelectedSubjects = null; }
+        try { ttMode = localStorage.getItem('tt_mode') || 'normal'; } catch (e) {}
+        if (rerender && currentPageId === 'timetable') { try { renderTimetable(); } catch (e) {} }
+    }
+    window.__ahReloadTimetablePrefs = ahTtReloadSaved;
 
     function ttSetSection(s) {
         ttSection = s;
@@ -9189,7 +9213,11 @@
         if (payload.MIDTERM_DATA !== undefined) window.MIDTERM_DATA = payload.MIDTERM_DATA;
         if (payload.FINAL_DATA !== undefined) window.FINAL_DATA = payload.FINAL_DATA;
         if (payload.STAFF_DATA !== undefined) window.STAFF_DATA = payload.STAFF_DATA;
-        if (payload.TIMETABLE_DATA !== undefined) window.TIMETABLE_DATA = payload.TIMETABLE_DATA;
+        if (payload.TIMETABLE_DATA !== undefined) {
+            window.TIMETABLE_DATA = payload.TIMETABLE_DATA;
+            window.__ahTimetableLive = true;          // the real timetable is in: choices can now be checked against it
+            try { ahTtReloadSaved(false); } catch (e) {}
+        }
         if (payload.UPDATES_DATA !== undefined) window.UPDATES_DATA = payload.UPDATES_DATA;
         if (payload.NEWS_DATA !== undefined) window.NEWS_DATA = payload.NEWS_DATA;
 

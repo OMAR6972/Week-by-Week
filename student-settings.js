@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19j — stats shared live between browsers on the same account (pulled when you come back, every minute, and when Home opens). */
+/* VERSION: 2026-09-19k — v19: after restoring your settings on sign-in, the timetable is told to re-read its choices. Includes 19j. */
 /* Guests: settings live in this browser (localStorage), exactly as before.
    Signed in: every setting is also saved to the account, and on sign-in the ACCOUNT wins and
    overwrites what is on the device. Anyone can export their settings as a code / file and
@@ -299,6 +299,8 @@
     else status = { state: 'ok', at: Date.now() };
 
     lastUser = st.id; lastReconcile = Date.now();
+    /* v19: hand the restored timetable choices to the timetable right away (it read its own copy at start-up) */
+    try { if (changed && window.__ahReloadTimetablePrefs) window.__ahReloadTimetablePrefs(true); } catch (e) {}
     if (changed) maybeReload();                            // screens read settings at start-up, so reload once
   }
 
