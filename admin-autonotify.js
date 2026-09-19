@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19b — v14: also covers deadline / Semester Map items, a per-row "send no matter what" tick, and added-vs-edited wording. Earlier: v13: after Save, offers to notify students about new announcements, exam schedule posts/changes and new material. */
+/* VERSION: 2026-09-19d — v15: many items at once — one combined email per student, tick/untick by type, compact rows. Earlier: v14b: pink badge on deadline rows now says Deadline (the small label says added/edited). Earlier: v14: also covers deadline / Semester Map items, a per-row "send no matter what" tick, and added-vs-edited wording. Earlier: v13: after Save, offers to notify students about new announcements, exam schedule posts/changes and new material. */
 /* Nothing is ever sent without the admin pressing the send button in the pop-up. */
 
 (function () {
@@ -163,7 +163,7 @@
         lines.push('The details are in the Semester Map on the site.');
         out.push({
           kind: 'deadline', mode: isNew ? 'added' : 'edited', resource_type: categoryOf(t),
-          label: (special ? special + ' \u00b7 ' : '') + (isNew ? 'Added' : 'Edited'),
+          label: (special ? special + ' \u00b7 ' : '') + 'Deadline',
           hint: special ? special + ' week \u2014 decide whether this change is worth an email.' : '',
           subject: subjectOrNull(snap.sub),
           title: (isNew ? 'Added: ' : 'Updated: ') + head,
@@ -210,10 +210,18 @@
     ov.id = 'ah-autonotify';
     ov.style.cssText = 'position:fixed; inset:0; z-index:5200; background:rgba(0,0,0,.72); display:flex; align-items:center; justify-content:center; padding:20px;';
 
+    var compact = items.length > 5;          // many items: keep each row short
+    var KIND_NAME = { announcement: 'Announcements', exam: 'Exams', deadline: 'Deadlines', material: 'Material' };
+    var kindCount = {};
+    items.forEach(function (it) { kindCount[it.kind] = (kindCount[it.kind] || 0) + 1; });
+    var kindLinks = Object.keys(kindCount).map(function (k) {
+      return '<a href="#" class="an-kind" data-kind="' + k + '" style="color:#4a90e2; margin-right:12px;">' + (KIND_NAME[k] || k) + ' (' + kindCount[k] + ')</a>';
+    }).join('');
+
     var rows = items.map(function (it, i) {
       var who = it.subject ? 'Students taking ' + esc(it.subject) : 'Everyone with an account';
       return '' +
-        '<div class="an-row" data-i="' + i + '" style="background:#120823; border:1px solid #2a1a3e; border-radius:10px; padding:12px; margin-bottom:10px;">' +
+        '<div class="an-row" data-i="' + i + '" data-kind="' + it.kind + '" style="background:#120823; border:1px solid #2a1a3e; border-radius:10px; padding:12px; margin-bottom:10px;">' +
           '<label style="display:flex; align-items:center; gap:9px; cursor:pointer; margin-bottom:8px;">' +
             '<input type="checkbox" class="an-on" checked style="cursor:pointer;">' +
             '<span style="font-size:.66rem; letter-spacing:.8px; text-transform:uppercase; font-weight:700; color:#fff; background:' + (BADGE[it.kind] || '#777') + '; padding:2px 8px; border-radius:20px;">' + esc(it.label) + '</span>' +
@@ -222,10 +230,13 @@
           '</label>' +
           (it.hint ? '<div style="font-size:.72rem; color:#e0b070; margin:-2px 0 7px 26px;">' + esc(it.hint) + '</div>' : '') +
           '<input class="an-title" type="text" value="' + esc(it.title) + '" style="width:100%; padding:8px 10px; margin-bottom:6px; font-size:.85rem;">' +
+          (compact ? '<a href="#" class="an-toggle" style="font-size:.72rem; color:#4a90e2;">Edit wording / send no matter what</a>' : '') +
+          '<div class="an-more" style="' + (compact ? 'display:none; margin-top:6px;' : '') + '">' +
           '<textarea class="an-body" rows="' + Math.min(6, Math.max(2, String(it.body || '').split('\n').length)) + '" style="width:100%; padding:8px 10px; font-size:.8rem; resize:vertical;">' + esc(it.body) + '</textarea>' +
           '<label style="display:flex; align-items:center; gap:8px; margin-top:7px; font-size:.74rem; color:#a89070; cursor:pointer;">' +
             '<input type="checkbox" class="an-force" style="cursor:pointer;"> Send no matter what \u2014 even to students who switched notifications off' +
           '</label>' +
+          '</div>' +
         '</div>';
     }).join('');
 
@@ -234,9 +245,10 @@
         '<div style="font-size:1.05rem; font-weight:700; color:#fff; margin-bottom:4px;"><i class="fa-solid fa-bell"></i> Saved. Tell students?</div>' +
         '<div style="font-size:.8rem; color:#8b8397; line-height:1.55; margin-bottom:14px;">' +
           'These things are new since your last save. Untick anything students shouldn\u2019t be emailed about, and change the wording if you like. ' +
-          'Each student only gets what their own notification settings allow.' +
+          'Each student only gets what their own notification settings allow, and if several things apply to them they arrive together in ONE email.' +
         '</div>' +
-        '<div style="font-size:.74rem; margin-bottom:10px;"><a href="#" id="an-all" style="color:#4a90e2;">Tick all</a> &nbsp;\u00b7&nbsp; <a href="#" id="an-none" style="color:#4a90e2;">Untick all</a></div>' +
+        '<div style="font-size:.74rem; margin-bottom:6px;"><a href="#" id="an-all" style="color:#4a90e2;">Tick all</a> &nbsp;\u00b7&nbsp; <a href="#" id="an-none" style="color:#4a90e2;">Untick all</a></div>' +
+        (Object.keys(kindCount).length > 1 ? '<div style="font-size:.74rem; margin-bottom:10px; color:#8b8397;">Tick / untick a whole type: ' + kindLinks + '</div>' : '<div style="margin-bottom:6px;"></div>') +
         rows +
         '<div style="display:flex; gap:8px; margin-top:6px;">' +
           '<button class="btn" id="an-skip" style="flex:1; background:rgba(255,255,255,.14); color:#fff; padding:10px;">Don\u2019t notify anyone</button>' +
@@ -251,6 +263,35 @@
     function setAll(v) { [].slice.call(ov.querySelectorAll('.an-on')).forEach(function (c) { c.checked = v; }); }
     ov.querySelector('#an-all').addEventListener('click', function (e) { e.preventDefault(); setAll(true); });
     ov.querySelector('#an-none').addEventListener('click', function (e) { e.preventDefault(); setAll(false); });
+
+    /* tick / untick a whole type: if every row of that type is ticked, untick them, otherwise tick them */
+    [].slice.call(ov.querySelectorAll('.an-kind')).forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var boxes = [].slice.call(ov.querySelectorAll('.an-row[data-kind="' + a.getAttribute('data-kind') + '"] .an-on'));
+        var allOn = boxes.every(function (c) { return c.checked; });
+        boxes.forEach(function (c) { c.checked = !allOn; });
+        refreshCount();
+      });
+    });
+    /* compact rows: reveal the wording box on demand */
+    [].slice.call(ov.querySelectorAll('.an-toggle')).forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var more = a.parentNode.querySelector('.an-more');
+        more.style.display = more.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+    /* live count on the send button */
+    function refreshCount() {
+      var n = ov.querySelectorAll('.an-on:checked').length;
+      var b = ov.querySelector('#an-send');
+      b.textContent = n ? 'Send selected (' + n + ')' : 'Send selected';
+    }
+    ov.addEventListener('change', function (e) { if (e.target && e.target.classList && e.target.classList.contains('an-on')) refreshCount(); });
+    ov.querySelector('#an-all').addEventListener('click', refreshCount);
+    ov.querySelector('#an-none').addEventListener('click', refreshCount);
+    refreshCount();
 
     ov.querySelector('#an-send').addEventListener('click', async function () {
       var msgEl = ov.querySelector('#an-msg');
