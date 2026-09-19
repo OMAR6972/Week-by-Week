@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19m — v11j: Hide buttons always visible on phones. Includes v11–v11i. */
+/* VERSION: 2026-09-19n — v11k: GPA card on Home stretches across the card with a progress bar. Includes v11–v11j. */
 /* Academic Hub - styles.css (extracted from index.html, Phase 1) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --bg-dark: #0a0012; --card-bg: rgba(39, 18, 68, 0.6); --accent-pink: #e91e8c; --accent-purple: #b519d6; --accent-blue: #4a90e2; --text-main: #ffffff; --text-sub: #c4b5db; }
@@ -885,10 +885,20 @@
 .dash-fd .badge-new { margin-left: auto; flex-shrink: 0; }
 
 /* gpa */
-.dash-gpa { display: flex; align-items: center; gap: 16px; }
+.dash-gpa { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 22px; row-gap: 12px; }
+.dash-gpa-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dash-gpa-meta b { font-family: 'Orbitron', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: #fff; }
+.dash-gpa-meta i { font-style: normal; font-size: 0.82rem; color: var(--text-sub); }
+.dash-gpa .dash-cta { justify-self: end; white-space: nowrap; }
+.dash-gpa-bar { grid-column: 1 / -1; display: block; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.dash-gpa-bar > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent-pink), var(--accent-blue)); }
+.dash-gpa-scale { grid-column: 1 / -1; display: flex; justify-content: space-between; margin-top: -6px; }
+.dash-gpa-scale i { font-style: normal; font-size: 0.68rem; color: var(--text-sub); opacity: 0.75; }
+@media (max-width: 600px) {
+    .dash-gpa { grid-template-columns: auto 1fr; }
+    .dash-gpa .dash-cta { grid-column: 1 / -1; justify-self: stretch; text-align: center; }
+}
 .dash-gpa-num { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 2.6rem; line-height: 1; background: linear-gradient(135deg, var(--accent-pink), var(--accent-blue)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.dash-gpa-info { display: flex; flex-direction: column; gap: 9px; align-items: flex-start; }
-.dash-gpa-info i { font-style: normal; font-size: 0.8rem; color: var(--text-sub); }
 .dash-gpa-empty { text-align: center; padding: 4px 0; }
 .dash-gpa-ei { width: 50px; height: 50px; border-radius: 15px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: var(--accent-purple); background: rgba(181,25,214,0.14); border: 1px solid rgba(181,25,214,0.4); }
 .dash-gpa-empty b { display: block; font-family: 'Orbitron', sans-serif; font-size: 0.95rem; margin-bottom: 6px; }

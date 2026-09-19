@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19d — v15: many items at once — one combined email per student, tick/untick by type, compact rows. Earlier: v14b: pink badge on deadline rows now says Deadline (the small label says added/edited). Earlier: v14: also covers deadline / Semester Map items, a per-row "send no matter what" tick, and added-vs-edited wording. Earlier: v13: after Save, offers to notify students about new announcements, exam schedule posts/changes and new material. */
+/* VERSION: 2026-09-19e — v15b: exam-material items get their own wording ("New exam material"). Earlier: v15: many items at once — one combined email per student, tick/untick by type, compact rows. Earlier: v14b: pink badge on deadline rows now says Deadline (the small label says added/edited). Earlier: v14: also covers deadline / Semester Map items, a per-row "send no matter what" tick, and added-vs-edited wording. Earlier: v13: after Save, offers to notify students about new announcements, exam schedule posts/changes and new material. */
 /* Nothing is ever sent without the admin pressing the send button in the pop-up. */
 
 (function () {
@@ -27,7 +27,7 @@
   function eachWeek(fn) {
     (window.COURSE_DATA || []).forEach(function (sub) {
       ['weeks', 'events'].forEach(function (sec) {
-        (sub[sec] || []).forEach(function (wk) { if (isObj(wk)) fn(sub, wk); });
+        (sub[sec] || []).forEach(function (wk) { if (isObj(wk)) fn(sub, wk, sec); });
       });
     });
   }
@@ -173,25 +173,29 @@
     });
 
     /* new material: a week getting its first material = "week"; more later = "resource" */
-    eachWeek(function (sub, wk) {
+    eachWeek(function (sub, wk, sec) {
       var before = weekReal.get(wk) || [];
       var nowKeys = realKeys(wk);
       var added = nowKeys.filter(function (k) { return before.indexOf(k) < 0; });
       if (!added.length) return;
-      var where = (sub.code || sub.name || '') + ' \u2014 ' + (wk.title || (wk.week ? 'Week ' + wk.week : 'new week'));
+      /* 'events' are the exam-material items (Quiz 1, Midterm, Final ...); 'weeks' are the weekly ones */
+      var isExam = (sec === 'events');
+      var what = wk.title || (isExam ? (wk.examType ? String(wk.examType) : 'exam material') : (wk.week ? 'Week ' + wk.week : 'new week'));
+      var where = (sub.code || sub.name || '') + ' \u2014 ' + what;
       if (!before.length) {
         out.push({
-          kind: 'material', mode: 'added', level: 'week', label: 'New week',
+          kind: 'material', mode: 'added', level: 'week', label: isExam ? 'New exam material' : 'New week',
           subject: subjectOrNull(sub.code),
-          title: 'New material: ' + where,
+          title: (isExam ? 'New exam material: ' : 'New material: ') + where,
           body: 'Now available: ' + nowKeys.join(', ') + '.'
         });
       } else {
         added.forEach(function (k) {
           out.push({
-            kind: 'material', mode: 'added', level: 'resource', resource_type: k, label: 'New ' + k,
+            kind: 'material', mode: 'added', level: 'resource', resource_type: k,
+            label: isExam ? 'New ' + k + ' (exam)' : 'New ' + k,
             subject: subjectOrNull(sub.code),
-            title: 'New ' + k + ': ' + where,
+            title: 'New ' + k + (isExam ? ' (exam material)' : '') + ': ' + where,
             body: 'A new ' + k + ' was added to ' + where + '.'
           });
         });

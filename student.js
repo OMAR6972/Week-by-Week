@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19n — v16: hooks for the notification bell + Home Notifications card. Includes 19l. */
+/* VERSION: 2026-09-19p — v16c: default Home order = Deadlines, Notifications, Just added, Announcements | GPA, Jump back in, Your activity. Also: GPA card now stretches across the card with a progress bar. Includes v16 (notification bell hooks) and 19l. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -9421,10 +9421,13 @@
                 <button class="dash-cta" onclick="showGpa()"><i class="fa-solid fa-plus"></i> Set up my GPA</button></div>`;
             return html;
         }
+        const gpaPct = Math.max(0, Math.min(100, (res.gpa / 4) * 100));
         html += `<div class="dash-gpa">
             <span class="dash-gpa-num">${res.gpa.toFixed(2)}</span>
-            <span class="dash-gpa-info"><i>Cumulative GPA<br>${res.credits} credit hours</i>
-            <button class="dash-cta sm" onclick="showGpa()"><i class="fa-solid fa-calculator"></i> Open calculator</button></span></div>`;
+            <span class="dash-gpa-meta"><b>Cumulative GPA</b><i>${res.credits} credit hours</i></span>
+            <button class="dash-cta sm" onclick="showGpa()"><i class="fa-solid fa-calculator"></i> Open calculator</button>
+            <span class="dash-gpa-bar" aria-hidden="true"><span style="width:${gpaPct.toFixed(1)}%"></span></span>
+            <span class="dash-gpa-scale" aria-hidden="true"><i>0</i><i>2.0</i><i>4.0</i></span></div>`;
         return html;
     }
 
@@ -9529,7 +9532,7 @@
        drag (a floating copy follows your finger and a pink line shows where it will
        land), which keeps it reliable on phones. */
     var AH_DASH_ORDER_KEY = 'wbw_dash_order';
-    var AH_DASH_DEFAULT = [['notifs', 'deadlines', 'new'], ['gpa', 'news', 'jump', 'stats']];
+    var AH_DASH_DEFAULT = [['deadlines', 'notifs', 'new', 'news'], ['gpa', 'jump', 'stats']];
     var ahDashEditing = false;
     var ahDashDrag = null;
 
