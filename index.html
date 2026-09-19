@@ -1,11 +1,17 @@
 <!DOCTYPE html>
-<!-- VERSION: 2026-09-19f — also loads student-bell.js (notification bell + Home card). Previously: 2026-09-19e — loads the new student-settings.js (settings sync + backup & share). -->
+<!-- VERSION: 2026-09-19g — v17: push notifications (manifest, home-screen icon, loads student-push.js). Previously: 2026-09-19f — loads student-bell.js. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Week by Week Material</title>
     <link rel="icon" type="image/png" href="logo.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="theme-color" content="#0a0012">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Week by Week">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css">
     <link rel="stylesheet" href="student.css">
@@ -462,6 +468,7 @@
 <script src="student-subjects.js"></script>
 <script src="student-notify.js"></script>
 <script src="student-bell.js"></script>
+<script src="student-push.js"></script>
 <script src="student-settings.js"></script>
 </body>
 </html>
