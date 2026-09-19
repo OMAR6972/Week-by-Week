@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-15i — v11: per-semester settings now use the real semester name, not "default". */
+/* VERSION: 2026-09-19b — v17b: push is described as phone-only. Previously: 2026-09-15i — v11: per-semester settings now use the real semester name, not "default". */
 
 (function () {
   var SB = window.__ahSupabase;
@@ -279,7 +279,7 @@
           '</label>' +
           '<label class="ah-nt-row">' +
             '<input type="checkbox" id="nt-push"' + (p.channels.push ? ' checked' : '') + '>' +
-            '<span><b>Push notification</b><small>Pops up on your phone or laptop</small></span>' +
+            '<span><b>Push notification</b><small>Pops up on your phone</small></span>' +
           '</label>' +
           '<div class="ah-nt-iphone" id="nt-iphone">' +
             '<div class="ah-nt-block-title"><i class="fa-brands fa-apple"></i> On iPhone or iPad?</div>' +
@@ -291,7 +291,7 @@
               '<li>Tap <b>Add</b> in the top right.</li>' +
               '<li>Open the site from the new icon on your home screen, then turn push on again here.</li>' +
             '</ol>' +
-            '<div class="ah-nt-hint">On Android or a laptop none of this applies \u2014 push just works.</div>' +
+            '<div class="ah-nt-hint">On Android none of this applies \u2014 push just works.</div>' +
           '</div>' +
         '</div>' +
 

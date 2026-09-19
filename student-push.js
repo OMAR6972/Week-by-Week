@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19 — v17: push notifications on the student side (registers this phone / browser). */
+/* VERSION: 2026-09-19b — v17b: phones and tablets only. Earlier: v17: push notifications on the student side (registers this phone / browser). */
 /* Push needs an account (like email): the server has to know who the device belongs to.            */
 /* Nothing is asked of the student until they tick "Push notification" in Notification settings.    */
 
@@ -16,6 +16,12 @@
   function isIos() {
     var ua = navigator.userAgent || '';
     return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  /* push is for phones and tablets only; on a computer the tick box is switched off */
+  function isPhoneOrTablet() {
+    var ua = navigator.userAgent || '';
+    if (/Android|iPhone|iPad|iPod|Mobile/i.test(ua)) return true;
+    return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;     // iPad asking for the desktop site
   }
   function isStandalone() {
     try {
@@ -48,6 +54,7 @@
   /* ------------------------------------------------------- turning it on / off */
   /* returns { ok:true } or { ok:false, why:'signin'|'ios-install'|'unsupported'|'denied'|'server', msg } */
   async function enable() {
+    if (!isPhoneOrTablet()) return { ok: false, why: 'computer' };
     if (!window.__ahStudent || !SB) return { ok: false, why: 'signin' };
     if (!supported()) return { ok: false, why: (isIos() && !isStandalone()) ? 'ios-install' : 'unsupported' };
     if (isIos() && !isStandalone()) return { ok: false, why: 'ios-install' };
@@ -101,6 +108,7 @@
 
   /* --------------------------------------------- the line under the tick box */
   var MSG = {
+    computer:    'Push is for phones. On a computer you\u2019ll still get email and the bell.',
     signin:      'Push needs an account, so the site knows which phone is yours. Sign in first (person icon at the top), then tick this again.',
     'ios-install': 'On iPhone, push only works from the home-screen icon. Follow the steps below, open the site from that icon, then tick this again.',
     unsupported: 'This browser can\u2019t receive push notifications. Try Chrome on a computer or an Android phone.',
@@ -156,6 +164,17 @@
       var box = document.getElementById('nt-push');
       if (!box || document.getElementById('nt-push-status')) return;
       statusEl();
+      if (!isPhoneOrTablet()) {
+        /* the tick stays exactly as saved (it belongs to the whole account, so a computer must not undo a phone's choice);
+           it is only locked so nobody can start a setup that can't work here */
+        box.disabled = true;
+        var row = box.closest('label');
+        if (row) row.style.opacity = '0.55';
+        say('Push is for phones, so it\u2019s off on this computer. You\u2019ll still get email and the bell here.', false);
+        var iph = document.getElementById('nt-iphone');
+        if (iph) iph.style.display = 'none';
+        return;
+      }
       if (box.checked) {
         var on = await thisDeviceOn();
         say(on ? 'Push is on for this device.'
