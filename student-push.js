@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19b — v17b: phones and tablets only. Earlier: v17: push notifications on the student side (registers this phone / browser). */
+/* VERSION: 2026-09-19c — v17c: repairs itself when a phone lost its push registration. Earlier: v17b: phones and tablets only. Earlier: v17: push notifications on the student side (registers this phone / browser). */
 /* Push needs an account (like email): the server has to know who the device belongs to.            */
 /* Nothing is asked of the student until they tick "Push notification" in Notification settings.    */
 
@@ -104,7 +104,22 @@
     } catch (e) { return false; }
   }
 
-  window.__ahPush = { supported: supported, enable: enable, disable: disable, thisDeviceOn: thisDeviceOn };
+  /* Push is wanted (ticked in the account's settings), the phone has already allowed notifications,
+     but this phone / home-screen icon has no registration: set it up quietly. No prompt is needed,
+     because permission was already given. Returns true when this device is (now) registered. */
+  async function ensure() {
+    try {
+      if (!window.__ahStudent || !SB || !supported() || !isPhoneOrTablet()) return false;
+      if (Notification.permission !== 'granted') return false;
+      if (isIos() && !isStandalone()) return false;
+      var p = window.__ahGetNotifyPrefs ? window.__ahGetNotifyPrefs() : null;
+      if (!p || !p.channels || !p.channels.push) return false;
+      var r = await enable();
+      return !!r.ok;
+    } catch (e) { return false; }
+  }
+
+  window.__ahPush = { supported: supported, enable: enable, disable: disable, thisDeviceOn: thisDeviceOn, ensure: ensure };
 
   /* --------------------------------------------- the line under the tick box */
   var MSG = {
@@ -177,6 +192,11 @@
       }
       if (box.checked) {
         var on = await thisDeviceOn();
+        if (!on && isIos() && !isStandalone()) {
+          say('On iPhone, push only works from the home-screen icon. Open the site from that icon and it sets itself up.', false);
+          return;
+        }
+        if (!on) { say('Setting up this device\u2026', true); on = await ensure(); }
         say(on ? 'Push is on for this device.'
                : 'Push is ticked, but this device isn\u2019t set up yet. Untick and tick it again to set it up.',
             on);
@@ -184,17 +204,8 @@
     }).observe(document.body, { childList: true, subtree: true });
   }
 
-  /* signed in, permission already given, device already subscribed: make sure it belongs to THIS account
-     (covers signing in as someone else on the same browser) */
-  async function rebind() {
-    try {
-      if (!window.__ahStudent || !SB || !supported() || Notification.permission !== 'granted') return;
-      var reg = await navigator.serviceWorker.getRegistration();
-      var sub = reg && await reg.pushManager.getSubscription();
-      if (sub) await saveToAccount(sub);
-    } catch (e) {}
-  }
-  document.addEventListener('ah-student-changed', function (e) { if (e.detail) rebind(); });
+  document.addEventListener('ah-student-changed', function (e) { if (e.detail) ensure(); });
+  setTimeout(ensure, 3500);
 
   watchScreen();
 })();

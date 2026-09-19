@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19l — Back button on screens opened from the account menu. */
+/* VERSION: 2026-09-19m — v18: Continue with Google. Includes 19l (Back button on account screens). */
 /* Optional by design: guests keep full access to everything, an account only adds extras. */
 
 (function () {
@@ -58,8 +58,21 @@
   }
 
   /* ------------------------------------------------------------- auth modal */
+  function injectGoogleCss() {
+    if (document.getElementById('ah-google-css')) return;
+    var st = document.createElement('style');
+    st.id = 'ah-google-css';
+    st.textContent =
+      '.ah-auth-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin:2px 0 14px;padding:11px 14px;border-radius:10px;border:1px solid #dadce0;background:#fff;color:#3c4043;font:600 .9rem "Work Sans",Arial,sans-serif;cursor:pointer;}' +
+      '.ah-auth-google:disabled{opacity:.7;cursor:default;}' +
+      '@media (hover:hover){.ah-auth-google:hover:not(:disabled){background:#f6f7f8;box-shadow:0 2px 10px rgba(0,0,0,.25);}}' +
+      '.ah-auth-or{display:flex;align-items:center;gap:10px;margin:0 0 12px;color:#8b8397;font-size:.72rem;letter-spacing:.5px;}' +
+      '.ah-auth-or:before,.ah-auth-or:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12);}';
+    document.head.appendChild(st);
+  }
   function openAuthModal(mode) {
     if (document.getElementById('ah-auth-modal')) return;
+    injectGoogleCss();
     if (!SB) { alert('Cannot reach the server right now. You can keep browsing as a guest.'); return; }
 
     var back = el('div', null);
@@ -71,6 +84,12 @@
         '<button class="ah-auth-x" id="ah-auth-x" aria-label="Close">&times;</button>' +
         '<div class="ah-auth-title" id="ah-auth-title"></div>' +
         '<div class="ah-auth-sub" id="ah-auth-sub"></div>' +
+
+        '<button type="button" class="ah-auth-google" id="ah-auth-google">' +
+          '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>' +
+          '<span>Continue with Google</span>' +
+        '</button>' +
+        '<div class="ah-auth-or"><span>or use your email</span></div>' +
 
         '<div id="ah-auth-name-wrap" style="display:none;">' +
           '<label class="ah-auth-label">Your name</label>' +
@@ -151,6 +170,30 @@
     }
 
     swBtn.addEventListener('click', function () { applyMode(mode === 'signup' ? 'signin' : 'signup'); });
+
+    /* Continue with Google: leaves the site, comes back signed in (the page's own address, no # part) */
+    back.querySelector('#ah-auth-google').addEventListener('click', async function () {
+      var gbtn = this;
+      gbtn.disabled = true;
+      setMsg('Opening Google\u2026', true);
+      try {
+        var gr = await SB.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: location.origin + location.pathname,
+            queryParams: { prompt: 'select_account' }      // always let them pick which Google account
+          }
+        });
+        if (gr && gr.error) {
+          setMsg(/not enabled|unsupported provider/i.test(gr.error.message)
+            ? 'Google sign-in isn\u2019t switched on yet.' : friendly(gr.error.message));
+          gbtn.disabled = false;
+        }
+      } catch (e) {
+        setMsg('Could not open Google. Try again.');
+        gbtn.disabled = false;
+      }
+    });
 
     forgotEl.addEventListener('click', async function () {
       var email = (emailEl.value || '').trim();
@@ -345,7 +388,8 @@
       var user = u && u.data && u.data.user;
       if (!user) { window.__ahStudentReady = true; paintButton(); return; }
 
-      var name = (user.user_metadata && user.user_metadata.display_name) || null;
+      var meta = user.user_metadata || {};
+      var name = meta.display_name || meta.full_name || meta.name || null;
       try {
         var p = await SB.from('student_profiles').select('display_name').eq('user_id', user.id).maybeSingle();
         if (p && !p.error && p.data && p.data.display_name) name = p.data.display_name;
