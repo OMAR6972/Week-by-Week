@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19m — v18: Continue with Google. Includes 19l (Back button on account screens). */
+/* VERSION: 2026-09-19m — v18b: Continue with Google, dark to match the sign-in screen. Includes 19l (Back button on account screens). */
 /* Optional by design: guests keep full access to everything, an account only adds extras. */
 
 (function () {
@@ -63,9 +63,10 @@
     var st = document.createElement('style');
     st.id = 'ah-google-css';
     st.textContent =
-      '.ah-auth-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin:2px 0 14px;padding:11px 14px;border-radius:10px;border:1px solid #dadce0;background:#fff;color:#3c4043;font:600 .9rem "Work Sans",Arial,sans-serif;cursor:pointer;}' +
-      '.ah-auth-google:disabled{opacity:.7;cursor:default;}' +
-      '@media (hover:hover){.ah-auth-google:hover:not(:disabled){background:#f6f7f8;box-shadow:0 2px 10px rgba(0,0,0,.25);}}' +
+      '.ah-auth-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin:4px 0 14px;padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.3);color:#fff;font:600 .9rem "Work Sans",Arial,sans-serif;cursor:pointer;transition:.2s;}' +
+      '.ah-auth-google svg{flex:0 0 18px;}' +
+      '.ah-auth-google:disabled{opacity:.6;cursor:default;}' +
+      '@media (hover:hover){.ah-auth-google:hover:not(:disabled){border-color:#e91e8c;background:rgba(233,30,140,.12);}}' +
       '.ah-auth-or{display:flex;align-items:center;gap:10px;margin:0 0 12px;color:#8b8397;font-size:.72rem;letter-spacing:.5px;}' +
       '.ah-auth-or:before,.ah-auth-or:after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12);}';
     document.head.appendChild(st);
