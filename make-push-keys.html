@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!-- VERSION: 2026-09-19 -- make-push-keys.html: makes the two keys push notifications need. Runs only inside your browser. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Make my push keys</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; background:#0f0720; color:#eee; margin:0; padding:24px; }
+  .card { max-width:640px; margin:0 auto; background:#1a0d2e; border:1px solid #3a2a4e; border-radius:14px; padding:24px; }
+  h1 { font-size:1.2rem; margin:0 0 6px; }
+  p { color:#b9adc9; line-height:1.55; font-size:.92rem; }
+  button { background:#e91e8c; color:#fff; border:none; border-radius:9px; padding:11px 20px; font-size:.95rem; font-weight:bold; cursor:pointer; }
+  button.small { padding:7px 14px; font-size:.8rem; background:#3a2a4e; margin-left:8px; }
+  .box { background:#0f0720; border:1px solid #2a1a3e; border-radius:10px; padding:12px; margin:8px 0 18px; word-break:break-all; font-family:Consolas,monospace; font-size:.82rem; color:#fff; }
+  .label { font-size:.72rem; letter-spacing:1px; text-transform:uppercase; color:#8b8397; margin-top:14px; }
+  .warn { background:rgba(255,179,71,.08); border:1px solid rgba(255,179,71,.35); color:#e0b070; border-radius:10px; padding:12px; font-size:.85rem; line-height:1.5; }
+  #out { display:none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Make my push keys</h1>
+  <p>This page makes the two keys that push notifications need. Everything happens inside your own browser. Nothing is sent anywhere, and nothing is saved on this page.</p>
+  <button id="go">Make my keys</button>
+
+  <div id="out">
+    <div class="label">Public key <span style="text-transform:none;letter-spacing:0;">(safe to share &mdash; send this one to Claude)</span></div>
+    <div class="box" id="pub"></div>
+    <button class="small" id="cpub" style="margin:-10px 0 14px 0;">Copy public key</button>
+
+    <div class="label">Private key <span style="text-transform:none;letter-spacing:0;">(keep secret)</span></div>
+    <div class="box" id="priv"></div>
+    <button class="small" id="cpriv" style="margin:-10px 0 14px 0;">Copy private key</button>
+
+    <div class="warn">
+      <b>Important:</b> do not send the private key to anyone, including in chat. It only goes into Supabase, in a later step.
+      If you close this page you can just make a new pair &mdash; but then use the new pair everywhere.
+    </div>
+  </div>
+</div>
+
+<script>
+function b64url(bytes) {
+  var s = '';
+  for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+async function makeKeys() {
+  var kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  var pub = new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey));      // 65 bytes
+  var jwk = await crypto.subtle.exportKey('jwk', kp.privateKey);                       // d = 32 bytes
+  return { publicKey: b64url(pub), privateKey: jwk.d };
+}
+if (typeof document !== 'undefined') {
+  document.getElementById('go').addEventListener('click', async function () {
+    try {
+      var k = await makeKeys();
+      document.getElementById('pub').textContent = k.publicKey;
+      document.getElementById('priv').textContent = k.privateKey;
+      document.getElementById('out').style.display = 'block';
+      this.textContent = 'Make a different pair';
+    } catch (e) {
+      alert('Your browser could not make the keys. Try Chrome or Edge on a computer.');
+    }
+  });
+  function copy(id, btn) {
+    var t = document.getElementById(id).textContent;
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+      var old = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = old; }, 1400);
+    }, function () { alert('Select the text and copy it by hand.'); });
+  }
+  document.getElementById('cpub').addEventListener('click', function () { copy('pub', this); });
+  document.getElementById('cpriv').addEventListener('click', function () { copy('priv', this); });
+}
+</script>
+</body>
+</html>
