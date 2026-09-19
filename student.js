@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19l — Back button from Backup & share to Settings. Includes 19k. */
+/* VERSION: 2026-09-19n — v16: hooks for the notification bell + Home Notifications card. Includes 19l. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -9460,6 +9460,7 @@
         const dl = document.getElementById('dw-deadlines');
         if (!dl) return;
         try { ahDashEnsureStatsHost(); } catch (e) {}
+        try { if (window.__ahDashNotifsHost) window.__ahDashNotifsHost(); } catch (e) {}
         try { ahDashApplyOrder(); } catch (e) {}
         const upcoming = ahUpcomingDeadlines();
         const added = ahJustAdded(20);
@@ -9478,6 +9479,7 @@
         document.getElementById('dw-news').innerHTML = ahDashNews();
         const statsHost = document.getElementById('dw-stats');
         if (statsHost) statsHost.innerHTML = ahDashStats();
+        try { if (window.__ahDashNotifsPaint) window.__ahDashNotifsPaint(); } catch (e) {}
 
         const jumpHost = document.getElementById('dw-jump');
         const jumpHtml = ahDashJump();
@@ -9505,6 +9507,21 @@
     window.showDashboard = showDashboard;
     window.renderDashboard = renderDashboard;
 
+    /* the notification bell asks for the page a notification is about */
+    window.__ahOpenFromBell = function (kind, subCode) {
+        try {
+            if (kind === 'exam') return showMidterms(true, 'home');
+            if (kind === 'deadline') return showDeadlines(true);
+            if (kind === 'material' && subCode) {
+                const sub = (window.COURSE_DATA || []).find(s => s.code === subCode);
+                if (sub) return showWeeks(sub);
+                return nav('home');
+            }
+            if (kind === 'material') return nav('home');
+            return showUpdates(true);
+        } catch (e) {}
+    };
+
     /* ============ HOME WIDGET REORDER (2026-09-19) ============
        Students can drag the Home cards into any order (and between the two columns).
        Reorder only — every card always stays; nothing is hidden. Saved on this device.
@@ -9512,7 +9529,7 @@
        drag (a floating copy follows your finger and a pink line shows where it will
        land), which keeps it reliable on phones. */
     var AH_DASH_ORDER_KEY = 'wbw_dash_order';
-    var AH_DASH_DEFAULT = [['deadlines', 'new'], ['gpa', 'news', 'jump', 'stats']];
+    var AH_DASH_DEFAULT = [['notifs', 'deadlines', 'new'], ['gpa', 'news', 'jump', 'stats']];
     var ahDashEditing = false;
     var ahDashDrag = null;
 
