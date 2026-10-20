@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19q — v19: the timetable no longer loses a signed-in student's saved section and subjects on reload. Includes v16c (GPA card, default Home order, bell hooks) and 19l. */
+/* VERSION: 2026-10-20r — v20: week dates now follow the Semester Start Date from admin Config (they were stuck on 7 Feb), the last day of a week now counts as that week, and the current-week colour is a Config setting (red by default). Earlier: 2026-09-19q — v19:the timetable no longer loses a signed-in student's saved section and subjects on reload. Includes v16c (GPA card, default Home order, bell hooks) and 19l. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -2838,23 +2838,48 @@
         return [...withTime.map(x => ({ task: x.task, origIdx: x.origIdx })), ...withoutTime];
     }
 
-    // Semester week 1 starts Saturday Feb 7, 2026. Weeks run Sat-Fri.
-    const SEMESTER_START = new Date(2026, 1, 7); // Feb 7, 2026 (Saturday)
+    /* v20: week dates now follow the "Semester Start Date" set in the admin Config page.
+       They used to be frozen to 7 Feb 2026 with a hardcoded week 8, so every week showed
+       the wrong dates and "current week" never matched. Week 1 starts on that date and each
+       week runs 7 days. A week's own date override (admin, Semester Map) still wins.
+       The 7 Feb fallback is only used when no start date has been saved at all. */
+    function ahSemesterStart() {
+        const s = window.CONFIG && window.CONFIG.semesterStart;
+        if (s && /^\d{4}-\d{2}-\d{2}/.test(String(s))) {
+            const d = new Date(String(s).slice(0, 10) + 'T00:00:00');
+            if (!isNaN(d.getTime())) return d;
+        }
+        return new Date(2026, 1, 7);
+    }
+    /* a week ends at the END of its last day, so that last day still counts as "this week" */
+    function ahEndOfDay(d) {
+        const e = new Date(d);
+        e.setHours(23, 59, 59, 999);
+        return e;
+    }
     function getWeekDates(weekNum) {
-        // Week 8 (midterms) exception: starts Friday Mar 27, ends Friday Apr 3
-        if (weekNum === 8) return { start: new Date(2026, 2, 27), end: new Date(2026, 3, 3) };
         // Check SCHEDULE_DATA for a date override
         if (window.SCHEDULE_DATA) {
             const wk = window.SCHEDULE_DATA.find(w => w.week === weekNum);
             if (wk && wk.dateStart && wk.dateEnd) {
-                return { start: new Date(wk.dateStart + 'T00:00:00'), end: new Date(wk.dateEnd + 'T00:00:00') };
+                return { start: new Date(wk.dateStart + 'T00:00:00'), end: ahEndOfDay(new Date(wk.dateEnd + 'T00:00:00')) };
             }
         }
-        const start = new Date(SEMESTER_START);
+        const start = ahSemesterStart();
         start.setDate(start.getDate() + (weekNum - 1) * 7);
         const end = new Date(start);
         end.setDate(end.getDate() + 6);
-        return { start, end };
+        return { start, end: ahEndOfDay(end) };
+    }
+
+    /* v20: colour of the current week on the Semester Map. Set in admin Config ("Current week colour");
+       red is the default when nothing has been chosen. A week's own Custom Card Accent Color still wins. */
+    function ahCurrentWeekColor() {
+        const c = window.CONFIG && window.CONFIG.currentWeekColor;
+        return (typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c)) ? c : '#ff3b30';
+    }
+    function ahHexToRgb(hex) {
+        return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
     }
     function getWeekDateRange(weekNum) {
         const { start, end } = getWeekDates(weekNum);
@@ -3152,9 +3177,10 @@
                 card.style.cursor = 'pointer';
                 card.onclick = () => openExamViewFromSchedule('midterms');
             } else if (isCurrentWeek) {
-                card.style.borderColor = '#ff3b30';
-                card.style.background = 'linear-gradient(135deg,rgba(255,59,48,0.08),var(--card-bg))';
-                card.style.boxShadow = '0 0 20px rgba(255,59,48,0.15)';
+                const cwHex = ahCurrentWeekColor(), cwRgb = ahHexToRgb(cwHex).join(',');
+                card.style.borderColor = cwHex;
+                card.style.background = `linear-gradient(135deg,rgba(${cwRgb},0.10),var(--card-bg))`;
+                card.style.boxShadow = `0 0 20px rgba(${cwRgb},0.18)`;
             } else {
                 card.style.borderColor = 'rgba(233,30,140,0.2)';
                 card.style.background = 'var(--card-bg)';
@@ -3192,11 +3218,12 @@
             const dateRangeHtml = `<div style="font-size:0.75rem;color:${isWhiteText?'rgba(255,255,255,0.7)':'#888'};margin-top:4px;letter-spacing:0.5px;">${getWeekDateRange(data.week)}</div>`;
 
             const periodLabel = (data.currentLabel && data.currentLabel.trim()) ? data.currentLabel.trim().toUpperCase() : 'CURRENT WEEK';
+            const cwHexB = ahCurrentWeekColor(), cwRgbB = ahHexToRgb(cwHexB).join(',');
             const currentWeekBadge = isCurrentWeek
-                ? `<div style="font-size:0.65rem;font-weight:800;color:#ff3b30;background:rgba(255,59,48,0.15);border:1px solid rgba(255,59,48,0.3);padding:3px 10px;border-radius:8px;letter-spacing:1.5px;margin-top:6px;display:inline-block;"><i class="fa-solid fa-location-dot"></i> ${periodLabel}</div>` : '';
+                ? `<div style="font-size:0.65rem;font-weight:800;color:${cwHexB};background:rgba(${cwRgbB},0.15);border:1px solid rgba(${cwRgbB},0.35);padding:3px 10px;border-radius:8px;letter-spacing:1.5px;margin-top:6px;display:inline-block;"><i class="fa-solid fa-location-dot"></i> ${periodLabel}</div>` : '';
 
             const weekTitle = (data.weekName && data.weekName.trim()) ? data.weekName.trim().toUpperCase() : 'WEEK ' + data.week;
-            const h2Color = isCurrentWeek && !isSpecialWk ? '#ff3b30' : (isWhiteText ? '#fff' : 'var(--accent-purple)');
+            const h2Color = isCurrentWeek && !isSpecialWk ? cwHexB : (isWhiteText ? '#fff' : 'var(--accent-purple)');
             card.dataset.week = String(data.week);
 
             card.innerHTML = `
