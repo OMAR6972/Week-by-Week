@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
+/* VERSION: 2026-10-23a — v6: adds an Accounts card (how many students have accounts, confirmed emails, who gets email/push). Previously: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
 /* Academic Hub - admin-stats.js  (feature 7.3)
    ---------------------------------------------------------------------------
    "📊 Stats" sidebar item + dashboard charting the anonymous usage events that
@@ -7,6 +7,8 @@
    time range (Today-hourly / 7 / 30 / 90 days / all).
 
    What's here now (from the data we currently collect — page/tab/subject/week):
+     • Accounts card (counts only, from the ah_account_stats() database function —
+       run account-stats.sql once). Not affected by the range or semester picker.
      • KPI cards + Most / Average / Lowest summary
      • Activity chart (hourly when "Today", daily otherwise; Y axis = events)
      • Per-subject drill-down: click a subject → its weeks ranked, with
@@ -120,9 +122,12 @@
           '<button id="ah-st-refresh" class="btn" style="background:#3a7bd5;font-size:0.78rem;">↻ Refresh</button>' +
         '</div>' +
         '<div style="color:#9a8cc0;font-size:0.8rem;margin-bottom:14px;">' +
-          'Anonymous, by random session — no logins, no personal data. ' +
+          'Usage is anonymous, by random session — no logins, no personal data. ' +
           'Showing <b style="color:#cbb3ff;">' + (allSemesters ? 'all semesters' : ('“' + esc(semName) + '”')) + '</b>.' +
         '</div>' +
+
+        /* v6: accounts card — counts only, independent of the range / semester pickers */
+        '<div id="ah-st-accounts" style="margin-bottom:20px;"></div>' +
 
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px;">' +
           rangeBtn('today','Today (hourly)') + rangeBtn('7','7 days') + rangeBtn('30','30 days') +
@@ -177,6 +182,59 @@
     }
   }
 
+  // ───────────────────────────── accounts card ──────────────────────────────
+  function loadAccounts() {
+    var box = document.getElementById('ah-st-accounts');
+    if (!box) return;
+    if (!SB) { box.innerHTML = ''; return; }
+    box.innerHTML = card('Accounts', '<div style="color:#9a8cc0;font-size:0.8rem;">Loading…</div>');
+    var done = function (res) {
+      var b = document.getElementById('ah-st-accounts');
+      if (!b) return;
+      if (!res || res.error || !res.data) {
+        var m = (res && res.error && res.error.message) || '';
+        var txt;
+        if (/NOT_ALLOWED/.test(m)) txt = 'You do not have permission to see account counts.';
+        else if (/ah_account_stats|could not find the function|does not exist|schema cache/i.test(m))
+          txt = 'Account counts are not set up yet. Run account-stats.sql once in the Supabase SQL Editor, then press Refresh.';
+        else txt = 'Could not load account counts' + (m ? ': ' + esc(m) : '.');
+        b.innerHTML = card('Accounts', '<div style="color:#ff9f6b;font-size:0.82rem;line-height:1.5;">' + txt + '</div>');
+        return;
+      }
+      renderAccounts(res.data);
+    };
+    try {
+      SB.rpc('ah_account_stats').then(done, function (e) { done({ error: { message: (e && e.message) || String(e) } }); });
+    } catch (e) { done({ error: { message: (e && e.message) || String(e) } }); }
+  }
+
+  function renderAccounts(d) {
+    var b = document.getElementById('ah-st-accounts');
+    if (!b) return;
+    var n = function (k) { return d[k] == null ? 0 : d[k]; };
+    var pct = function (a, t) { return t > 0 ? ' · ' + Math.round((a / t) * 100) + '%' : ''; };
+    var grid =
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;">' +
+        kpi(n('total'),                                  'Accounts',                  C.pink) +
+        kpi(n('confirmed') + pct(n('confirmed'), n('total')), 'Confirmed email',      C.green) +
+        kpi(n('email_on'),                               'Get emails',                C.cyan) +
+        kpi(n('push_on'),                                'Push on',                   C.orange) +
+        kpi(n('google'),                                 'Signed up with Google',     C.blue) +
+        kpi(n('password'),                               'Email + password',          C.purple) +
+        kpi(n('active_7d'),                              'Seen in 7 days',            C.green) +
+        kpi(n('active_30d'),                             'Seen in 30 days',           C.cyan) +
+        kpi(n('new_7d'),                                 'New in 7 days',             C.pink) +
+        kpi(n('new_30d'),                                'New in 30 days',            C.purple) +
+      '</div>' +
+      '<div style="color:#7a6aa0;font-size:0.74rem;margin-top:10px;line-height:1.5;">' +
+        'Counts only, student accounts (admin logins excluded). “Get emails” = confirmed accounts that have not turned email off — ' +
+        'accounts that never opened settings count as on, because email is the default. ' +
+        (n('unconfirmed') ? n('unconfirmed') + ' account' + (n('unconfirmed') === 1 ? ' has' : 's have') + ' not confirmed their email yet and ' + (n('unconfirmed') === 1 ? 'is' : 'are') + ' not counted there. ' : '') +
+        'Not affected by the range or semester pickers.' +
+      '</div>';
+    b.innerHTML = card('Accounts', grid);
+  }
+
   // ───────────────────────── Chart.js lazy loader ───────────────────────────
   function ensureChart(cb) {
     if (window.Chart) return cb();
@@ -202,6 +260,7 @@
   function loadAndRender() {
     if (!SB) { status('Not connected to the database.', true); return; }
     status('Loading…');
+    loadAccounts();
     var q = SB.from('click_events')
       .select('created_at, event_type, label, detail, session_id, semester')
       .order('created_at', { ascending: true })
