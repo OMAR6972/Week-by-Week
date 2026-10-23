@@ -1,4 +1,4 @@
-/* VERSION: 2026-10-20r — v20: week dates now follow the Semester Start Date from admin Config (they were stuck on 7 Feb), the last day of a week now counts as that week, and the current-week colour is a Config setting (red by default). Earlier: 2026-09-19q — v19:the timetable no longer loses a signed-in student's saved section and subjects on reload. Includes v16c (GPA card, default Home order, bell hooks) and 19l. */
+/* VERSION: 2026-10-23a — v21: the Exams tab (with its screenshot, share list and menu) now follows My subjects, and the exam footer shows the real semester name instead of "Spring 2026". Earlier: 2026-10-20r — v20: week dates now follow the Semester Start Date from admin Config (they were stuck on 7 Feb), the last day of a week now counts as that week, and the current-week colour is a Config setting (red by default). Earlier: 2026-09-19q — v19:the timetable no longer loses a signed-in student's saved section and subjects on reload. Includes v16c (GPA card, default Home order, bell hooks) and 19l. */
 /* Academic Hub - app.js (extracted from index.html, Phase 1) */
     window.addEventListener('DOMContentLoaded', () => {
         if(typeof window.COURSE_DATA === 'undefined') {
@@ -695,6 +695,19 @@
         }).filter(p => p.subjects.length > 0);
     }
 
+    /* v21: exams follow "My subjects" like every other tab. An exam for a subject the student
+       is not registered in (or has hidden) is tucked away, never deleted — the same switch brings it back. */
+    function ahExamVisible(exam) {
+        return !exam || !exam.sub || !isSubjectHidden(exam.sub);
+    }
+    function ahVisibleExamCount(arr) {
+        return (arr || []).filter(ahExamVisible).length;
+    }
+    function ahExamFooter() {
+        const nm = String(window.__ahSemName || '').trim();
+        return 'GOOD LUCK' + (nm ? ' · ' + nm.toUpperCase() : '');
+    }
+
     function refreshCurrentFilteredPage() {
         if (currentPageId === 'dashboard') { init(); renderDashboard(); }
         else if (currentPageId === 'home') init();
@@ -706,6 +719,7 @@
             showUsefulLinks(false, currentUsefulFilter, currentUsefulSubject, Array.from(currentUsefulBadgeFilters));
         }
         else if (currentPageId === 'directory') renderDirectory();
+        else if (currentPageId === 'midterm') renderCurrentExamView(false);
         populateAllDropdowns();
     }
 
@@ -3474,8 +3488,10 @@
         // group visible exams by dateLabel, preserving sorted order
         const groups = [];
         const byLabel = {};
+        let notMine = 0;   // v21: exams of subjects the student is not registered in
         sortedEntries.forEach(function(entry) {
             if (hiddenSet.has(entry.origIdx)) return;
+            if (!ahExamVisible(entry.exam)) { notMine++; return; }
             const key = entry.exam.dateLabel || 'Date TBD';
             if (!byLabel[key]) { byLabel[key] = { label: key, date: entry.exam.date || '', items: [] }; groups.push(byLabel[key]); }
             byLabel[key].items.push(entry);
@@ -3484,7 +3500,9 @@
         if (groups.length === 0) {
             const empty = document.createElement('div');
             empty.style.cssText = 'text-align:center; color:#777; padding:40px 20px; font-style:italic;';
-            empty.textContent = hiddenSet.size > 0 ? 'All exams are hidden. Use the eye button above to restore them.' : 'No exams scheduled yet.';
+            empty.textContent = notMine > 0
+                ? 'No exams for your subjects yet. You can change your subjects from My subjects in the account menu.'
+                : (hiddenSet.size > 0 ? 'All exams are hidden. Use the eye button above to restore them.' : 'No exams scheduled yet.');
             container.appendChild(empty);
             return;
         }
@@ -3597,7 +3615,7 @@
 
         const footer = document.createElement('div');
         footer.style.cssText = 'text-align:center; margin-top:52px; margin-bottom:20px; font-size:0.75rem; color:var(--text-sub); letter-spacing:3px; opacity:0.5;';
-        footer.textContent = footerText;
+        footer.textContent = ahExamFooter();
         container.appendChild(footer);
     }
 
@@ -3617,13 +3635,15 @@
         title.textContent = 'Hidden Exams';
         panel.appendChild(title);
 
-        if (hiddenSet.size === 0) {
+        /* v21: only list hidden exams that belong to the student's own subjects */
+        const shownHidden = Array.from(hiddenSet).filter(function(i) { return dataArr[i] && ahExamVisible(dataArr[i]); });
+        if (shownHidden.length === 0) {
             const empty = document.createElement('div');
             empty.style.cssText = 'color:#888; font-size:0.85rem; font-style:italic;';
             empty.textContent = 'Nothing hidden.';
             panel.appendChild(empty);
         } else {
-            hiddenSet.forEach(function(idx) {
+            shownHidden.forEach(function(idx) {
                 const exam = dataArr[idx];
                 if (!exam) return;
                 let subName = exam.sub;
@@ -3664,8 +3684,8 @@
         const wrap = document.getElementById('exam-view-toggle');
         if (!wrap) return;
         const hasFinals = window.FINAL_DATA && window.FINAL_DATA.length > 0;
-        const midCount = window.MIDTERM_DATA ? window.MIDTERM_DATA.length : 0;
-        const finCount = window.FINAL_DATA ? window.FINAL_DATA.length : 0;
+        const midCount = ahVisibleExamCount(window.MIDTERM_DATA);   // v21: only the student's own subjects
+        const finCount = ahVisibleExamCount(window.FINAL_DATA);
 
         // Update nav tab color to match active exam type
         const navLink = document.querySelector('.nav-link-midterms');
@@ -3703,11 +3723,14 @@
 
         // hidden-exams icon button, only when something is hidden
         const activeHidden = examViewMode === 'finals' ? finalHiddenSet : midtermHiddenSet;
-        if (activeHidden && activeHidden.size > 0) {
+        const activeData = (examViewMode === 'finals' ? window.FINAL_DATA : window.MIDTERM_DATA) || [];
+        let activeHiddenCount = 0;
+        if (activeHidden) activeHidden.forEach(function(i) { if (activeData[i] && ahExamVisible(activeData[i])) activeHiddenCount++; });
+        if (activeHiddenCount > 0) {
             const hBtn = document.createElement('button');
             hBtn.className = 'ah-exam-hidden-icon' + (examViewMode === 'finals' ? ' fin' : '');
             hBtn.title = 'Manage hidden exams';
-            hBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i><span class="ah-exam-hidden-badge">' + activeHidden.size + '</span>';
+            hBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i><span class="ah-exam-hidden-badge">' + activeHiddenCount + '</span>';
             hBtn.addEventListener('click', examViewMode === 'finals' ? openFinalHiddenPanel : openMidtermHiddenPanel);
             wrap.appendChild(hBtn);
         }
@@ -3743,7 +3766,7 @@
             openMidtermHiddenPanel,
             'midterm-hidden-panel-slot',
             'midterm-hidden-btn',
-            'GOOD LUCK · SPRING 2026'
+            ahExamFooter()
         );
     }
 
@@ -3771,7 +3794,7 @@
             openFinalHiddenPanel,
             'final-hidden-panel-slot',
             'finals-hidden-btn',
-            'GOOD LUCK · SPRING 2026'
+            ahExamFooter()
         );
     }
 
@@ -5315,11 +5338,13 @@
         const dd = document.getElementById('dd-midterms');
         if(!dd || !window.MIDTERM_DATA) return;
         let html = '<div class="dd-header">Exam schedule</div>';
-        if(window.MIDTERM_DATA.length === 0) {
-            html += '<div class="dd-empty">No exams configured</div>';
+        /* v21: only the student's own subjects (keeping each exam's real position in the list) */
+        const mineExams = window.MIDTERM_DATA.map((exam, idx) => ({ exam, idx })).filter(x => ahExamVisible(x.exam));
+        if(mineExams.length === 0) {
+            html += '<div class="dd-empty">' + (window.MIDTERM_DATA.length === 0 ? 'No exams configured' : 'No exams for your subjects') + '</div>';
         } else {
             let lastDate = '';
-            window.MIDTERM_DATA.slice(0, 6).forEach((exam, idx) => {
+            mineExams.slice(0, 6).forEach(({ exam, idx }) => {
                 let subName = exam.sub;
                 const sObj = window.COURSE_DATA ? window.COURSE_DATA.find(s => s.code === exam.sub) : null;
                 if(sObj) subName = sObj.name;
@@ -5335,8 +5360,8 @@
                 html += `<span class="dd-meta" style="font-family:'Orbitron',sans-serif; font-size:0.7rem; color:#007aff;">${exam.time}</span>`;
                 html += `</div>`;
             });
-            if(window.MIDTERM_DATA.length > 6) {
-                html += `<div class="dd-footer"><div class="dd-item" style="color:#007aff;" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showMidterms(true,'home');">View all ${window.MIDTERM_DATA.length} exams <i class="fa-solid fa-arrow-right"></i></div></div>`;
+            if(mineExams.length > 6) {
+                html += `<div class="dd-footer"><div class="dd-item" style="color:#007aff;" onclick="event.stopPropagation(); closeAllDropdowns(); closeMobileMenu(); showMidterms(true,'home');">View all ${mineExams.length} exams <i class="fa-solid fa-arrow-right"></i></div></div>`;
             }
         }
         dd.innerHTML = html;
@@ -5715,7 +5740,7 @@
         }
 
         if (active === 'midterm') {
-            const rows = (window.MIDTERM_DATA || []).map(m => `- ${m.sub} ${m.examCode ? `(${m.examCode})` : ''} | ${m.dateLabel || ''} ${m.time || ''}`);
+            const rows = (window.MIDTERM_DATA || []).filter(ahExamVisible).map(m => `- ${m.sub} ${m.examCode ? `(${m.examCode})` : ''} | ${m.dateLabel || ''} ${m.time || ''}`);
             return {
                 title: 'Midterm Exams',
                 fileBase: 'midterm-exams',
@@ -6097,7 +6122,7 @@
         // --- Midterm / Finals: build a clean off-screen tile ---
         if (active === 'midterm') {
             const isFinals = (typeof examViewMode !== 'undefined') && examViewMode === 'finals';
-            const exams = (isFinals ? (window.FINAL_DATA || []) : (window.MIDTERM_DATA || []));
+            const exams = (isFinals ? (window.FINAL_DATA || []) : (window.MIDTERM_DATA || [])).filter(ahExamVisible);   // v21: own subjects only
             const accentColor = isFinals ? '#d97706' : '#007aff';
             const titleText  = isFinals ? 'FINAL EXAMS' : 'MIDTERM EXAMS';
 
@@ -6112,7 +6137,7 @@
 
             const expRgb = isFinals ? '204,34,0' : '0,122,255';
             let innerHtml = `<div style="font-family:Orbitron,Arial,sans-serif;font-size:26px;font-weight:900;color:${accentColor};text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;">${titleText}</div>`;
-            innerHtml += `<div style="font-size:13px;color:#888;margin-bottom:28px;letter-spacing:1px;">Spring 2026</div>`;
+            innerHtml += `<div style="font-size:13px;color:#888;margin-bottom:28px;letter-spacing:1px;">${eHtml(window.__ahSemName || '')}</div>`;
 
             if (sorted.length === 0) {
                 innerHtml += `<div style="text-align:center;color:#555;padding:40px 0;font-size:14px;">No exams added yet.</div>`;
@@ -6166,7 +6191,7 @@
                     innerHtml += `</div></div>`;
                 });
             }
-            innerHtml += `<div style="text-align:center;margin-top:28px;font-size:11px;color:#555;letter-spacing:3px;">GOOD LUCK &nbsp;✦&nbsp; SPRING 2026</div>`;
+            innerHtml += `<div style="text-align:center;margin-top:28px;font-size:11px;color:#555;letter-spacing:3px;">GOOD LUCK${window.__ahSemName ? ' &nbsp;✦&nbsp; ' + eHtml(String(window.__ahSemName).toUpperCase()) : ''}</div>`;
             shell.innerHTML = innerHtml;
             document.body.appendChild(shell);
             shellEl = shell;
@@ -8724,6 +8749,7 @@
         const expGroups = [], expByLabel = {};
         sorted.forEach(({ exam, origIdx }) => {
             if (hiddenSet.has(origIdx)) return;
+            if (!ahExamVisible(exam)) return;   // v21: own subjects only
             hasAny = true;
             const key = exam.dateLabel || 'Date TBD';
             if (!expByLabel[key]) { expByLabel[key] = { label: key, date: exam.date || '', items: [] }; expGroups.push(expByLabel[key]); }

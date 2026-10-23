@@ -1,4 +1,4 @@
-/* VERSION: 2026-09-19b — v19: says when the real semester data is in (the timetable waits for it). Previously: 2026-09-15i — v11. */
+/* VERSION: 2026-10-23a — v20: a subject can use the content (weeks, exam materials, useful links, details) of the same subject from another semester (set in admin on the subject's page). Earlier: 2026-09-19b — v19: says when the real semester data is in (the timetable waits for it). Previously: 2026-09-15i — v11. */
 /* Academic Hub - student-data.js  (semester-aware, feature 7.1; + 7.3 analytics appended at bottom)
    --------------------------------------------------------------------------
    What this does, in order:
@@ -74,6 +74,93 @@
     }
   }
 
+  /* v20 — LINKED SUBJECTS
+     In admin, a subject can be set to "use content from <other semester> / <subject>". The subject keeps its OWN
+     code, name, colour, Semester Map tasks, midterms and finals — only the learning content comes from the
+     other semester: weeks, exam materials (events), useful links, drive link and the details tab.
+     The other semester's data is only READ here; nothing is copied into the database. A link is followed one
+     level only (a linked subject is never itself a source). If anything goes wrong the subject simply shows its
+     own content, so this can never blank the page. */
+  function cloneJ(v) { return JSON.parse(JSON.stringify(v)); }
+
+  function resolveLinks(rows, scopedSlug) {
+    try {
+      if (!scopedSlug || !rows) return Promise.resolve(rows);
+      var courseRow = null, detailRow = null;
+      rows.forEach(function (r) {
+        if (r.key === 'COURSE_DATA') courseRow = r;
+        else if (r.key === 'SUBJECT_DETAILS_DATA') detailRow = r;
+      });
+      if (!courseRow || !Array.isArray(courseRow.value)) return Promise.resolve(rows);
+
+      var wanted = {};
+      courseRow.value.forEach(function (e) {
+        var l = e && e.linkedFrom;
+        if (l && l.semester && l.code && l.semester !== scopedSlug) wanted[l.semester] = true;
+      });
+      var sems = Object.keys(wanted);
+      if (!sems.length) return Promise.resolve(rows);
+
+      return sb.from('site_data').select('key, value, semester')
+        .in('semester', sems).in('key', ['COURSE_DATA', 'SUBJECT_DETAILS_DATA'])
+        .then(function (res) {
+          if (res.error || !res.data) {
+            console.warn('[AcademicHub] Linked subjects not loaded - showing their own content.', res.error && res.error.message);
+            return rows;
+          }
+          var courses = {}, details = {};
+          res.data.forEach(function (r) {
+            if (r.key === 'COURSE_DATA') courses[r.semester] = r.value;
+            else details[r.semester] = r.value;
+          });
+
+          var mergedCourses = cloneJ(courseRow.value);
+          var mergedDetails = (detailRow && detailRow.value && typeof detailRow.value === 'object' && !Array.isArray(detailRow.value))
+            ? cloneJ(detailRow.value) : {};
+          var linkedCount = 0;
+
+          mergedCourses.forEach(function (e) {
+            var l = e && e.linkedFrom;
+            if (!l || !l.semester || !l.code || l.semester === scopedSlug) return;
+            var srcList = courses[l.semester];
+            if (!Array.isArray(srcList)) return;
+            var src = null;
+            for (var i = 0; i < srcList.length; i++) { if (srcList[i] && srcList[i].code === l.code) { src = srcList[i]; break; } }
+            if (!src) return;
+
+            ['weeks', 'events', 'playlists'].forEach(function (k) { e[k] = cloneJ(src[k] || []); });
+            if (!e.driveLink && src.driveLink) e.driveLink = src.driveLink;
+
+            var sd = details[l.semester] && details[l.semester][l.code];
+            if (sd && typeof sd === 'object') {
+              var own = (mergedDetails[e.code] && typeof mergedDetails[e.code] === 'object') ? mergedDetails[e.code] : {};
+              ['gradeDistribution', 'examTypes', 'generalNotes'].forEach(function (k) {
+                // what was typed for THIS semester wins; the linked subject only fills the blanks
+                if (!String(own[k] || '').trim() && sd[k]) own[k] = sd[k];
+              });
+              mergedDetails[e.code] = own;
+            }
+            linkedCount++;
+          });
+
+          if (!linkedCount) return rows;
+          var out = [];
+          var sawDetails = false;
+          rows.forEach(function (r) {
+            if (r.key === 'COURSE_DATA') out.push({ key: r.key, value: mergedCourses });
+            else if (r.key === 'SUBJECT_DETAILS_DATA') { sawDetails = true; out.push({ key: r.key, value: mergedDetails }); }
+            else out.push(r);
+          });
+          if (!sawDetails) out.push({ key: 'SUBJECT_DETAILS_DATA', value: mergedDetails });
+          console.log('[AcademicHub] Linked subjects applied: ' + linkedCount);
+          return out;
+        });
+    } catch (e) {
+      console.warn('[AcademicHub] Linked subjects skipped.', e);
+      return Promise.resolve(rows);
+    }
+  }
+
   function loadSemester(slug) {
     var q = sb.from('site_data').select('key, value');
     if (slug) q = q.eq('semester', slug);
@@ -89,7 +176,10 @@
         console.warn('[AcademicHub] Live load failed - using bundled data.', res.error.message);
         return;
       }
-      applyRows(res.data, slug);
+      return resolveLinks(res.data, slug).then(
+        function (rows) { applyRows(rows, slug); },
+        function ()     { applyRows(res.data, slug); }
+      );
     });
   }
 
