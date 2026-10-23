@@ -1,4 +1,4 @@
-/* VERSION: 2026-10-23a — v6: adds an Accounts card (how many students have accounts, confirmed emails, who gets email/push). Previously: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
+/* VERSION: 2026-10-23b — v6b: owner-only "See all accounts" list under the Accounts card. 2026-10-23a — v6: adds an Accounts card (how many students have accounts, confirmed emails, who gets email/push). Previously: 2026-09-12h — v5d: stats permission, section pairing configurable, localStorage guarded. */
 /* Academic Hub - admin-stats.js  (feature 7.3)
    ---------------------------------------------------------------------------
    "📊 Stats" sidebar item + dashboard charting the anonymous usage events that
@@ -122,7 +122,7 @@
           '<button id="ah-st-refresh" class="btn" style="background:#3a7bd5;font-size:0.78rem;">↻ Refresh</button>' +
         '</div>' +
         '<div style="color:#9a8cc0;font-size:0.8rem;margin-bottom:14px;">' +
-          'Usage is anonymous, by random session — no logins, no personal data. ' +
+          'Usage below is anonymous, by random session. ' +
           'Showing <b style="color:#cbb3ff;">' + (allSemesters ? 'all semesters' : ('“' + esc(semName) + '”')) + '</b>.' +
         '</div>' +
 
@@ -232,7 +232,98 @@
         (n('unconfirmed') ? n('unconfirmed') + ' account' + (n('unconfirmed') === 1 ? ' has' : 's have') + ' not confirmed their email yet and ' + (n('unconfirmed') === 1 ? 'is' : 'are') + ' not counted there. ' : '') +
         'Not affected by the range or semester pickers.' +
       '</div>';
-    b.innerHTML = card('Accounts', grid);
+    var more = window.__ahIsSuper
+      ? '<div style="margin-top:12px;"><button id="ah-st-acc-more" class="btn" style="background:#7b3fe4;font-size:0.78rem;">' +
+        (accListOpen ? 'Hide accounts' : 'See all accounts') + '</button></div>' +
+        '<div id="ah-st-acclist" style="margin-top:12px;"></div>'
+      : '';
+    b.innerHTML = card('Accounts', grid + more);
+    var mb = document.getElementById('ah-st-acc-more');
+    if (mb) mb.addEventListener('click', function () {
+      accListOpen = !accListOpen;
+      mb.textContent = accListOpen ? 'Hide accounts' : 'See all accounts';
+      if (accListOpen) loadAccountList(); else { var l = document.getElementById('ah-st-acclist'); if (l) l.innerHTML = ''; }
+    });
+    if (accListOpen) loadAccountList();
+  }
+
+  // ── per-account list (owner only; names and emails come from ah_account_list) ──
+  var accListOpen = false;
+  var accRows = [];
+  var accSearch = '';
+
+  function loadAccountList() {
+    var box = document.getElementById('ah-st-acclist');
+    if (!box || !SB) return;
+    box.innerHTML = '<div style="color:#9a8cc0;font-size:0.8rem;">Loading accounts…</div>';
+    var done = function (res) {
+      var b2 = document.getElementById('ah-st-acclist');
+      if (!b2) return;
+      if (!res || res.error || !Array.isArray(res.data)) {
+        var m = (res && res.error && res.error.message) || '';
+        var txt = /NOT_ALLOWED/.test(m) ? 'Only the owner can see the account list.'
+          : /ah_account_list|could not find the function|does not exist|schema cache/i.test(m)
+            ? 'Run account-list.sql once in the Supabase SQL Editor, then try again.'
+            : 'Could not load the list' + (m ? ': ' + esc(m) : '.');
+        b2.innerHTML = '<div style="color:#ff9f6b;font-size:0.82rem;">' + txt + '</div>';
+        return;
+      }
+      accRows = res.data;
+      renderAccountList();
+    };
+    try {
+      SB.rpc('ah_account_list').then(done, function (e) { done({ error: { message: (e && e.message) || String(e) } }); });
+    } catch (e) { done({ error: { message: (e && e.message) || String(e) } }); }
+  }
+
+  function fmtDay(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return isNaN(d) ? '—' : d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+  function dot(on, label) {
+    return '<span style="color:' + (on ? C.green : '#7a6aa0') + ';font-weight:700;white-space:nowrap;">' + (on ? '● ' : '○ ') + label + '</span>';
+  }
+
+  function renderAccountList() {
+    var box = document.getElementById('ah-st-acclist');
+    if (!box) return;
+    var q = accSearch.trim().toLowerCase();
+    var rows = accRows.filter(function (r) {
+      return !q || ((r.name || '') + ' ' + (r.email || '')).toLowerCase().indexOf(q) > -1;
+    });
+    var TD = 'padding:8px 10px;border-bottom:1px solid #221634;vertical-align:top;';
+    var body = rows.map(function (r) {
+      return '<tr>' +
+        '<td style="' + TD + 'color:#fff;font-weight:700;">' + esc(r.name) + '<div style="color:#9a8cc0;font-weight:500;font-size:0.74rem;word-break:break-all;">' + esc(r.email) + '</div></td>' +
+        '<td style="' + TD + 'color:#cbb3ff;white-space:nowrap;">' + esc(r.method) + '</td>' +
+        '<td style="' + TD + '">' + dot(!!r.confirmed, r.confirmed ? 'Confirmed' : 'Not confirmed') + '</td>' +
+        '<td style="' + TD + '">' + dot(!!r.email_on, 'Email') + '<br>' + dot(!!r.push_on, 'Push') + '</td>' +
+        '<td style="' + TD + 'color:#ddd;text-align:center;">' + (r.subjects == null ? '—' : r.subjects) + '</td>' +
+        '<td style="' + TD + 'color:#ddd;white-space:nowrap;">' + fmtDay(r.created_at) + '</td>' +
+        '<td style="' + TD + 'color:#ddd;white-space:nowrap;">' + fmtDay(r.last_seen_at) + '</td>' +
+      '</tr>';
+    }).join('');
+    var TH = 'text-align:left;padding:8px 10px;color:#9a8cc0;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;border-bottom:1px solid #2f1d4a;white-space:nowrap;';
+    box.innerHTML =
+      '<input id="ah-st-accq" type="search" placeholder="Search name or email…" value="' + esc(accSearch) + '" ' +
+        'style="width:100%;box-sizing:border-box;padding:9px 12px;margin-bottom:10px;background:#0a0012;border:1px solid #2a1a3e;border-radius:8px;color:#fff;font-size:0.85rem;">' +
+      '<div style="color:#9a8cc0;font-size:0.76rem;margin-bottom:8px;">' + rows.length + ' of ' + accRows.length + ' account' + (accRows.length === 1 ? '' : 's') + ', newest first. Only you can see this list.</div>' +
+      '<div style="overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid #2f1d4a;border-radius:10px;">' +
+        '<table style="width:100%;border-collapse:collapse;font-size:0.8rem;min-width:640px;">' +
+          '<thead style="position:sticky;top:0;background:#1d0f33;"><tr>' +
+            '<th style="' + TH + '">Account</th><th style="' + TH + '">Sign-in</th><th style="' + TH + '">Email status</th>' +
+            '<th style="' + TH + '">Notifies by</th><th style="' + TH + 'text-align:center;">Subjects</th>' +
+            '<th style="' + TH + '">Joined</th><th style="' + TH + '">Last seen</th>' +
+          '</tr></thead><tbody>' + (body || '<tr><td colspan="7" style="' + TD + 'color:#9a8cc0;">No matches.</td></tr>') + '</tbody></table></div>';
+    var qi = document.getElementById('ah-st-accq');
+    if (qi) qi.addEventListener('input', function () {
+      accSearch = qi.value;
+      var pos = qi.selectionStart;
+      renderAccountList();
+      var again = document.getElementById('ah-st-accq');
+      if (again) { again.focus(); try { again.setSelectionRange(pos, pos); } catch (e) {} }
+    });
   }
 
   // ───────────────────────── Chart.js lazy loader ───────────────────────────
